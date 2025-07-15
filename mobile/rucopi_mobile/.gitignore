@@ -1,45 +1,68 @@
-# Miscellaneous
+# ===========================
+# IGNORAR CONFIGURAÇÕES LOCAIS, ARQUIVOS TEMPORÁRIOS E BUILDS
+# ===========================
+
+# Arquivos temporários e de sistema
 *.class
 *.log
 *.pyc
 *.swp
 .DS_Store
 .atom/
-.build/
-.buildlog/
 .history
 .svn/
-.swiftpm/
 migrate_working_dir/
 
-# IntelliJ related
+# Arquivos gerados pela documentação
+**/doc/api/
+
+# ===========================
+# IGNORAR AMBIENTES DE DESENVOLVIMENTO
+# ===========================
+
+# Visual Studio Code
+.vscode/
+
+# Android Studio e IntelliJ
 *.iml
 *.ipr
 *.iws
 .idea/
 
-# The .vscode folder contains launch configuration and tasks you configure in
-# VS Code which you may wish to be included in version control, so this line
-# is commented out by default.
-#.vscode/
+# ===========================
+# FLUTTER / DART
+# ===========================
 
-# Flutter/Dart/Pub related
-**/doc/api/
-**/ios/Flutter/.last_build_id
 .dart_tool/
 .flutter-plugins
 .flutter-plugins-dependencies
 .pub-cache/
 .pub/
+.packages
 /build/
+**/ios/Flutter/.last_build_id
 
-# Symbolication related
+# ===========================
+# ARQUIVOS SENSÍVEIS
+# ===========================
+
+*.env
+*.key
+*.secret
+.env.*
+.secrets/
+
+# ===========================
+# ARTEFATOS DE SIMBOLICAÇÃO / OFUSCAÇÃO
+# ===========================
+
 app.*.symbols
-
-# Obfuscation related
 app.*.map.json
 
-# Android Studio will place build artifacts here
+# ===========================
+# BUILD ANDROID
+# ===========================
+
 /android/app/debug
 /android/app/profile
 /android/app/release
