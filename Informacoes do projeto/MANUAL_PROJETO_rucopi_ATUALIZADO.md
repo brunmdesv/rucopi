@@ -395,3 +395,34 @@ flutter doctor
 ➡️ Início da integração do Supabase com o projeto `rucopi_dashboard` (painel administrativo web) e implementação das políticas de acesso para administradores e operadores.
 
 ---
+
+## 🔒 Políticas de Acesso e Fluxo de Visualização
+
+O fluxo do sistema foi desenhado para garantir privacidade e controle:
+
+- **Morador:**
+  - No aplicativo mobile, cada morador só pode visualizar e acompanhar as suas próprias solicitações de retirada de entulho.
+  - O campo `morador_id` em cada solicitação é igual ao `auth.uid()` do usuário autenticado.
+  - A política RLS garante que moradores não vejam solicitações de outros.
+
+- **Operadores e Administradores (Prefeitura):**
+  - No dashboard, operadores e administradores têm acesso a **todas** as solicitações enviadas pelos moradores.
+  - Isso permite que a equipe da prefeitura visualize, filtre, organize e gerencie todas as solicitações de forma centralizada e eficiente.
+  - A política RLS de SELECT na tabela `solicitacoes` foi ajustada para permitir que administradores vejam todas as solicitações, enquanto moradores continuam vendo apenas as suas.
+
+### Política RLS de SELECT para a tabela `solicitacoes`:
+```sql
+USING (
+  auth.uid() = morador_id
+  OR EXISTS (
+    SELECT 1 FROM usuarios u WHERE u.id = auth.uid() AND u.cargo = 'administrador'
+  )
+)
+```
+
+**Resumo:**
+- Moradores têm acesso restrito às suas próprias solicitações.
+- Operadores/administradores da prefeitura têm acesso total a todas as solicitações pelo dashboard.
+- Esse fluxo garante privacidade para o cidadão e controle total para a gestão pública.
+
+---
