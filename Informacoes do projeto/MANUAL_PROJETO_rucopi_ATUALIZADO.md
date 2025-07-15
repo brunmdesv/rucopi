@@ -59,16 +59,16 @@ Este projeto será dividido em fases, com objetivos claros e entregáveis em cad
 Esta fase é crucial para estabelecer as bases do projeto, garantindo que todas as configurações iniciais estejam corretas e que a arquitetura esteja bem definida. Embora a versão anterior tenha sido excluída, esta fase está sendo refeita com foco nas novas tecnologias e requisitos.
 
 **Objetivos:**
-*   Definição e validação do escopo detalhado do projeto.
-*   Criação da identidade visual básica (ícone, cores, splash screen).
-*   Configuração inicial do ambiente Supabase (projeto, banco de dados, autenticação, storage).
-*   Configuração do repositório Git para controle de versão.
-*   Estrutura inicial dos projetos Flutter (Mobile App e Dashboard Web).
+*   ✅ Definição e validação do escopo detalhado do projeto.
+*   [ ] Criação da identidade visual básica (ícone, cores, splash screen).
+*   ✅ Configuração inicial do ambiente Supabase (projeto, banco de dados, autenticação, storage).
+*   ✅ Configuração do repositório Git para controle de versão.
+*   ✅ Estrutura inicial dos projetos Flutter (Mobile App e Dashboard Web).
 
 **Tarefas Detalhadas:**
 
 *   **1.1 Validação do Escopo:**
-    *   [ ] Revisar e confirmar todas as funcionalidades desejadas com a prefeitura de Piracuruca-PI.
+    *   ✅ Revisar e confirmar todas as funcionalidades desejadas com a prefeitura de Piracuruca-PI.
     *   [ ] Documentar os casos de uso e requisitos não funcionais.
 
 *   **1.2 Identidade Visual:**
@@ -77,22 +77,22 @@ Esta fase é crucial para estabelecer as bases do projeto, garantindo que todas 
     *   [ ] Criar a splash screen inicial para o aplicativo móvel.
 
 *   **1.3 Configuração do Supabase:**
-    *   [ ] Criar um novo projeto no Supabase.
-    *   [ ] Configurar o módulo de Autenticação (Auth) para e-mail e senha.
-    *   [ ] Criar o esquema inicial do banco de dados PostgreSQL para usuários e solicitações.
-    *   [ ] Configurar o Supabase Storage para o armazenamento de fotos, definindo políticas de acesso e tamanhos máximos para otimização do plano gratuito.
-    *   [ ] Obter as chaves de API (URL e `anon_key`) do Supabase para integração com o Flutter.
+    *   ✅ Criar um novo projeto no Supabase.
+    *   ✅ Configurar o módulo de Autenticação (Auth) para e-mail e senha.
+    *   ✅ Criar o esquema inicial do banco de dados PostgreSQL para usuários e solicitações.
+    *   ✅ Configurar o Supabase Storage para o armazenamento de fotos, definindo políticas de acesso e tamanhos máximos para otimização do plano gratuito.
+    *   ✅ Obter as chaves de API (URL e `anon_key`) do Supabase para integração com o Flutter.
 
 *   **1.4 Configuração do Repositório Git:**
-    *   [ ] Criar um novo repositório Git (ex: GitHub, GitLab, Bitbucket).
-    *   [ ] Configurar o `.gitignore` para excluir arquivos desnecessários e sensíveis.
-    *   [ ] Realizar o primeiro commit da estrutura básica do projeto.
+    *   ✅ Criar um novo repositório Git (ex: GitHub, GitLab, Bitbucket).
+    *   ✅ Configurar o `.gitignore` para excluir arquivos desnecessários e sensíveis.
+    *   ✅ Realizar o primeiro commit da estrutura básica do projeto.
 
 *   **1.5 Estrutura Inicial dos Projetos Flutter:**
-    *   [ ] Criar o projeto Flutter `rucopi_mobile`.
-    *   [ ] Criar o projeto Flutter `rucopi_dashboard`.
-    *   [ ] Adicionar as dependências do Supabase (ex: `supabase_flutter`) aos arquivos `pubspec.yaml` de ambos os projetos.
-    *   [ ] Implementar a inicialização do Supabase nos projetos Flutter.
+    *   ✅ Criar o projeto Flutter `rucopi_mobile`.
+    *   ✅ Criar o projeto Flutter `rucopi_dashboard`.
+    *   ✅ Adicionar as dependências do Supabase (ex: `supabase_flutter`) aos arquivos `pubspec.yaml` de ambos os projetos.
+    *   ✅ Implementar a inicialização do Supabase nos projetos Flutter.
 
 **Status:** Em andamento. A reestruturação do projeto implica na revisão e execução dessas tarefas com as novas tecnologias.
 
@@ -365,28 +365,6 @@ flutter doctor
    - Relacionamento com a tabela `moradores` via `morador_id`.
    - RLS ativado.
    - Políticas criadas:
-     - `SELECT`: usuário vê apenas suas solicitações.
-     - `INSERT`: permitido para usuários autenticados.
-     - `UPDATE`: apenas o próprio morador pode atualizar suas solicitações (provisório, depois será refinado no dashboard).
-
-7. **Configuração de Storage no Supabase**
-   - Criado bucket público chamado `fotosrucopi`.
-   - Definido limite de 2MB por imagem.
-   - Política de `INSERT` criada para permitir apenas uploads de usuários autenticados (`auth.role() = 'authenticated'`).
-
-8. **Integração do Supabase com os projetos Flutter**
-   - Adicionada dependência `supabase_flutter: ^2.9.1` no `pubspec.yaml` do mobile.
-   - Criado arquivo `.env` na raiz do projeto mobile com as chaves `SUPABASE_URL` e `SUPABASE_ANON_KEY`.
-   - Instalado e configurado o pacote `flutter_dotenv` para carregar variáveis de ambiente.
-   - Inicialização do Supabase no `main.dart` usando as variáveis do `.env`.
-   - Implementada tela de login e cadastro, com fluxo correto de autenticação e criação de perfil do morador.
-   - Testado cadastro, login e inserção de perfil, garantindo que o campo `id` do morador corresponde ao `auth.uid()` do usuário autenticado.
-   - Ajustado código para garantir que o insert em `moradores` só ocorre após autenticação.
-   - Adicionada tela de cadastro com campos completos e integração com Supabase.
-   - Adicionada tela de login com redirecionamento e feedback ao usuário.
-
-9. **Ajuste e criação de políticas RLS detalhadas**
-   - Políticas de RLS da tabela `moradores` revisadas e atualizadas:
      - `SELECT`: `USING (auth.uid() = id)`
      - `INSERT`: `WITH CHECK (auth.uid() = id)`
      - `UPDATE`: `USING (auth.uid() = id)`
@@ -402,6 +380,14 @@ flutter doctor
     - Testado cadastro de usuário, login, criação de perfil e solicitação de coleta.
     - Validado que as políticas RLS estão funcionando corretamente, bloqueando acessos indevidos e permitindo apenas operações do próprio usuário.
     - Corrigido erro de Unauthorized após insert, ajustando o uso do método `.select()` e revisando as políticas de SELECT.
+
+11. **Implementação da tela de nova solicitação**
+    - Criada a página de nova solicitação no app mobile, com formulário para descrição, tipo de entulho (dropdown), endereço e upload de até 3 fotos.
+    - Integrado o upload de imagens com o bucket 'fotosrucopi' no Supabase Storage.
+    - Inserção do registro na tabela 'solicitacoes' com as URLs das imagens e relacionamento automático com o usuário autenticado (morador_id).
+    - Ajustado o fluxo de navegação: após login, o usuário é redirecionado para a tela de nova solicitação.
+    - Testado e validado o fluxo completo de envio de solicitação, incluindo upload de imagens e inserção no banco.
+    - Observado que após o envio da solicitação, a tela ficava preta devido à ausência de uma tela de confirmação ou histórico; próxima etapa sugerida é criar uma tela de confirmação ou histórico de solicitações para melhorar a navegação do usuário.
 
 ---
 
