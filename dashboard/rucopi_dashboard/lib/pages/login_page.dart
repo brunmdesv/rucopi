@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
-import 'package:rucopi_dashboard/pages/solicitacoes_page.dart';
+import 'dashboard_home_page.dart';
 
 class LoginPage extends StatefulWidget {
   const LoginPage({super.key});
@@ -28,7 +28,7 @@ class _LoginPageState extends State<LoginPage> {
       if (response.user != null) {
         Navigator.pushReplacement(
           context,
-          MaterialPageRoute(builder: (_) => const SolicitacoesPage()),
+          MaterialPageRoute(builder: (_) => const DashboardHomePage()),
         );
       } else {
         setState(() {

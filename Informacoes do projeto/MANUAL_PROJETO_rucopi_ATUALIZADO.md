@@ -389,6 +389,12 @@ flutter doctor
     - Testado e validado o fluxo completo de envio de solicitação, incluindo upload de imagens e inserção no banco.
     - Observado que após o envio da solicitação, a tela ficava preta devido à ausência de uma tela de confirmação ou histórico; próxima etapa sugerida é criar uma tela de confirmação ou histórico de solicitações para melhorar a navegação do usuário.
 
+11. **Implementação da dashboard inicial no painel administrativo**
+    - Criada uma tela inicial moderna e responsiva para o dashboard web, exibindo cards com o total de solicitações, solicitações pendentes, em andamento e concluídas.
+    - Adicionados atalhos úteis no AppBar para atualização dos dados e navegação para a listagem completa de solicitações.
+    - Definida a dashboard como destino padrão após o login de administradores e operadores.
+    - Layout responsivo e visualmente agradável, facilitando a visão geral e a gestão das operações pela equipe da prefeitura.
+
 ---
 
 **Próxima Etapa:**

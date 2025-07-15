@@ -16,7 +16,7 @@
 - [x] Testar login com usuário criado manualmente no Supabase
 
 ### 2. Estrutura de Navegação
-- [ ] Definir rotas principais do dashboard (login, lista de solicitações, detalhes, etc)
+- [x] Definir rotas principais do dashboard (login, dashboard inicial, lista de solicitações, detalhes, etc)
 - [x] Implementar navegação segura (logout, proteção de rotas)
 
 ### 3. Listagem de Solicitações
@@ -36,6 +36,7 @@
 - [ ] Implementar exportação de relatórios (CSV/PDF)
 
 ### 6. Interface e Usabilidade
+- [x] Criar dashboard inicial moderna e bonita, com cards de totais e atalhos úteis
 - [ ] Garantir responsividade e boa experiência de uso
 - [ ] Adicionar feedbacks visuais (loadings, mensagens de sucesso/erro)
 
