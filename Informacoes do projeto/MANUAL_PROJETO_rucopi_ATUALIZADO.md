@@ -1,6 +1,6 @@
 # 📖 MANUAL DO PROJETO - rucopi
 
-## 📋 **INFORMAÇÕES GERAIS**
+## 📋 INFORMAÇÕES GERAIS
 
 **Nome do Projeto:** rucopi - Sistema de Coleta de Entulho para Prefeitura Municipal de Piracuruca-PI
 **Tecnologias Principais:** Flutter, Dart, Supabase
@@ -9,31 +9,27 @@
 
 ---
 
-## 🎯 **VISÃO GERAL E OBJETIVOS**
+## 🎯 VISÃO GERAL E OBJETIVOS
 
 O projeto rucopi visa desenvolver um sistema completo para otimizar a gestão da coleta de entulho na Prefeitura Municipal de Piracuruca-PI. Este sistema será composto por um aplicativo móvel para moradores, permitindo a solicitação e acompanhamento de coletas, e um painel administrativo web para a gestão das operações pela prefeitura. O objetivo principal é aprimorar a eficiência do serviço, a comunicação com os cidadãos e a fiscalização do descarte de resíduos.
 
 ---
 
-## 🏛️ **ARQUITETURA DO SISTEMA**
+## 🏛️ ARQUITETURA DO SISTEMA
 
-### **Componentes Principais:**
+### Componentes Principais:
 
 1.  **Mobile App (Flutter):** Aplicativo nativo para dispositivos Android e iOS, destinado aos moradores. Permitirá o cadastro, login, solicitação de coleta (com envio de fotos e descrição), acompanhamento do status das solicitações e histórico.
-
 2.  **Dashboard Web (Flutter):** Painel administrativo acessível via navegador web, para uso exclusivo da equipe da prefeitura. Oferecerá funcionalidades como gestão de solicitações, visualização em mapa, cadastro de equipes, relatórios e auditoria.
-
 3.  **Backend (Supabase):** A espinha dorsal do sistema, responsável pela autenticação de usuários, armazenamento de dados (banco de dados relacional), e gerenciamento de arquivos (fotos). Será utilizado o Supabase, uma alternativa de código aberto ao Firebase, que oferece um conjunto robusto de ferramentas para desenvolvimento de aplicações.
 
-### **Detalhes do Backend com Supabase:**
+### Detalhes do Backend com Supabase:
 
-Conforme solicitado, o projeto utilizará o Supabase como principal solução de backend, aproveitando sua camada gratuita para as funcionalidades iniciais. O Supabase oferece:
+- **Autenticação:** Gerenciamento de usuários via e-mail e senha, com suporte a outras formas de autenticação no futuro, se necessário.
+- **Banco de Dados (PostgreSQL):** Estrutura relacional para usuários, solicitações, equipes, etc.
+- **Armazenamento (Storage):** Utilizado para fotos das solicitações de coleta, com políticas de acesso e limites definidos.
 
-*   **Autenticação:** Gerenciamento de usuários via e-mail e senha, com suporte a outras formas de autenticação no futuro, se necessário. O Supabase Auth é uma solução completa para autenticação de usuários, incluindo gerenciamento de sessões e políticas de segurança.
-*   **Banco de Dados (PostgreSQL):** Um banco de dados relacional robusto e escalável, ideal para armazenar informações estruturadas como dados de usuários, solicitações de coleta, equipes, etc. A flexibilidade do PostgreSQL permite a criação de esquemas complexos e a execução de consultas eficientes.
-*   **Armazenamento (Storage):** Embora a solicitação inicial mencione não querer Storage, o Supabase oferece um serviço de armazenamento de objetos (Supabase Storage) que é ideal para guardar as fotos das solicitações de coleta. É uma solução eficiente e segura para lidar com arquivos binários, e será detalhado como utilizá-lo de forma otimizada para as fotos, garantindo que não haja custos inesperados na camada gratuita.
-
-### **Estrutura de Pastas (Proposta Inicial):**
+### Estrutura de Pastas (Proposta Inicial):
 
 ```
 rucopi/
@@ -54,7 +50,7 @@ rucopi/
 
 ---
 
-## 📅 **LINHA DO TEMPO E FASES DO PROJETO**
+## 📅 LINHA DO TEMPO E FASES DO PROJETO
 
 Este projeto será dividido em fases, com objetivos claros e entregáveis em cada uma. A ideia é seguir um desenvolvimento iterativo, garantindo que as funcionalidades mais críticas sejam implementadas primeiro.
 
@@ -212,7 +208,7 @@ A fase final do projeto, focada na implantação e disponibilização do sistema
 
 ---
 
-## 🎯 **ROADMAP DE PRIORIDADES**
+## 🎯 ROADMAP DE PRIORIDADES
 
 Este roadmap define a ordem de importância das funcionalidades, garantindo que o MVP (Produto Mínimo Viável) seja entregue primeiro.
 
@@ -269,7 +265,7 @@ Funcionalidades que podem ser consideradas em etapas posteriores do projeto, ap�
 
 ---
 
-## ⚠️ **QUESTÕES IMPORTANTES E DECISÕES DE ARQUITETURA**
+## ⚠️ QUESTÕES IMPORTANTES E DECISÕES DE ARQUITETURA
 
 ### **1. Separação de Projetos Flutter:**
 
@@ -289,7 +285,7 @@ Funcionalidades que podem ser consideradas em etapas posteriores do projeto, ap�
 
 ---
 
-## 🔧 **COMANDOS ÚTEIS PARA O DESENVOLVIMENTO**
+## 🔧 COMANDOS ÚTEIS PARA O DESENVOLVIMENTO
 
 Estes comandos são essenciais para navegar e gerenciar os projetos Flutter durante o desenvolvimento:
 
@@ -331,8 +327,6 @@ flutter doctor
 ## 📘 DIÁRIO DE PROGRESSO DO DESENVOLVIMENTO
 
 ### 🗓️ Atualizado em 15/07/2025
-
-**Fase 1 – Planejamento e Estrutura (Progresso Detalhado)**
 
 #### ✅ Etapas já concluídas até agora:
 
@@ -380,5 +374,38 @@ flutter doctor
    - Definido limite de 2MB por imagem.
    - Política de `INSERT` criada para permitir apenas uploads de usuários autenticados (`auth.role() = 'authenticated'`).
 
+8. **Integração do Supabase com os projetos Flutter**
+   - Adicionada dependência `supabase_flutter: ^2.9.1` no `pubspec.yaml` do mobile.
+   - Criado arquivo `.env` na raiz do projeto mobile com as chaves `SUPABASE_URL` e `SUPABASE_ANON_KEY`.
+   - Instalado e configurado o pacote `flutter_dotenv` para carregar variáveis de ambiente.
+   - Inicialização do Supabase no `main.dart` usando as variáveis do `.env`.
+   - Implementada tela de login e cadastro, com fluxo correto de autenticação e criação de perfil do morador.
+   - Testado cadastro, login e inserção de perfil, garantindo que o campo `id` do morador corresponde ao `auth.uid()` do usuário autenticado.
+   - Ajustado código para garantir que o insert em `moradores` só ocorre após autenticação.
+   - Adicionada tela de cadastro com campos completos e integração com Supabase.
+   - Adicionada tela de login com redirecionamento e feedback ao usuário.
+
+9. **Ajuste e criação de políticas RLS detalhadas**
+   - Políticas de RLS da tabela `moradores` revisadas e atualizadas:
+     - `SELECT`: `USING (auth.uid() = id)`
+     - `INSERT`: `WITH CHECK (auth.uid() = id)`
+     - `UPDATE`: `USING (auth.uid() = id)`
+     - (Opcional) `DELETE`: `USING (auth.uid() = id)`
+   - Políticas de RLS da tabela `solicitacoes` criadas:
+     - `SELECT`: `USING (auth.uid() = morador_id)`
+     - `INSERT`: `WITH CHECK (auth.uid() = morador_id)`
+     - `UPDATE`: `USING (auth.uid() = morador_id)`
+     - (Opcional) `DELETE`: `USING (auth.uid() = morador_id)`
+   - Todas as políticas criadas via SQL Editor para garantir rastreabilidade e documentação.
+
+10. **Testes e validação do fluxo completo**
+    - Testado cadastro de usuário, login, criação de perfil e solicitação de coleta.
+    - Validado que as políticas RLS estão funcionando corretamente, bloqueando acessos indevidos e permitindo apenas operações do próprio usuário.
+    - Corrigido erro de Unauthorized após insert, ajustando o uso do método `.select()` e revisando as políticas de SELECT.
+
+---
+
 **Próxima Etapa:**
-➡️ Início da **integração do Supabase com os projetos Flutter** (`rucopi_mobile` e `rucopi_dashboard`).
+➡️ Início da integração do Supabase com o projeto `rucopi_dashboard` (painel administrativo web) e implementação das políticas de acesso para administradores e operadores.
+
+---

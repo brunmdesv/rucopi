@@ -1,6 +1,6 @@
-
 import 'package:flutter/material.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
+import 'nova_solicitacao_page.dart';
 
 class LoginPage extends StatefulWidget {
   const LoginPage({super.key});
@@ -27,12 +27,15 @@ class _LoginPageState extends State<LoginPage> {
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(content: Text('Login realizado com sucesso')),
         );
-        // Redireciona para a Home (substitua pela sua rota)
+        Navigator.pushReplacement(
+          context,
+          MaterialPageRoute(builder: (_) => const NovaSolicitacaoPage()),
+        );
       }
     } on AuthException catch (e) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text(e.message)),
-      );
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(SnackBar(content: Text(e.message)));
     } finally {
       setState(() => carregando = false);
     }
@@ -46,12 +49,21 @@ class _LoginPageState extends State<LoginPage> {
         padding: const EdgeInsets.all(16),
         child: Column(
           children: [
-            TextField(controller: emailController, decoration: const InputDecoration(labelText: 'E-mail')),
-            TextField(controller: senhaController, obscureText: true, decoration: const InputDecoration(labelText: 'Senha')),
+            TextField(
+              controller: emailController,
+              decoration: const InputDecoration(labelText: 'E-mail'),
+            ),
+            TextField(
+              controller: senhaController,
+              obscureText: true,
+              decoration: const InputDecoration(labelText: 'Senha'),
+            ),
             const SizedBox(height: 16),
             ElevatedButton(
               onPressed: carregando ? null : login,
-              child: carregando ? const CircularProgressIndicator() : const Text('Entrar'),
+              child: carregando
+                  ? const CircularProgressIndicator()
+                  : const Text('Entrar'),
             ),
             const SizedBox(height: 16),
             TextButton(
