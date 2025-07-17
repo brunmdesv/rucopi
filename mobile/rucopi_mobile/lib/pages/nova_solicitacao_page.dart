@@ -75,7 +75,7 @@ class _NovaSolicitacaoPageState extends State<NovaSolicitacaoPage> {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(content: Text('Solicitação enviada com sucesso!')),
       );
-      Navigator.pop(context);
+      Navigator.pop(context, true);
     } catch (e) {
       ScaffoldMessenger.of(
         context,

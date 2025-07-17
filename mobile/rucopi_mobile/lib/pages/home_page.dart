@@ -17,7 +17,7 @@ class HomePage extends StatefulWidget {
   State<HomePage> createState() => _HomePageState();
 }
 
-class _HomePageState extends State<HomePage> {
+class _HomePageState extends State<HomePage> with WidgetsBindingObserver {
   String nomeUsuario = '';
   int solicitacoesPendentes = 0;
   int solicitacoesTotais = 0;
@@ -25,10 +25,25 @@ class _HomePageState extends State<HomePage> {
   List<dynamic> solicitacoesRecentes = [];
 
   @override
+  void didChangeAppLifecycleState(AppLifecycleState state) {
+    if (state == AppLifecycleState.resumed) {
+      _carregarDados();
+      _carregarSolicitacoesRecentes();
+    }
+  }
+
+  @override
   void initState() {
     super.initState();
+    WidgetsBinding.instance.addObserver(this);
     _carregarDados();
     _carregarSolicitacoesRecentes();
+  }
+
+  @override
+  void dispose() {
+    WidgetsBinding.instance.removeObserver(this);
+    super.dispose();
   }
 
   Future<void> _carregarDados() async {
@@ -133,19 +148,8 @@ class _HomePageState extends State<HomePage> {
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     // Header com informações do usuário
-                    Container(
-                      width: double.infinity,
-                      padding: const EdgeInsets.all(AppSpacing.section),
-                      decoration: BoxDecoration(
-                        gradient: LinearGradient(
-                          begin: Alignment.topLeft,
-                          end: Alignment.bottomRight,
-                          colors: [
-                            theme.primaryColor.withOpacity(0.1),
-                            theme.primaryColor.withOpacity(0.05),
-                          ],
-                        ),
-                      ),
+                    HomeSectionCard(
+                      margin: const EdgeInsets.only(top: 8, bottom: 8),
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
@@ -196,17 +200,10 @@ class _HomePageState extends State<HomePage> {
                       ),
                     ),
 
-                    const SizedBox(height: 6),
+                    const SizedBox(height: 0),
 
                     // Seção de estatísticas + botão principal em um único card
-                    Container(
-                      width: double.infinity,
-                      margin: const EdgeInsets.symmetric(vertical: 12),
-                      padding: const EdgeInsets.all(20),
-                      decoration: BoxDecoration(
-                        color: theme.primaryColor.withOpacity(0.08),
-                        borderRadius: BorderRadius.circular(16),
-                      ),
+                    HomeSectionCard(
                       child: Column(
                         children: [
                           Row(
@@ -264,7 +261,7 @@ class _HomePageState extends State<HomePage> {
                                   ),
                                 ),
                               ),
-                              const SizedBox(width: 16),
+                              const SizedBox(width: 8),
                               Expanded(
                                 child: Container(
                                   padding: const EdgeInsets.all(20),
@@ -341,20 +338,22 @@ class _HomePageState extends State<HomePage> {
                               ),
                             ],
                           ),
-                          const SizedBox(height: 24),
+                          const SizedBox(height: 12),
                           // Botão principal
                           GestureDetector(
-                            onTap:
-                                widget.onAdd ??
-                                () {
-                                  Navigator.push(
-                                    context,
-                                    MaterialPageRoute(
-                                      builder: (context) =>
-                                          const NovaSolicitacaoPage(),
-                                    ),
-                                  );
-                                },
+                            onTap: () async {
+                              final result = await Navigator.push(
+                                context,
+                                MaterialPageRoute(
+                                  builder: (context) =>
+                                      const NovaSolicitacaoPage(),
+                                ),
+                              );
+                              if (result == true) {
+                                _carregarDados();
+                                _carregarSolicitacoesRecentes();
+                              }
+                            },
                             child: Container(
                               width: double.infinity,
                               padding: const EdgeInsets.symmetric(
@@ -406,14 +405,8 @@ class _HomePageState extends State<HomePage> {
                     const SizedBox(height: 0),
 
                     // Seção Histórico de Solicitações em um único card
-                    Container(
-                      width: double.infinity,
-                      margin: const EdgeInsets.symmetric(vertical: 12),
-                      padding: const EdgeInsets.all(20),
-                      decoration: BoxDecoration(
-                        color: theme.primaryColor.withOpacity(0.08),
-                        borderRadius: BorderRadius.circular(16),
-                      ),
+                    HomeSectionCard(
+                      margin: const EdgeInsets.only(top: 5, bottom: 2),
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
@@ -447,7 +440,7 @@ class _HomePageState extends State<HomePage> {
                               ),
                             ],
                           ),
-                          const SizedBox(height: 20),
+                          const SizedBox(height: 15),
                           if (solicitacoesRecentes.isEmpty)
                             Text(
                               'Nenhuma solicitação recente.',
@@ -456,32 +449,40 @@ class _HomePageState extends State<HomePage> {
                           for (final solicitacao in solicitacoesRecentes)
                             _buildSolicitacaoResumoCard(context, solicitacao),
                           if (solicitacoesRecentes.isNotEmpty) ...[
-                            const SizedBox(height: 8),
+                            const SizedBox(height: 0),
                             Center(
-                              child: ElevatedButton.icon(
-                                onPressed: () {
-                                  Navigator.push(
-                                    context,
-                                    MaterialPageRoute(
-                                      builder: (context) =>
-                                          const HistoricoSolicitacoesPage(),
+                              child: SizedBox(
+                                width: double.infinity,
+                                child: ElevatedButton.icon(
+                                  onPressed: () {
+                                    Navigator.push(
+                                      context,
+                                      MaterialPageRoute(
+                                        builder: (context) =>
+                                            const HistoricoSolicitacoesPage(),
+                                      ),
+                                    );
+                                  },
+                                  icon: const Icon(Icons.list_alt),
+                                  label: const Text(
+                                    'Ver todas as solicitações',
+                                  ),
+                                  style: ElevatedButton.styleFrom(
+                                    backgroundColor: theme.primaryColor,
+                                    foregroundColor: Colors.white,
+                                    shape: RoundedRectangleBorder(
+                                      borderRadius: BorderRadius.circular(16),
                                     ),
-                                  );
-                                },
-                                icon: const Icon(Icons.list_alt),
-                                label: const Text('Ver todas as solicitações'),
-                                style: ElevatedButton.styleFrom(
-                                  backgroundColor: theme.primaryColor,
-                                  foregroundColor: Colors.white,
-                                  shape: RoundedRectangleBorder(
-                                    borderRadius: BorderRadius.circular(12),
+                                    padding: const EdgeInsets.symmetric(
+                                      vertical: 16,
+                                      horizontal: 20,
+                                    ),
+                                    textStyle: theme.textTheme.titleMedium
+                                        ?.copyWith(
+                                          color: Colors.white,
+                                          fontWeight: FontWeight.w600,
+                                        ),
                                   ),
-                                  padding: const EdgeInsets.symmetric(
-                                    horizontal: 24,
-                                    vertical: 12,
-                                  ),
-                                  textStyle: theme.textTheme.bodyMedium
-                                      ?.copyWith(fontWeight: FontWeight.bold),
                                 ),
                               ),
                             ),
@@ -563,7 +564,7 @@ class _HomePageState extends State<HomePage> {
               ),
               child: Icon(icon, color: theme.primaryColor, size: 24),
             ),
-            const SizedBox(width: 16),
+            const SizedBox(width: 6),
             Expanded(
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
@@ -627,8 +628,8 @@ class _HomePageState extends State<HomePage> {
       },
       child: Container(
         width: double.infinity,
-        margin: const EdgeInsets.only(bottom: 16),
-        padding: const EdgeInsets.all(20),
+        margin: const EdgeInsets.only(bottom: 10),
+        padding: const EdgeInsets.symmetric(vertical: 10, horizontal: 12),
         decoration: BoxDecoration(
           color: theme.primaryColor.withOpacity(0.08),
           borderRadius: BorderRadius.circular(16),
@@ -641,8 +642,8 @@ class _HomePageState extends State<HomePage> {
               children: [
                 Row(
                   children: [
-                    Icon(statusIcon, color: statusColor, size: 22),
-                    const SizedBox(width: 8),
+                    Icon(statusIcon, color: statusColor, size: 20),
+                    const SizedBox(width: 6),
                     Text(
                       statusText,
                       style: theme.textTheme.bodyMedium?.copyWith(
@@ -657,19 +658,19 @@ class _HomePageState extends State<HomePage> {
                     Icon(
                       Icons.calendar_today_outlined,
                       color: theme.primaryColor,
-                      size: 18,
+                      size: 16,
                     ),
-                    const SizedBox(width: 6),
-                    Text(dataStr, style: theme.textTheme.bodyMedium),
+                    const SizedBox(width: 4),
+                    Text(dataStr, style: theme.textTheme.bodySmall),
                   ],
                 ),
               ],
             ),
-            const SizedBox(height: 12),
+            const SizedBox(height: 6),
             Center(
               child: Text(
                 endereco,
-                style: theme.textTheme.bodyMedium,
+                style: theme.textTheme.bodySmall,
                 maxLines: 2,
                 overflow: TextOverflow.ellipsis,
                 textAlign: TextAlign.center,
@@ -687,4 +688,26 @@ String _primeiroNomeESobrenome(String nomeCompleto) {
   final partes = nomeCompleto.trim().split(' ');
   if (partes.length <= 2) return nomeCompleto;
   return '${partes[0]} ${partes[1]}';
+}
+
+// Widget reutilizável para padronizar os cards/seções da home
+class HomeSectionCard extends StatelessWidget {
+  final Widget child;
+  final EdgeInsetsGeometry? margin;
+  const HomeSectionCard({required this.child, this.margin, Key? key})
+    : super(key: key);
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    return Container(
+      width: double.infinity,
+      margin: margin ?? const EdgeInsets.symmetric(vertical: 8),
+      padding: const EdgeInsets.all(20),
+      decoration: BoxDecoration(
+        color: theme.primaryColor.withOpacity(0.08),
+        borderRadius: BorderRadius.circular(16),
+      ),
+      child: child,
+    );
+  }
 }
