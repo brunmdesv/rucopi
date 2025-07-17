@@ -15,7 +15,6 @@ class _LoginPageState extends State<LoginPage> {
   final senhaController = TextEditingController();
   bool carregando = false;
   bool _obscurePassword = true;
-  bool lembrarDeMim = false;
 
   void login() async {
     setState(() => carregando = true);
@@ -128,15 +127,6 @@ class _LoginPageState extends State<LoginPage> {
                 const SizedBox(height: 12),
                 Row(
                   children: [
-                    Checkbox(
-                      value: lembrarDeMim,
-                      onChanged: (v) =>
-                          setState(() => lembrarDeMim = v ?? false),
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(4),
-                      ),
-                    ),
-                    const Text('Lembrar de mim'),
                     const Spacer(),
                     TextButton(
                       onPressed: () {},
