@@ -2,6 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import '../main.dart';
 import 'cadastro_page.dart';
+import '../widgets/app_padrao.dart';
+import '../theme/app_styles.dart';
 
 class LoginPage extends StatefulWidget {
   const LoginPage({super.key});
@@ -54,54 +56,40 @@ class _LoginPageState extends State<LoginPage> {
 
   @override
   Widget build(BuildContext context) {
-    final size = MediaQuery.of(context).size;
-    return Scaffold(
-      backgroundColor: const Color(0xFFF8F6F2),
-      body: Center(
+    final theme = Theme.of(context);
+    final isDark = theme.brightness == Brightness.dark;
+    return AppPadrao(
+      mostrarAppBar: false,
+      child: Center(
         child: SingleChildScrollView(
-          padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 32),
+          padding: EdgeInsets.zero,
           child: Container(
             constraints: const BoxConstraints(maxWidth: 400),
-            padding: const EdgeInsets.all(24),
+            padding: const EdgeInsets.all(AppSpacing.page),
             decoration: BoxDecoration(
-              color: Colors.white,
-              borderRadius: BorderRadius.circular(32),
-              boxShadow: [
-                BoxShadow(
-                  color: Colors.black12,
-                  blurRadius: 16,
-                  offset: Offset(0, 8),
-                ),
-              ],
+              color: theme.cardColor,
+              borderRadius: BorderRadius.circular(AppRadius.card),
+              boxShadow: isDark ? AppShadows.dark : AppShadows.light,
             ),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.stretch,
               children: [
-                const SizedBox(height: 8),
-                const Text(
+                const SizedBox(height: AppSpacing.item),
+                Text(
                   'Entrar',
-                  style: TextStyle(
-                    fontSize: 28,
-                    fontWeight: FontWeight.bold,
-                    letterSpacing: 0.5,
-                  ),
+                  style: theme.textTheme.titleLarge,
                   textAlign: TextAlign.left,
                 ),
-                const SizedBox(height: 32),
+                const SizedBox(height: AppSpacing.section * 2),
                 TextField(
                   controller: emailController,
                   keyboardType: TextInputType.emailAddress,
                   decoration: InputDecoration(
                     labelText: 'Endereço de e-mail',
                     prefixIcon: const Icon(Icons.email_outlined),
-                    border: OutlineInputBorder(
-                      borderRadius: BorderRadius.circular(16),
-                    ),
-                    filled: true,
-                    fillColor: const Color(0xFFF5F5F5),
                   ),
                 ),
-                const SizedBox(height: 20),
+                const SizedBox(height: AppSpacing.section),
                 TextField(
                   controller: senhaController,
                   obscureText: _obscurePassword,
@@ -117,14 +105,9 @@ class _LoginPageState extends State<LoginPage> {
                       onPressed: () =>
                           setState(() => _obscurePassword = !_obscurePassword),
                     ),
-                    border: OutlineInputBorder(
-                      borderRadius: BorderRadius.circular(16),
-                    ),
-                    filled: true,
-                    fillColor: const Color(0xFFF5F5F5),
                   ),
                 ),
-                const SizedBox(height: 12),
+                const SizedBox(height: AppSpacing.item),
                 Row(
                   children: [
                     const Spacer(),
@@ -132,28 +115,17 @@ class _LoginPageState extends State<LoginPage> {
                       onPressed: () {},
                       child: const Text(
                         'Esqueceu a senha?',
-                        style: TextStyle(color: Color(0xFFFF9900)),
+                        style: TextStyle(color: AppColors.lightSecondary),
                       ),
                       style: TextButton.styleFrom(padding: EdgeInsets.zero),
                     ),
                   ],
                 ),
-                const SizedBox(height: 16),
+                const SizedBox(height: AppSpacing.section),
                 SizedBox(
                   height: 52,
                   child: ElevatedButton(
                     onPressed: carregando ? null : login,
-                    style: ElevatedButton.styleFrom(
-                      backgroundColor: const Color(0xFFFF9900),
-                      foregroundColor: Colors.white,
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(16),
-                      ),
-                      textStyle: const TextStyle(
-                        fontSize: 18,
-                        fontWeight: FontWeight.bold,
-                      ),
-                    ),
                     child: carregando
                         ? const CircularProgressIndicator(
                             valueColor: AlwaysStoppedAnimation<Color>(
@@ -163,11 +135,14 @@ class _LoginPageState extends State<LoginPage> {
                         : const Text('Continuar'),
                   ),
                 ),
-                const SizedBox(height: 24),
+                const SizedBox(height: AppSpacing.section * 1.5),
                 Row(
                   mainAxisAlignment: MainAxisAlignment.center,
                   children: [
-                    const Text("Não tem uma conta? "),
+                    Text(
+                      "Não tem uma conta? ",
+                      style: theme.textTheme.bodyMedium,
+                    ),
                     GestureDetector(
                       onTap: carregando
                           ? null
@@ -179,17 +154,17 @@ class _LoginPageState extends State<LoginPage> {
                                 ),
                               );
                             },
-                      child: const Text(
+                      child: Text(
                         'Criar conta',
-                        style: TextStyle(
-                          color: Color(0xFFFF9900),
+                        style: theme.textTheme.bodyMedium?.copyWith(
+                          color: theme.colorScheme.secondary,
                           fontWeight: FontWeight.bold,
                         ),
                       ),
                     ),
                   ],
                 ),
-                const SizedBox(height: 8),
+                const SizedBox(height: AppSpacing.item),
               ],
             ),
           ),

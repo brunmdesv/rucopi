@@ -1,8 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
+import '../widgets/app_padrao.dart';
+import '../theme/app_styles.dart';
 
 class CadastroPage extends StatefulWidget {
-  const CadastroPage({super.key});
+  const CadastroPage({Key? key}) : super(key: key);
 
   @override
   State<CadastroPage> createState() => _CadastroPageState();
@@ -59,201 +61,149 @@ class _CadastroPageState extends State<CadastroPage> {
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      backgroundColor: const Color(0xFFF8F6F2),
-      body: Center(
-        child: SingleChildScrollView(
-          padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 32),
-          child: Container(
-            constraints: const BoxConstraints(maxWidth: 400),
-            padding: const EdgeInsets.all(24),
-            decoration: BoxDecoration(
-              color: Colors.white,
-              borderRadius: BorderRadius.circular(32),
-              boxShadow: [
-                BoxShadow(
-                  color: Colors.black12,
-                  blurRadius: 16,
-                  offset: Offset(0, 8),
+    final theme = Theme.of(context);
+    final isDark = theme.brightness == Brightness.dark;
+    return AppPadrao(
+      titulo: 'Cadastro',
+      leading: Navigator.of(context).canPop()
+          ? IconButton(
+              icon: const Icon(Icons.arrow_back),
+              onPressed: () => Navigator.of(context).pop(),
+            )
+          : null,
+      child: SingleChildScrollView(
+        child: Container(
+          constraints: const BoxConstraints(maxWidth: 500),
+          padding: const EdgeInsets.all(AppSpacing.page),
+          decoration: BoxDecoration(
+            color: theme.cardColor,
+            borderRadius: BorderRadius.circular(AppRadius.card),
+            boxShadow: isDark ? AppShadows.dark : AppShadows.light,
+          ),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              const SizedBox(height: AppSpacing.item),
+              Text(
+                'Criar Conta',
+                style: theme.textTheme.titleLarge,
+                textAlign: TextAlign.left,
+              ),
+              const SizedBox(height: AppSpacing.section * 2),
+              TextField(
+                controller: emailController,
+                keyboardType: TextInputType.emailAddress,
+                decoration: const InputDecoration(
+                  labelText: 'Endereço de e-mail',
+                  prefixIcon: Icon(Icons.email_outlined),
                 ),
-              ],
-            ),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.stretch,
-              children: [
-                const SizedBox(height: 8),
-                const Text(
-                  'Criar Conta',
-                  style: TextStyle(
-                    fontSize: 28,
-                    fontWeight: FontWeight.bold,
-                    letterSpacing: 0.5,
-                  ),
-                  textAlign: TextAlign.left,
-                ),
-                const SizedBox(height: 32),
-                TextField(
-                  controller: emailController,
-                  keyboardType: TextInputType.emailAddress,
-                  decoration: InputDecoration(
-                    labelText: 'Endereço de e-mail',
-                    prefixIcon: const Icon(Icons.email_outlined),
-                    border: OutlineInputBorder(
-                      borderRadius: BorderRadius.circular(16),
+              ),
+              const SizedBox(height: AppSpacing.section),
+              TextField(
+                controller: senhaController,
+                obscureText: _obscurePassword,
+                decoration: InputDecoration(
+                  labelText: 'Senha',
+                  prefixIcon: const Icon(Icons.lock_outline),
+                  suffixIcon: IconButton(
+                    icon: Icon(
+                      _obscurePassword
+                          ? Icons.visibility_off_outlined
+                          : Icons.visibility_outlined,
                     ),
-                    filled: true,
-                    fillColor: const Color(0xFFF5F5F5),
-                  ),
-                ),
-                const SizedBox(height: 16),
-                TextField(
-                  controller: senhaController,
-                  obscureText: _obscurePassword,
-                  decoration: InputDecoration(
-                    labelText: 'Senha',
-                    prefixIcon: const Icon(Icons.lock_outline),
-                    suffixIcon: IconButton(
-                      icon: Icon(
-                        _obscurePassword
-                            ? Icons.visibility_off_outlined
-                            : Icons.visibility_outlined,
-                      ),
-                      onPressed: () =>
-                          setState(() => _obscurePassword = !_obscurePassword),
-                    ),
-                    border: OutlineInputBorder(
-                      borderRadius: BorderRadius.circular(16),
-                    ),
-                    filled: true,
-                    fillColor: const Color(0xFFF5F5F5),
+                    onPressed: () =>
+                        setState(() => _obscurePassword = !_obscurePassword),
                   ),
                 ),
-                const SizedBox(height: 16),
-                TextField(
-                  controller: confirmarSenhaController,
-                  obscureText: _obscureConfirmPassword,
-                  decoration: InputDecoration(
-                    labelText: 'Confirmar senha',
-                    prefixIcon: const Icon(Icons.lock_outline),
-                    suffixIcon: IconButton(
-                      icon: Icon(
-                        _obscureConfirmPassword
-                            ? Icons.visibility_off_outlined
-                            : Icons.visibility_outlined,
-                      ),
-                      onPressed: () => setState(
-                        () =>
-                            _obscureConfirmPassword = !_obscureConfirmPassword,
-                      ),
+              ),
+              const SizedBox(height: AppSpacing.section),
+              TextField(
+                controller: confirmarSenhaController,
+                obscureText: _obscureConfirmPassword,
+                decoration: InputDecoration(
+                  labelText: 'Confirmar senha',
+                  prefixIcon: const Icon(Icons.lock_outline),
+                  suffixIcon: IconButton(
+                    icon: Icon(
+                      _obscureConfirmPassword
+                          ? Icons.visibility_off_outlined
+                          : Icons.visibility_outlined,
                     ),
-                    border: OutlineInputBorder(
-                      borderRadius: BorderRadius.circular(16),
+                    onPressed: () => setState(
+                      () => _obscureConfirmPassword = !_obscureConfirmPassword,
                     ),
-                    filled: true,
-                    fillColor: const Color(0xFFF5F5F5),
                   ),
                 ),
-                const SizedBox(height: 16),
-                TextField(
-                  controller: nomeController,
-                  decoration: InputDecoration(
-                    labelText: 'Nome completo',
-                    prefixIcon: const Icon(Icons.person_outline),
-                    border: OutlineInputBorder(
-                      borderRadius: BorderRadius.circular(16),
-                    ),
-                    filled: true,
-                    fillColor: const Color(0xFFF5F5F5),
-                  ),
+              ),
+              const SizedBox(height: AppSpacing.section),
+              TextField(
+                controller: nomeController,
+                decoration: const InputDecoration(
+                  labelText: 'Nome completo',
+                  prefixIcon: Icon(Icons.person_outline),
                 ),
-                const SizedBox(height: 16),
-                TextField(
-                  controller: cpfController,
-                  decoration: InputDecoration(
-                    labelText: 'CPF',
-                    prefixIcon: const Icon(Icons.badge_outlined),
-                    border: OutlineInputBorder(
-                      borderRadius: BorderRadius.circular(16),
-                    ),
-                    filled: true,
-                    fillColor: const Color(0xFFF5F5F5),
-                  ),
+              ),
+              const SizedBox(height: AppSpacing.section),
+              TextField(
+                controller: cpfController,
+                decoration: const InputDecoration(
+                  labelText: 'CPF',
+                  prefixIcon: Icon(Icons.badge_outlined),
                 ),
-                const SizedBox(height: 16),
-                TextField(
-                  controller: whatsappController,
-                  decoration: InputDecoration(
-                    labelText: 'WhatsApp',
-                    prefixIcon: const Icon(Icons.phone_outlined),
-                    border: OutlineInputBorder(
-                      borderRadius: BorderRadius.circular(16),
-                    ),
-                    filled: true,
-                    fillColor: const Color(0xFFF5F5F5),
-                  ),
+              ),
+              const SizedBox(height: AppSpacing.section),
+              TextField(
+                controller: whatsappController,
+                decoration: const InputDecoration(
+                  labelText: 'WhatsApp',
+                  prefixIcon: Icon(Icons.phone_outlined),
                 ),
-                const SizedBox(height: 16),
-                TextField(
-                  controller: enderecoController,
-                  decoration: InputDecoration(
-                    labelText: 'Endereço',
-                    prefixIcon: const Icon(Icons.location_on_outlined),
-                    border: OutlineInputBorder(
-                      borderRadius: BorderRadius.circular(16),
-                    ),
-                    filled: true,
-                    fillColor: const Color(0xFFF5F5F5),
-                  ),
+              ),
+              const SizedBox(height: AppSpacing.section),
+              TextField(
+                controller: enderecoController,
+                decoration: const InputDecoration(
+                  labelText: 'Endereço',
+                  prefixIcon: Icon(Icons.location_on_outlined),
                 ),
-                const SizedBox(height: 24),
-                SizedBox(
-                  height: 52,
-                  child: ElevatedButton(
-                    onPressed: carregando ? null : cadastrar,
-                    style: ElevatedButton.styleFrom(
-                      backgroundColor: const Color(0xFFFF9900),
-                      foregroundColor: Colors.white,
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(16),
-                      ),
-                      textStyle: const TextStyle(
-                        fontSize: 18,
+              ),
+              const SizedBox(height: AppSpacing.section * 1.5),
+              SizedBox(
+                height: 52,
+                child: ElevatedButton(
+                  onPressed: carregando ? null : cadastrar,
+                  child: carregando
+                      ? const CircularProgressIndicator(
+                          valueColor: AlwaysStoppedAnimation<Color>(
+                            Colors.white,
+                          ),
+                        )
+                      : const Text('Continuar'),
+                ),
+              ),
+              const SizedBox(height: AppSpacing.section * 1.5),
+              Row(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  Text("Já tem uma conta? ", style: theme.textTheme.bodyMedium),
+                  GestureDetector(
+                    onTap: carregando
+                        ? null
+                        : () {
+                            Navigator.pop(context);
+                          },
+                    child: Text(
+                      'Entrar',
+                      style: theme.textTheme.bodyMedium?.copyWith(
+                        color: theme.colorScheme.secondary,
                         fontWeight: FontWeight.bold,
                       ),
                     ),
-                    child: carregando
-                        ? const CircularProgressIndicator(
-                            valueColor: AlwaysStoppedAnimation<Color>(
-                              Colors.white,
-                            ),
-                          )
-                        : const Text('Continuar'),
                   ),
-                ),
-                const SizedBox(height: 24),
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: [
-                    const Text("Já tem uma conta? "),
-                    GestureDetector(
-                      onTap: carregando
-                          ? null
-                          : () {
-                              Navigator.pop(context);
-                            },
-                      child: const Text(
-                        'Entrar',
-                        style: TextStyle(
-                          color: Color(0xFFFF9900),
-                          fontWeight: FontWeight.bold,
-                        ),
-                      ),
-                    ),
-                  ],
-                ),
-                const SizedBox(height: 8),
-              ],
-            ),
+                ],
+              ),
+              const SizedBox(height: AppSpacing.item),
+            ],
           ),
         ),
       ),

@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import '../theme/app_styles.dart';
 
 class BottomNavBar extends StatelessWidget {
   final int currentIndex;
@@ -11,17 +12,18 @@ class BottomNavBar extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final theme = Theme.of(context);
     return Padding(
       padding: const EdgeInsets.only(bottom: 24, left: 24, right: 24),
       child: Container(
         decoration: BoxDecoration(
-          color: Colors.white,
+          color: theme.cardColor,
           borderRadius: BorderRadius.circular(32),
           boxShadow: [
             BoxShadow(
               color: Colors.black12,
               blurRadius: 12,
-              offset: Offset(0, 4),
+              offset: const Offset(0, 4),
             ),
           ],
         ),
@@ -64,10 +66,13 @@ class _NavBarIcon extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final theme = Theme.of(context);
     return IconButton(
       icon: Icon(
         icon,
-        color: selected ? const Color(0xFF7C3AED) : Colors.black54,
+        color: selected
+            ? theme.colorScheme.primary
+            : theme.iconTheme.color?.withOpacity(0.6) ?? Colors.grey,
         size: 28,
       ),
       onPressed: onTap,

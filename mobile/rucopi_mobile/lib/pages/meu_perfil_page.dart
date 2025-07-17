@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
+import '../widgets/app_padrao.dart';
 
 class MeuPerfilPage extends StatefulWidget {
   const MeuPerfilPage({Key? key}) : super(key: key);
@@ -39,38 +40,41 @@ class _MeuPerfilPageState extends State<MeuPerfilPage> {
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(title: const Text('Meu Perfil')),
-      body: loading
+    return AppPadrao(
+      titulo: 'Meu Perfil',
+      leading: Navigator.of(context).canPop()
+          ? IconButton(
+              icon: const Icon(Icons.arrow_back),
+              onPressed: () => Navigator.of(context).pop(),
+            )
+          : null,
+      child: loading
           ? const Center(child: CircularProgressIndicator())
           : morador == null
           ? const Center(child: Text('Usuário não logado.'))
-          : Padding(
-              padding: const EdgeInsets.all(24),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Row(
-                    children: [
-                      const Icon(
-                        Icons.account_circle,
-                        size: 64,
-                        color: Colors.grey,
-                      ),
-                      const SizedBox(width: 16),
-                      Text(
-                        morador!['nome'] ?? '-',
-                        style: Theme.of(context).textTheme.titleLarge,
-                      ),
-                    ],
-                  ),
-                  const SizedBox(height: 24),
-                  _info('E-mail', morador!['email']),
-                  _info('CPF', morador!['cpf']),
-                  _info('Whatsapp', morador!['whatsapp']),
-                  _info('Endereço', morador!['endereco']),
-                ],
-              ),
+          : Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Row(
+                  children: [
+                    const Icon(
+                      Icons.account_circle,
+                      size: 64,
+                      color: Colors.grey,
+                    ),
+                    const SizedBox(width: 16),
+                    Text(
+                      morador!['nome'] ?? '-',
+                      style: Theme.of(context).textTheme.titleLarge,
+                    ),
+                  ],
+                ),
+                const SizedBox(height: 24),
+                _info('E-mail', morador!['email']),
+                _info('CPF', morador!['cpf']),
+                _info('Whatsapp', morador!['whatsapp']),
+                _info('Endereço', morador!['endereco']),
+              ],
             ),
     );
   }

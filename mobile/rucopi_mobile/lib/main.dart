@@ -5,32 +5,57 @@ import 'pages/home_page.dart';
 import 'pages/nova_solicitacao_page.dart';
 import 'widgets/bottom_navbar.dart';
 import 'pages/login_page.dart';
+import 'widgets/app_padrao.dart';
+import 'package:provider/provider.dart';
+import 'theme/theme_provider.dart';
 
 class ConfiguracoesPage extends StatelessWidget {
   const ConfiguracoesPage({Key? key}) : super(key: key);
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(title: const Text('Configurações')),
-      body: Center(
-        child: ElevatedButton.icon(
-          icon: const Icon(Icons.logout),
-          label: const Text('Sair'),
-          style: ElevatedButton.styleFrom(
-            backgroundColor: Colors.red,
-            foregroundColor: Colors.white,
-            padding: const EdgeInsets.symmetric(horizontal: 32, vertical: 16),
+    final themeProvider = Provider.of<ThemeProvider>(context);
+    final isDark = themeProvider.themeMode == ThemeMode.dark;
+    return AppPadrao(
+      titulo: 'Configurações',
+      child: Column(
+        mainAxisAlignment: MainAxisAlignment.center,
+        crossAxisAlignment: CrossAxisAlignment.center,
+        children: [
+          Row(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              const Icon(Icons.brightness_6),
+              const SizedBox(width: 12),
+              const Text('Tema escuro'),
+              const SizedBox(width: 12),
+              Switch(
+                value: isDark,
+                onChanged: (value) {
+                  themeProvider.toggleTheme(value);
+                },
+              ),
+            ],
           ),
-          onPressed: () async {
-            await Supabase.instance.client.auth.signOut();
-            if (context.mounted) {
-              Navigator.of(context).pushAndRemoveUntil(
-                MaterialPageRoute(builder: (_) => const LoginPage()),
-                (route) => false,
-              );
-            }
-          },
-        ),
+          const SizedBox(height: 32),
+          ElevatedButton.icon(
+            icon: const Icon(Icons.logout),
+            label: const Text('Sair'),
+            style: ElevatedButton.styleFrom(
+              backgroundColor: Colors.red,
+              foregroundColor: Colors.white,
+              padding: const EdgeInsets.symmetric(horizontal: 32, vertical: 16),
+            ),
+            onPressed: () async {
+              await Supabase.instance.client.auth.signOut();
+              if (context.mounted) {
+                Navigator.of(context).pushAndRemoveUntil(
+                  MaterialPageRoute(builder: (_) => const LoginPage()),
+                  (route) => false,
+                );
+              }
+            },
+          ),
+        ],
       ),
     );
   }
@@ -43,16 +68,24 @@ Future<void> main() async {
     url: dotenv.env['SUPABASE_URL']!,
     anonKey: dotenv.env['SUPABASE_ANON_KEY']!,
   );
-  runApp(const MyApp());
+  runApp(
+    ChangeNotifierProvider(
+      create: (_) => ThemeProvider(),
+      child: const MyApp(),
+    ),
+  );
 }
 
 class MyApp extends StatelessWidget {
   const MyApp({super.key});
   @override
   Widget build(BuildContext context) {
+    final themeProvider = Provider.of<ThemeProvider>(context);
     return MaterialApp(
       title: 'Rucopi',
-      theme: ThemeData(primarySwatch: Colors.green, useMaterial3: true),
+      theme: themeProvider.lightTheme,
+      darkTheme: themeProvider.darkTheme,
+      themeMode: themeProvider.themeMode,
       debugShowCheckedModeBanner: false,
       home: const AuthWrapper(),
     );

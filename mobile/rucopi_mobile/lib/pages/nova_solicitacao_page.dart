@@ -2,9 +2,10 @@ import 'package:flutter/material.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:image_picker/image_picker.dart';
 import 'dart:io';
+import '../widgets/app_padrao.dart';
 
 class NovaSolicitacaoPage extends StatefulWidget {
-  const NovaSolicitacaoPage({super.key});
+  const NovaSolicitacaoPage({Key? key}) : super(key: key);
 
   @override
   State<NovaSolicitacaoPage> createState() => _NovaSolicitacaoPageState();
@@ -86,9 +87,15 @@ class _NovaSolicitacaoPageState extends State<NovaSolicitacaoPage> {
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(title: const Text('Nova Solicitação')),
-      body: SingleChildScrollView(
+    return AppPadrao(
+      titulo: 'Nova Solicitação',
+      leading: Navigator.of(context).canPop()
+          ? IconButton(
+              icon: const Icon(Icons.arrow_back),
+              onPressed: () => Navigator.of(context).pop(),
+            )
+          : null,
+      child: SingleChildScrollView(
         padding: const EdgeInsets.all(16),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.stretch,
