@@ -18,7 +18,7 @@ class BottomNavBar extends StatelessWidget {
       child: Container(
         decoration: BoxDecoration(
           color: theme.cardColor,
-          borderRadius: BorderRadius.circular(32),
+          borderRadius: BorderRadius.circular(16),
           boxShadow: theme.brightness == Brightness.dark
               ? []
               : [
@@ -29,7 +29,7 @@ class BottomNavBar extends StatelessWidget {
                   ),
                 ],
         ),
-        padding: const EdgeInsets.symmetric(vertical: 10, horizontal: 16),
+        padding: const EdgeInsets.symmetric(vertical: 8, horizontal: 16),
         child: Row(
           mainAxisAlignment: MainAxisAlignment.spaceEvenly,
           children: [
