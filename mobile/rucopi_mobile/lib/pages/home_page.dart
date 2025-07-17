@@ -107,15 +107,19 @@ class _HomePageState extends State<HomePage> {
     final theme = Theme.of(context);
     return AppPadrao(
       titulo: 'Rucopi',
+      leading: IconButton(
+        icon: const Icon(Icons.account_circle),
+        onPressed: () {
+          Navigator.push(
+            context,
+            MaterialPageRoute(builder: (context) => const MeuPerfilPage()),
+          );
+        },
+      ),
       actions: [
         IconButton(
-          icon: const Icon(Icons.account_circle),
-          onPressed: () {
-            Navigator.push(
-              context,
-              MaterialPageRoute(builder: (context) => const MeuPerfilPage()),
-            );
-          },
+          icon: const Icon(Icons.notifications_none),
+          onPressed: () {},
         ),
       ],
       child: loading

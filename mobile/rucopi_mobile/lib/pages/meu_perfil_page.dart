@@ -40,6 +40,7 @@ class _MeuPerfilPageState extends State<MeuPerfilPage> {
 
   @override
   Widget build(BuildContext context) {
+    final theme = Theme.of(context);
     return AppPadrao(
       titulo: 'Meu Perfil',
       leading: Navigator.of(context).canPop()
@@ -52,42 +53,102 @@ class _MeuPerfilPageState extends State<MeuPerfilPage> {
           ? const Center(child: CircularProgressIndicator())
           : morador == null
           ? const Center(child: Text('Usuário não logado.'))
-          : Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Row(
+          : SingleChildScrollView(
+              padding: const EdgeInsets.symmetric(horizontal: 2, vertical: 2),
+              child: Container(
+                width: double.infinity,
+                margin: const EdgeInsets.only(bottom: 16, top: 8),
+                padding: const EdgeInsets.all(20),
+                decoration: BoxDecoration(
+                  color: theme.primaryColor.withOpacity(0.08),
+                  borderRadius: BorderRadius.circular(16),
+                ),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.stretch,
                   children: [
-                    const Icon(
-                      Icons.account_circle,
-                      size: 64,
-                      color: Colors.grey,
+                    // Header com ícone e nome
+                    Column(
+                      children: [
+                        Icon(
+                          Icons.account_circle,
+                          size: 72,
+                          color: theme.primaryColor,
+                        ),
+                        const SizedBox(height: 12),
+                        Text(
+                          morador!['nome'] ?? '-',
+                          style: theme.textTheme.titleLarge?.copyWith(
+                            fontWeight: FontWeight.bold,
+                          ),
+                          textAlign: TextAlign.center,
+                        ),
+                      ],
                     ),
-                    const SizedBox(width: 16),
-                    Text(
-                      morador!['nome'] ?? '-',
-                      style: Theme.of(context).textTheme.titleLarge,
+                    const SizedBox(height: 24),
+                    // Campos
+                    _infoRow(
+                      context,
+                      icon: Icons.email_outlined,
+                      label: 'E-mail',
+                      value: morador!['email'],
+                    ),
+                    const SizedBox(height: 16),
+                    _infoRow(
+                      context,
+                      icon: Icons.badge_outlined,
+                      label: 'CPF',
+                      value: morador!['cpf'],
+                    ),
+                    const SizedBox(height: 16),
+                    _infoRow(
+                      context,
+                      icon: Icons.phone_outlined,
+                      label: 'Whatsapp',
+                      value: morador!['whatsapp'],
+                    ),
+                    const SizedBox(height: 16),
+                    _infoRow(
+                      context,
+                      icon: Icons.location_on_outlined,
+                      label: 'Endereço',
+                      value: morador!['endereco'],
                     ),
                   ],
                 ),
-                const SizedBox(height: 24),
-                _info('E-mail', morador!['email']),
-                _info('CPF', morador!['cpf']),
-                _info('Whatsapp', morador!['whatsapp']),
-                _info('Endereço', morador!['endereco']),
-              ],
+              ),
             ),
     );
   }
 
-  Widget _info(String label, String? value) {
-    return Padding(
-      padding: const EdgeInsets.only(bottom: 12),
-      child: Row(
-        children: [
-          Text('$label: ', style: const TextStyle(fontWeight: FontWeight.bold)),
-          Expanded(child: Text(value ?? '-')),
-        ],
-      ),
+  Widget _infoRow(
+    BuildContext context, {
+    required IconData icon,
+    required String label,
+    String? value,
+  }) {
+    final theme = Theme.of(context);
+    return Row(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Icon(icon, color: theme.primaryColor, size: 22),
+        const SizedBox(width: 12),
+        Expanded(
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(
+                label,
+                style: theme.textTheme.titleMedium?.copyWith(
+                  fontWeight: FontWeight.bold,
+                  color: theme.primaryColor,
+                ),
+              ),
+              const SizedBox(height: 4),
+              Text(value ?? '-', style: theme.textTheme.bodyMedium),
+            ],
+          ),
+        ),
+      ],
     );
   }
 }
