@@ -169,7 +169,7 @@ class _HomePageState extends State<HomePage> {
                                   crossAxisAlignment: CrossAxisAlignment.start,
                                   children: [
                                     Text(
-                                      nomeUsuario,
+                                      _primeiroNomeESobrenome(nomeUsuario),
                                       style: theme.textTheme.headlineSmall
                                           ?.copyWith(
                                             fontWeight: FontWeight.bold,
@@ -667,4 +667,11 @@ class _HomePageState extends State<HomePage> {
       ),
     );
   }
+}
+
+// Função utilitária para exibir apenas o primeiro nome e sobrenome
+String _primeiroNomeESobrenome(String nomeCompleto) {
+  final partes = nomeCompleto.trim().split(' ');
+  if (partes.length <= 2) return nomeCompleto;
+  return '${partes[0]} ${partes[1]}';
 }
