@@ -5,6 +5,7 @@ import 'historico_solicitacoes_page.dart';
 import 'meu_perfil_page.dart';
 import '../widgets/app_padrao.dart';
 import '../theme/app_styles.dart';
+import 'detalhes_solicitacao_page.dart';
 
 class HomePage extends StatefulWidget {
   const HomePage({Key? key}) : super(key: key);
@@ -74,12 +75,22 @@ class _HomePageState extends State<HomePage> {
     try {
       final resp = await Supabase.instance.client
           .from('solicitacoes')
-          .select('descricao, status, criado_em, endereco, tipo_entulho')
+          .select('descricao, status, criado_em, endereco, tipo_entulho, fotos')
           .eq('morador_id', user.id)
-          .order('criado_em', ascending: false)
-          .limit(2);
+          .order(
+            'criado_em',
+            ascending: true,
+          ); // ordem crescente (mais antigas primeiro)
+      // Filtrar pendentes primeiro, depois as demais, e limitar a 2
+      final pendentes = resp
+          .where((s) => (s['status'] ?? '').toLowerCase() == 'pendente')
+          .toList();
+      final outros = resp
+          .where((s) => (s['status'] ?? '').toLowerCase() != 'pendente')
+          .toList();
+      final recentes = [...pendentes, ...outros];
       setState(() {
-        solicitacoesRecentes = resp;
+        solicitacoesRecentes = recentes.take(2).toList();
       });
     } catch (e) {
       setState(() {
@@ -564,57 +575,69 @@ class _HomePageState extends State<HomePage> {
     final dataStr = data != null
         ? '${data.day.toString().padLeft(2, '0')}/${data.month.toString().padLeft(2, '0')}/${data.year}'
         : 'Data não disponível';
-    return Container(
-      width: double.infinity,
-      margin: const EdgeInsets.only(bottom: 16),
-      padding: const EdgeInsets.all(20),
-      decoration: BoxDecoration(
-        color: theme.primaryColor.withOpacity(0.08),
-        borderRadius: BorderRadius.circular(16),
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.stretch,
-        children: [
-          Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-            children: [
-              Row(
-                children: [
-                  Icon(statusIcon, color: statusColor, size: 22),
-                  const SizedBox(width: 8),
-                  Text(
-                    statusText,
-                    style: theme.textTheme.bodyMedium?.copyWith(
-                      color: statusColor,
-                      fontWeight: FontWeight.bold,
+    return InkWell(
+      borderRadius: BorderRadius.circular(16),
+      onTap: () {
+        Navigator.push(
+          context,
+          MaterialPageRoute(
+            builder: (context) =>
+                DetalhesSolicitacaoPage(solicitacao: solicitacao),
+          ),
+        );
+      },
+      child: Container(
+        width: double.infinity,
+        margin: const EdgeInsets.only(bottom: 16),
+        padding: const EdgeInsets.all(20),
+        decoration: BoxDecoration(
+          color: theme.primaryColor.withOpacity(0.08),
+          borderRadius: BorderRadius.circular(16),
+        ),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+            Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                Row(
+                  children: [
+                    Icon(statusIcon, color: statusColor, size: 22),
+                    const SizedBox(width: 8),
+                    Text(
+                      statusText,
+                      style: theme.textTheme.bodyMedium?.copyWith(
+                        color: statusColor,
+                        fontWeight: FontWeight.bold,
+                      ),
                     ),
-                  ),
-                ],
-              ),
-              Row(
-                children: [
-                  Icon(
-                    Icons.calendar_today_outlined,
-                    color: theme.primaryColor,
-                    size: 18,
-                  ),
-                  const SizedBox(width: 6),
-                  Text(dataStr, style: theme.textTheme.bodyMedium),
-                ],
-              ),
-            ],
-          ),
-          const SizedBox(height: 12),
-          Center(
-            child: Text(
-              endereco,
-              style: theme.textTheme.bodyMedium,
-              maxLines: 2,
-              overflow: TextOverflow.ellipsis,
-              textAlign: TextAlign.center,
+                  ],
+                ),
+                Row(
+                  children: [
+                    Icon(
+                      Icons.calendar_today_outlined,
+                      color: theme.primaryColor,
+                      size: 18,
+                    ),
+                    const SizedBox(width: 6),
+                    Text(dataStr, style: theme.textTheme.bodyMedium),
+                  ],
+                ),
+              ],
             ),
-          ),
-        ],
+            const SizedBox(height: 12),
+            Center(
+              child: Text(
+                endereco,
+                style: theme.textTheme.bodyMedium,
+                maxLines: 2,
+                overflow: TextOverflow.ellipsis,
+                textAlign: TextAlign.center,
+              ),
+            ),
+          ],
+        ),
       ),
     );
   }
