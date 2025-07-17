@@ -196,134 +196,205 @@ class _HomePageState extends State<HomePage> {
                       ),
                     ),
 
-                    const SizedBox(height: 24),
+                    const SizedBox(height: 6),
 
-                    // Seção de estatísticas
-                    Padding(
-                      padding: const EdgeInsets.symmetric(
-                        horizontal: AppSpacing.section,
+                    // Seção de estatísticas + botão principal em um único card
+                    Container(
+                      width: double.infinity,
+                      margin: const EdgeInsets.symmetric(vertical: 12),
+                      padding: const EdgeInsets.all(20),
+                      decoration: BoxDecoration(
+                        color: theme.primaryColor.withOpacity(0.08),
+                        borderRadius: BorderRadius.circular(16),
                       ),
-                      child: Row(
+                      child: Column(
                         children: [
-                          Expanded(
-                            child: Container(
-                              padding: const EdgeInsets.all(20),
-                              decoration: BoxDecoration(
-                                color: theme.primaryColor.withOpacity(0.08),
-                                borderRadius: BorderRadius.circular(16),
-                              ),
-                              child: Column(
-                                crossAxisAlignment: CrossAxisAlignment.start,
-                                children: [
-                                  // Label na primeira linha
-                                  Text(
-                                    'Pendentes',
-                                    style: theme.textTheme.bodyMedium?.copyWith(
-                                      color: theme.primaryColor,
-                                      fontWeight: FontWeight.w500,
-                                    ),
+                          Row(
+                            children: [
+                              Expanded(
+                                child: Container(
+                                  padding: const EdgeInsets.all(20),
+                                  decoration: BoxDecoration(
+                                    color: theme.primaryColor.withOpacity(0.08),
+                                    borderRadius: BorderRadius.circular(16),
                                   ),
-                                  const SizedBox(height: 8),
-                                  // Icone e quantidade na segunda linha
-                                  Row(
+                                  child: Column(
+                                    crossAxisAlignment:
+                                        CrossAxisAlignment.start,
                                     children: [
-                                      Container(
-                                        padding: const EdgeInsets.all(10),
-                                        decoration: BoxDecoration(
-                                          color: theme.primaryColor.withOpacity(
-                                            0.15,
-                                          ),
-                                          borderRadius: BorderRadius.circular(
-                                            12,
-                                          ),
-                                        ),
-                                        child: Icon(
-                                          Icons.schedule_outlined,
-                                          color: theme.primaryColor,
-                                          size: 24,
-                                        ),
-                                      ),
-                                      const SizedBox(width: 16),
                                       Text(
-                                        solicitacoesPendentes.toString(),
-                                        style: theme.textTheme.headlineMedium
+                                        'Pendentes',
+                                        style: theme.textTheme.bodyMedium
                                             ?.copyWith(
-                                              fontWeight: FontWeight.bold,
                                               color: theme.primaryColor,
+                                              fontWeight: FontWeight.w500,
                                             ),
+                                      ),
+                                      const SizedBox(height: 8),
+                                      Row(
+                                        children: [
+                                          Container(
+                                            padding: const EdgeInsets.all(10),
+                                            decoration: BoxDecoration(
+                                              color: theme.primaryColor
+                                                  .withOpacity(0.15),
+                                              borderRadius:
+                                                  BorderRadius.circular(12),
+                                            ),
+                                            child: Icon(
+                                              Icons.schedule_outlined,
+                                              color: theme.primaryColor,
+                                              size: 24,
+                                            ),
+                                          ),
+                                          const SizedBox(width: 16),
+                                          Text(
+                                            solicitacoesPendentes.toString(),
+                                            style: theme
+                                                .textTheme
+                                                .headlineMedium
+                                                ?.copyWith(
+                                                  fontWeight: FontWeight.bold,
+                                                  color: theme.primaryColor,
+                                                ),
+                                          ),
+                                        ],
                                       ),
                                     ],
                                   ),
-                                ],
+                                ),
                               ),
-                            ),
-                          ),
-                          const SizedBox(width: 16),
-                          Expanded(
-                            child: Container(
-                              padding: const EdgeInsets.all(20),
-                              decoration: BoxDecoration(
-                                color: theme.brightness == Brightness.dark
-                                    ? theme.cardColor
-                                    : theme.colorScheme.secondary.withOpacity(
-                                        0.08,
-                                      ),
-                                borderRadius: BorderRadius.circular(16),
-                              ),
-                              child: Column(
-                                crossAxisAlignment: CrossAxisAlignment.start,
-                                children: [
-                                  // Label na primeira linha
-                                  Text(
-                                    'Total',
-                                    style: theme.textTheme.bodyMedium?.copyWith(
-                                      color: theme.brightness == Brightness.dark
-                                          ? Colors.white70
-                                          : theme.colorScheme.secondary,
-                                      fontWeight: FontWeight.w500,
-                                    ),
+                              const SizedBox(width: 16),
+                              Expanded(
+                                child: Container(
+                                  padding: const EdgeInsets.all(20),
+                                  decoration: BoxDecoration(
+                                    color: theme.brightness == Brightness.dark
+                                        ? theme.cardColor
+                                        : theme.colorScheme.secondary
+                                              .withOpacity(0.08),
+                                    borderRadius: BorderRadius.circular(16),
                                   ),
-                                  const SizedBox(height: 8),
-                                  // Icone e quantidade na segunda linha
-                                  Row(
+                                  child: Column(
+                                    crossAxisAlignment:
+                                        CrossAxisAlignment.start,
                                     children: [
-                                      Container(
-                                        padding: const EdgeInsets.all(10),
-                                        decoration: BoxDecoration(
-                                          color:
-                                              theme.brightness ==
-                                                  Brightness.dark
-                                              ? Colors.white24
-                                              : theme.colorScheme.secondary
-                                                    .withOpacity(0.15),
-                                          borderRadius: BorderRadius.circular(
-                                            12,
-                                          ),
-                                        ),
-                                        child: Icon(
-                                          Icons.analytics_outlined,
-                                          color:
-                                              theme.brightness ==
-                                                  Brightness.dark
-                                              ? Colors.white
-                                              : theme.colorScheme.secondary,
-                                          size: 24,
-                                        ),
-                                      ),
-                                      const SizedBox(width: 16),
                                       Text(
-                                        solicitacoesTotais.toString(),
-                                        style: theme.textTheme.headlineMedium
+                                        'Total',
+                                        style: theme.textTheme.bodyMedium
                                             ?.copyWith(
-                                              fontWeight: FontWeight.bold,
+                                              color:
+                                                  theme.brightness ==
+                                                      Brightness.dark
+                                                  ? Colors.white70
+                                                  : theme.colorScheme.secondary,
+                                              fontWeight: FontWeight.w500,
+                                            ),
+                                      ),
+                                      const SizedBox(height: 8),
+                                      Row(
+                                        children: [
+                                          Container(
+                                            padding: const EdgeInsets.all(10),
+                                            decoration: BoxDecoration(
+                                              color:
+                                                  theme.brightness ==
+                                                      Brightness.dark
+                                                  ? Colors.white24
+                                                  : theme.colorScheme.secondary
+                                                        .withOpacity(0.15),
+                                              borderRadius:
+                                                  BorderRadius.circular(12),
+                                            ),
+                                            child: Icon(
+                                              Icons.analytics_outlined,
                                               color:
                                                   theme.brightness ==
                                                       Brightness.dark
                                                   ? Colors.white
                                                   : theme.colorScheme.secondary,
+                                              size: 24,
                                             ),
+                                          ),
+                                          const SizedBox(width: 16),
+                                          Text(
+                                            solicitacoesTotais.toString(),
+                                            style: theme
+                                                .textTheme
+                                                .headlineMedium
+                                                ?.copyWith(
+                                                  fontWeight: FontWeight.bold,
+                                                  color:
+                                                      theme.brightness ==
+                                                          Brightness.dark
+                                                      ? Colors.white
+                                                      : theme
+                                                            .colorScheme
+                                                            .secondary,
+                                                ),
+                                          ),
+                                        ],
                                       ),
                                     ],
+                                  ),
+                                ),
+                              ),
+                            ],
+                          ),
+                          const SizedBox(height: 24),
+                          // Botão principal
+                          GestureDetector(
+                            onTap:
+                                widget.onAdd ??
+                                () {
+                                  Navigator.push(
+                                    context,
+                                    MaterialPageRoute(
+                                      builder: (context) =>
+                                          const NovaSolicitacaoPage(),
+                                    ),
+                                  );
+                                },
+                            child: Container(
+                              width: double.infinity,
+                              padding: const EdgeInsets.symmetric(
+                                vertical: 16,
+                                horizontal: 20,
+                              ),
+                              decoration: BoxDecoration(
+                                gradient: LinearGradient(
+                                  begin: Alignment.topLeft,
+                                  end: Alignment.bottomRight,
+                                  colors: [
+                                    theme.primaryColor,
+                                    theme.primaryColor.withOpacity(0.8),
+                                  ],
+                                ),
+                                borderRadius: BorderRadius.circular(16),
+                                boxShadow: [
+                                  BoxShadow(
+                                    color: theme.primaryColor.withOpacity(0.2),
+                                    blurRadius: 8,
+                                    offset: const Offset(0, 4),
+                                  ),
+                                ],
+                              ),
+                              child: Row(
+                                mainAxisAlignment: MainAxisAlignment.center,
+                                children: [
+                                  Icon(
+                                    Icons.add_circle_outline,
+                                    color: Colors.white,
+                                    size: 22,
+                                  ),
+                                  const SizedBox(width: 12),
+                                  Text(
+                                    'Solicitar Nova Coleta',
+                                    style: theme.textTheme.titleMedium
+                                        ?.copyWith(
+                                          color: Colors.white,
+                                          fontWeight: FontWeight.w600,
+                                        ),
                                   ),
                                 ],
                               ),
@@ -332,82 +403,21 @@ class _HomePageState extends State<HomePage> {
                         ],
                       ),
                     ),
+                    const SizedBox(height: 0),
 
-                    const SizedBox(height: 32),
-
-                    // Botão principal
-                    Padding(
-                      padding: const EdgeInsets.symmetric(
-                        horizontal: AppSpacing.section,
-                      ),
-                      child: GestureDetector(
-                        onTap:
-                            widget.onAdd ??
-                            () {
-                              Navigator.push(
-                                context,
-                                MaterialPageRoute(
-                                  builder: (context) =>
-                                      const NovaSolicitacaoPage(),
-                                ),
-                              );
-                            },
-                        child: Container(
-                          width: double.infinity,
-                          padding: const EdgeInsets.symmetric(
-                            vertical: 16,
-                            horizontal: 20,
-                          ),
-                          decoration: BoxDecoration(
-                            gradient: LinearGradient(
-                              begin: Alignment.topLeft,
-                              end: Alignment.bottomRight,
-                              colors: [
-                                theme.primaryColor,
-                                theme.primaryColor.withOpacity(0.8),
-                              ],
-                            ),
-                            borderRadius: BorderRadius.circular(16),
-                            boxShadow: [
-                              BoxShadow(
-                                color: theme.primaryColor.withOpacity(0.2),
-                                blurRadius: 8,
-                                offset: const Offset(0, 4),
-                              ),
-                            ],
-                          ),
-                          child: Row(
-                            mainAxisAlignment: MainAxisAlignment.center,
-                            children: [
-                              Icon(
-                                Icons.add_circle_outline,
-                                color: Colors.white,
-                                size: 22,
-                              ),
-                              const SizedBox(width: 12),
-                              Text(
-                                'Solicitar Nova Coleta',
-                                style: theme.textTheme.titleMedium?.copyWith(
-                                  color: Colors.white,
-                                  fontWeight: FontWeight.w600,
-                                ),
-                              ),
-                            ],
-                          ),
-                        ),
-                      ),
-                    ),
-
-                    const SizedBox(height: 32),
-                    // Seção Histórico de Solicitações
-                    Padding(
-                      padding: const EdgeInsets.symmetric(
-                        horizontal: AppSpacing.section,
+                    // Seção Histórico de Solicitações em um único card
+                    Container(
+                      width: double.infinity,
+                      margin: const EdgeInsets.symmetric(vertical: 12),
+                      padding: const EdgeInsets.all(20),
+                      decoration: BoxDecoration(
+                        color: theme.primaryColor.withOpacity(0.08),
+                        borderRadius: BorderRadius.circular(16),
                       ),
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
-                          // Separador visual
+                          // Separador visual com texto
                           Row(
                             children: [
                               Expanded(
@@ -420,10 +430,13 @@ class _HomePageState extends State<HomePage> {
                                 padding: const EdgeInsets.symmetric(
                                   horizontal: 12,
                                 ),
-                                child: Icon(
-                                  Icons.history,
-                                  color: theme.primaryColor,
-                                  size: 28,
+                                child: Text(
+                                  'Histórico de Solicitações',
+                                  style: theme.textTheme.bodySmall?.copyWith(
+                                    color: theme.textTheme.bodySmall?.color
+                                        ?.withOpacity(0.7),
+                                    fontWeight: FontWeight.w600,
+                                  ),
                                 ),
                               ),
                               Expanded(
