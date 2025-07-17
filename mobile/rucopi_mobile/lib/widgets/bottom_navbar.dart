@@ -19,13 +19,15 @@ class BottomNavBar extends StatelessWidget {
         decoration: BoxDecoration(
           color: theme.cardColor,
           borderRadius: BorderRadius.circular(32),
-          boxShadow: [
-            BoxShadow(
-              color: Colors.black12,
-              blurRadius: 12,
-              offset: const Offset(0, 4),
-            ),
-          ],
+          boxShadow: theme.brightness == Brightness.dark
+              ? []
+              : [
+                  BoxShadow(
+                    color: Colors.black12,
+                    blurRadius: 12,
+                    offset: const Offset(0, 4),
+                  ),
+                ],
         ),
         padding: const EdgeInsets.symmetric(vertical: 10, horizontal: 16),
         child: Row(

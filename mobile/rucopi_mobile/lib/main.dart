@@ -98,16 +98,58 @@ class MainNavigation extends StatefulWidget {
 
 class _MainNavigationState extends State<MainNavigation> {
   int _currentIndex = 0;
-  final _pages = const [HomePage(), NovaSolicitacaoPage(), ConfiguracoesPage()];
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      body: IndexedStack(index: _currentIndex, children: _pages),
+      body: Builder(
+        builder: (context) {
+          // Só a HomePage fica no IndexedStack
+          return IndexedStack(
+            index: _currentIndex,
+            children: [
+              HomePage(
+                onAdd: () {
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                      builder: (context) => const NovaSolicitacaoPage(),
+                    ),
+                  );
+                },
+                onConfig: () {
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                      builder: (context) => const ConfiguracoesPage(),
+                    ),
+                  );
+                },
+              ),
+            ],
+          );
+        },
+      ),
       bottomNavigationBar: BottomNavBar(
         currentIndex: _currentIndex,
         onTap: (index) {
-          setState(() => _currentIndex = index);
+          if (index == 0) {
+            setState(() => _currentIndex = 0);
+          } else if (index == 1) {
+            Navigator.push(
+              context,
+              MaterialPageRoute(
+                builder: (context) => const NovaSolicitacaoPage(),
+              ),
+            );
+          } else if (index == 2) {
+            Navigator.push(
+              context,
+              MaterialPageRoute(
+                builder: (context) => const ConfiguracoesPage(),
+              ),
+            );
+          }
         },
       ),
     );

@@ -6,9 +6,12 @@ import 'meu_perfil_page.dart';
 import '../widgets/app_padrao.dart';
 import '../theme/app_styles.dart';
 import 'detalhes_solicitacao_page.dart';
+import 'configuracoes_page.dart';
 
 class HomePage extends StatefulWidget {
-  const HomePage({Key? key}) : super(key: key);
+  final VoidCallback? onAdd;
+  final VoidCallback? onConfig;
+  const HomePage({Key? key, this.onAdd, this.onConfig}) : super(key: key);
 
   @override
   State<HomePage> createState() => _HomePageState();
@@ -256,9 +259,11 @@ class _HomePageState extends State<HomePage> {
                             child: Container(
                               padding: const EdgeInsets.all(20),
                               decoration: BoxDecoration(
-                                color: theme.colorScheme.secondary.withOpacity(
-                                  0.08,
-                                ),
+                                color: theme.brightness == Brightness.dark
+                                    ? theme.cardColor
+                                    : theme.colorScheme.secondary.withOpacity(
+                                        0.08,
+                                      ),
                                 borderRadius: BorderRadius.circular(16),
                               ),
                               child: Column(
@@ -268,7 +273,9 @@ class _HomePageState extends State<HomePage> {
                                   Text(
                                     'Total',
                                     style: theme.textTheme.bodyMedium?.copyWith(
-                                      color: theme.colorScheme.secondary,
+                                      color: theme.brightness == Brightness.dark
+                                          ? Colors.white70
+                                          : theme.colorScheme.secondary,
                                       fontWeight: FontWeight.w500,
                                     ),
                                   ),
@@ -279,15 +286,23 @@ class _HomePageState extends State<HomePage> {
                                       Container(
                                         padding: const EdgeInsets.all(10),
                                         decoration: BoxDecoration(
-                                          color: theme.colorScheme.secondary
-                                              .withOpacity(0.15),
+                                          color:
+                                              theme.brightness ==
+                                                  Brightness.dark
+                                              ? Colors.white24
+                                              : theme.colorScheme.secondary
+                                                    .withOpacity(0.15),
                                           borderRadius: BorderRadius.circular(
                                             12,
                                           ),
                                         ),
                                         child: Icon(
                                           Icons.analytics_outlined,
-                                          color: theme.colorScheme.secondary,
+                                          color:
+                                              theme.brightness ==
+                                                  Brightness.dark
+                                              ? Colors.white
+                                              : theme.colorScheme.secondary,
                                           size: 24,
                                         ),
                                       ),
@@ -298,7 +313,10 @@ class _HomePageState extends State<HomePage> {
                                             ?.copyWith(
                                               fontWeight: FontWeight.bold,
                                               color:
-                                                  theme.colorScheme.secondary,
+                                                  theme.brightness ==
+                                                      Brightness.dark
+                                                  ? Colors.white
+                                                  : theme.colorScheme.secondary,
                                             ),
                                       ),
                                     ],
@@ -319,14 +337,17 @@ class _HomePageState extends State<HomePage> {
                         horizontal: AppSpacing.section,
                       ),
                       child: GestureDetector(
-                        onTap: () {
-                          Navigator.push(
-                            context,
-                            MaterialPageRoute(
-                              builder: (context) => const NovaSolicitacaoPage(),
-                            ),
-                          );
-                        },
+                        onTap:
+                            widget.onAdd ??
+                            () {
+                              Navigator.push(
+                                context,
+                                MaterialPageRoute(
+                                  builder: (context) =>
+                                      const NovaSolicitacaoPage(),
+                                ),
+                              );
+                            },
                         child: Container(
                           width: double.infinity,
                           padding: const EdgeInsets.symmetric(

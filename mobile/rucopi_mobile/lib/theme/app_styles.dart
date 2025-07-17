@@ -21,7 +21,7 @@ class AppColors {
 
   // Tema Escuro
   static const Color darkPrimary = Color(0xFF8DA34E);
-  static const Color darkSecondary = Color(0xFF191919);
+  static const Color darkSecondary = Color(0xFF232323);
   static const Color darkBackground = Color(0xFF191919);
   static const Color darkCard = Color(0xFF232323);
   static const Color darkText = Color(0xFFF5F5F5);
