@@ -96,18 +96,27 @@ class _NovaSolicitacaoPageState extends State<NovaSolicitacaoPage> {
             )
           : null,
       child: SingleChildScrollView(
-        padding: const EdgeInsets.all(16),
+        padding: const EdgeInsets.symmetric(horizontal: 2, vertical: 2),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
+            // Campo de descrição
             TextField(
               controller: descricaoController,
-              decoration: const InputDecoration(
+              decoration: InputDecoration(
                 labelText: 'Descrição do entulho',
+                prefixIcon: const Icon(Icons.description_outlined),
+                filled: true,
+                fillColor: Theme.of(context).primaryColor.withOpacity(0.08),
+                border: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(16),
+                  borderSide: BorderSide.none,
+                ),
               ),
               maxLines: 2,
             ),
-            const SizedBox(height: 12),
+            const SizedBox(height: 16),
+            // Campo de tipo de entulho
             DropdownButtonFormField<String>(
               value: tipoEntulho,
               items: tiposEntulho
@@ -116,43 +125,105 @@ class _NovaSolicitacaoPageState extends State<NovaSolicitacaoPage> {
                   )
                   .toList(),
               onChanged: (val) => setState(() => tipoEntulho = val),
-              decoration: const InputDecoration(labelText: 'Tipo de entulho'),
+              decoration: InputDecoration(
+                labelText: 'Tipo de entulho',
+                prefixIcon: const Icon(Icons.category_outlined),
+                filled: true,
+                fillColor: Theme.of(context).primaryColor.withOpacity(0.08),
+                border: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(16),
+                  borderSide: BorderSide.none,
+                ),
+              ),
             ),
-            const SizedBox(height: 12),
+            const SizedBox(height: 16),
+            // Campo de endereço
             TextField(
               controller: enderecoController,
-              decoration: const InputDecoration(labelText: 'Endereço'),
+              decoration: InputDecoration(
+                labelText: 'Endereço',
+                prefixIcon: const Icon(Icons.location_on_outlined),
+                filled: true,
+                fillColor: Theme.of(context).primaryColor.withOpacity(0.08),
+                border: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(16),
+                  borderSide: BorderSide.none,
+                ),
+              ),
             ),
-            const SizedBox(height: 12),
-            Text('Fotos (máx. 3):'),
-            const SizedBox(height: 8),
-            Row(
-              children: [
-                ...imagensSelecionadas.map(
-                  (img) => Padding(
-                    padding: const EdgeInsets.only(right: 8),
-                    child: Image.file(
-                      File(img.path),
-                      width: 64,
-                      height: 64,
-                      fit: BoxFit.cover,
+            const SizedBox(height: 16),
+            // Card de fotos centralizado
+            Container(
+              width: double.infinity,
+              margin: const EdgeInsets.only(bottom: 16),
+              padding: const EdgeInsets.all(20),
+              decoration: BoxDecoration(
+                color: Theme.of(context).primaryColor.withOpacity(0.08),
+                borderRadius: BorderRadius.circular(16),
+              ),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.center,
+                children: [
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      const Icon(Icons.photo_library_outlined),
+                      const SizedBox(width: 10),
+                      const Text('Fotos (máx. 3):'),
+                    ],
+                  ),
+                  const SizedBox(height: 8),
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      ...imagensSelecionadas.map(
+                        (img) => Padding(
+                          padding: const EdgeInsets.only(right: 8),
+                          child: Image.file(
+                            File(img.path),
+                            width: 64,
+                            height: 64,
+                            fit: BoxFit.cover,
+                          ),
+                        ),
+                      ),
+                      if (imagensSelecionadas.length < 3)
+                        IconButton(
+                          icon: const Icon(Icons.add_a_photo),
+                          onPressed: selecionarImagens,
+                        ),
+                    ],
+                  ),
+                ],
+              ),
+            ),
+            const SizedBox(height: 24),
+            Center(
+              child: SizedBox(
+                width: 260,
+                child: ElevatedButton.icon(
+                  onPressed: carregando ? null : enviarSolicitacao,
+                  icon: const Icon(Icons.send),
+                  label: const Text('Enviar Solicitação'),
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: Theme.of(context).primaryColor,
+                    foregroundColor: Colors.white,
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+                    padding: const EdgeInsets.symmetric(vertical: 16),
+                    textStyle: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                      fontWeight: FontWeight.bold,
                     ),
                   ),
                 ),
-                if (imagensSelecionadas.length < 3)
-                  IconButton(
-                    icon: const Icon(Icons.add_a_photo),
-                    onPressed: selecionarImagens,
-                  ),
-              ],
+              ),
             ),
-            const SizedBox(height: 24),
-            ElevatedButton(
-              onPressed: carregando ? null : enviarSolicitacao,
-              child: carregando
-                  ? const CircularProgressIndicator()
-                  : const Text('Enviar Solicitação'),
-            ),
+            if (carregando)
+              const Padding(
+                padding: EdgeInsets.only(top: 16),
+                child: Center(child: CircularProgressIndicator()),
+              ),
           ],
         ),
       ),

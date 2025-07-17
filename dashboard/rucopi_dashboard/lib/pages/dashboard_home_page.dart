@@ -9,7 +9,8 @@ class DashboardHomePage extends StatefulWidget {
   State<DashboardHomePage> createState() => _DashboardHomePageState();
 }
 
-class _DashboardHomePageState extends State<DashboardHomePage> with TickerProviderStateMixin {
+class _DashboardHomePageState extends State<DashboardHomePage>
+    with TickerProviderStateMixin {
   int total = 0;
   int pendentes = 0;
   int andamento = 0;
@@ -39,17 +40,17 @@ class _DashboardHomePageState extends State<DashboardHomePage> with TickerProvid
       carregando = true;
       erro = null;
     });
-    
+
     try {
       final response = await Supabase.instance.client
           .from('solicitacoes')
           .select('status');
-      
+
       total = response.length;
       pendentes = response.where((s) => s['status'] == 'pendente').length;
       andamento = response.where((s) => s['status'] == 'em andamento').length;
       concluidas = response.where((s) => s['status'] == 'concluida').length;
-      
+
       _animationController.forward();
     } catch (e) {
       erro = 'Erro ao buscar dados: $e';
@@ -133,11 +134,7 @@ class _DashboardHomePageState extends State<DashboardHomePage> with TickerProvid
                               color: Colors.white.withOpacity(0.2),
                               borderRadius: BorderRadius.circular(12),
                             ),
-                            child: Icon(
-                              icon,
-                              color: Colors.white,
-                              size: 24,
-                            ),
+                            child: Icon(icon, color: Colors.white, size: 24),
                           ),
                           const Spacer(),
                           Text(
@@ -163,7 +160,9 @@ class _DashboardHomePageState extends State<DashboardHomePage> with TickerProvid
                       Row(
                         children: [
                           TweenAnimationBuilder<int>(
-                            duration: Duration(milliseconds: 800 + (index * 100)),
+                            duration: Duration(
+                              milliseconds: 800 + (index * 100),
+                            ),
                             tween: IntTween(begin: 0, end: value),
                             builder: (context, animatedValue, child) {
                               return Text(
@@ -179,7 +178,10 @@ class _DashboardHomePageState extends State<DashboardHomePage> with TickerProvid
                           const Spacer(),
                           if (index == 0)
                             Container(
-                              padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                              padding: const EdgeInsets.symmetric(
+                                horizontal: 8,
+                                vertical: 4,
+                              ),
                               decoration: BoxDecoration(
                                 color: Colors.white.withOpacity(0.2),
                                 borderRadius: BorderRadius.circular(8),
@@ -239,11 +241,7 @@ class _DashboardHomePageState extends State<DashboardHomePage> with TickerProvid
                 color: color.withOpacity(0.1),
                 shape: BoxShape.circle,
               ),
-              child: Icon(
-                icon,
-                color: color,
-                size: 24,
-              ),
+              child: Icon(icon, color: color, size: 24),
             ),
             const SizedBox(height: 8),
             Text(
@@ -278,11 +276,7 @@ class _DashboardHomePageState extends State<DashboardHomePage> with TickerProvid
                 ),
                 borderRadius: BorderRadius.circular(12),
               ),
-              child: const Icon(
-                Icons.dashboard,
-                color: Colors.white,
-                size: 24,
-              ),
+              child: const Icon(Icons.dashboard, color: Colors.white, size: 24),
             ),
             const SizedBox(width: 12),
             const Column(
@@ -298,10 +292,7 @@ class _DashboardHomePageState extends State<DashboardHomePage> with TickerProvid
                 ),
                 Text(
                   'Gestão de Coleta de Entulho',
-                  style: TextStyle(
-                    color: Colors.grey,
-                    fontSize: 12,
-                  ),
+                  style: TextStyle(color: Colors.grey, fontSize: 12),
                 ),
               ],
             ),
@@ -340,7 +331,9 @@ class _DashboardHomePageState extends State<DashboardHomePage> with TickerProvid
                     onPressed: () {
                       Navigator.push(
                         context,
-                        MaterialPageRoute(builder: (_) => const SolicitacoesPage()),
+                        MaterialPageRoute(
+                          builder: (_) => const SolicitacoesPage(),
+                        ),
                       );
                     },
                   ),
@@ -370,261 +363,275 @@ class _DashboardHomePageState extends State<DashboardHomePage> with TickerProvid
                   const SizedBox(height: 16),
                   const Text(
                     'Carregando dados...',
-                    style: TextStyle(
-                      color: Colors.grey,
-                      fontSize: 16,
-                    ),
+                    style: TextStyle(color: Colors.grey, fontSize: 16),
                   ),
                 ],
               ),
             )
           : erro != null
-              ? Center(
-                  child: Column(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    children: [
-                      Container(
-                        padding: const EdgeInsets.all(16),
-                        decoration: BoxDecoration(
-                          color: Colors.red.shade50,
-                          shape: BoxShape.circle,
-                        ),
-                        child: Icon(
-                          Icons.error_outline,
-                          color: Colors.red.shade400,
-                          size: 48,
-                        ),
+          ? Center(
+              child: Column(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  Container(
+                    padding: const EdgeInsets.all(16),
+                    decoration: BoxDecoration(
+                      color: Colors.red.shade50,
+                      shape: BoxShape.circle,
+                    ),
+                    child: Icon(
+                      Icons.error_outline,
+                      color: Colors.red.shade400,
+                      size: 48,
+                    ),
+                  ),
+                  const SizedBox(height: 16),
+                  Text(
+                    erro!,
+                    style: TextStyle(color: Colors.red.shade600, fontSize: 16),
+                    textAlign: TextAlign.center,
+                  ),
+                  const SizedBox(height: 16),
+                  ElevatedButton(
+                    onPressed: buscarResumo,
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: Colors.red.shade400,
+                      foregroundColor: Colors.white,
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 24,
+                        vertical: 12,
                       ),
-                      const SizedBox(height: 16),
-                      Text(
-                        erro!,
-                        style: TextStyle(
-                          color: Colors.red.shade600,
-                          fontSize: 16,
-                        ),
-                        textAlign: TextAlign.center,
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(12),
                       ),
-                      const SizedBox(height: 16),
-                      ElevatedButton(
-                        onPressed: buscarResumo,
-                        style: ElevatedButton.styleFrom(
-                          backgroundColor: Colors.red.shade400,
-                          foregroundColor: Colors.white,
-                          padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
-                          shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(12),
+                    ),
+                    child: const Text('Tentar novamente'),
+                  ),
+                ],
+              ),
+            )
+          : SingleChildScrollView(
+              padding: const EdgeInsets.all(24),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  // Header com informações da cidade
+                  Container(
+                    width: double.infinity,
+                    padding: const EdgeInsets.all(24),
+                    decoration: BoxDecoration(
+                      gradient: const LinearGradient(
+                        begin: Alignment.topLeft,
+                        end: Alignment.bottomRight,
+                        colors: [Color(0xFF667eea), Color(0xFF764ba2)],
+                      ),
+                      borderRadius: BorderRadius.circular(20),
+                      boxShadow: [
+                        BoxShadow(
+                          color: const Color(0xFF667eea).withOpacity(0.3),
+                          blurRadius: 20,
+                          offset: const Offset(0, 10),
+                        ),
+                      ],
+                    ),
+                    child: Row(
+                      children: [
+                        Expanded(
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              const Text(
+                                'Prefeitura Municipal de Piracuruca-PI',
+                                style: TextStyle(
+                                  color: Colors.white,
+                                  fontSize: 22,
+                                  fontWeight: FontWeight.bold,
+                                ),
+                              ),
+                              const SizedBox(height: 8),
+                              const Text(
+                                'Sistema de Gestão de Coleta de Entulho',
+                                style: TextStyle(
+                                  color: Colors.white70,
+                                  fontSize: 16,
+                                ),
+                              ),
+                              const SizedBox(height: 16),
+                              Container(
+                                padding: const EdgeInsets.symmetric(
+                                  horizontal: 16,
+                                  vertical: 8,
+                                ),
+                                decoration: BoxDecoration(
+                                  color: Colors.white.withOpacity(0.2),
+                                  borderRadius: BorderRadius.circular(20),
+                                ),
+                                child: Text(
+                                  'Última atualização: ${DateTime.now().day}/${DateTime.now().month}/${DateTime.now().year} às ${DateTime.now().hour}:${DateTime.now().minute.toString().padLeft(2, '0')}',
+                                  style: const TextStyle(
+                                    color: Colors.white,
+                                    fontSize: 14,
+                                  ),
+                                ),
+                              ),
+                            ],
                           ),
                         ),
-                        child: const Text('Tentar novamente'),
+                        Container(
+                          width: 80,
+                          height: 80,
+                          decoration: BoxDecoration(
+                            color: Colors.white.withOpacity(0.2),
+                            shape: BoxShape.circle,
+                          ),
+                          child: const Icon(
+                            Icons.location_city,
+                            color: Colors.white,
+                            size: 40,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+
+                  const SizedBox(height: 32),
+
+                  // Título da seção de estatísticas
+                  const Text(
+                    'Estatísticas de Solicitações',
+                    style: TextStyle(
+                      fontSize: 24,
+                      fontWeight: FontWeight.bold,
+                      color: Colors.black87,
+                    ),
+                  ),
+
+                  const SizedBox(height: 16),
+
+                  // Cards de estatísticas
+                  Wrap(
+                    alignment: WrapAlignment.center,
+                    spacing: 24,
+                    runSpacing: 24,
+                    children: [
+                      _buildStatCard(
+                        title: 'Total de Solicitações',
+                        value: total,
+                        icon: Icons.all_inbox,
+                        primaryColor: const Color(0xFF667eea),
+                        secondaryColor: const Color(0xFF764ba2),
+                        index: 0,
+                      ),
+                      _buildStatCard(
+                        title: 'Aguardando Coleta',
+                        value: pendentes,
+                        icon: Icons.schedule,
+                        primaryColor: const Color(0xFFf093fb),
+                        secondaryColor: const Color(0xFFf5576c),
+                        index: 1,
+                      ),
+                      _buildStatCard(
+                        title: 'Em Andamento',
+                        value: andamento,
+                        icon: Icons.local_shipping,
+                        primaryColor: const Color(0xFF4facfe),
+                        secondaryColor: const Color(0xFF00f2fe),
+                        index: 2,
+                      ),
+                      _buildStatCard(
+                        title: 'Concluídas',
+                        value: concluidas,
+                        icon: Icons.check_circle,
+                        primaryColor: const Color(0xFF43e97b),
+                        secondaryColor: const Color(0xFF38f9d7),
+                        index: 3,
                       ),
                     ],
                   ),
-                )
-              : SingleChildScrollView(
-                  padding: const EdgeInsets.all(24),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
+
+                  const SizedBox(height: 40),
+
+                  // Título da seção de ações rápidas
+                  const Text(
+                    'Ações Rápidas',
+                    style: TextStyle(
+                      fontSize: 24,
+                      fontWeight: FontWeight.bold,
+                      color: Colors.black87,
+                    ),
+                  ),
+
+                  const SizedBox(height: 16),
+
+                  // Ações rápidas
+                  Wrap(
+                    alignment: WrapAlignment.center,
+                    spacing: 16,
+                    runSpacing: 16,
                     children: [
-                      // Header com informações da cidade
-                      Container(
-                        width: double.infinity,
-                        padding: const EdgeInsets.all(24),
-                        decoration: BoxDecoration(
-                          gradient: const LinearGradient(
-                            begin: Alignment.topLeft,
-                            end: Alignment.bottomRight,
-                            colors: [Color(0xFF667eea), Color(0xFF764ba2)],
-                          ),
-                          borderRadius: BorderRadius.circular(20),
-                          boxShadow: [
-                            BoxShadow(
-                              color: const Color(0xFF667eea).withOpacity(0.3),
-                              blurRadius: 20,
-                              offset: const Offset(0, 10),
+                      _buildQuickAction(
+                        title: 'Ver Solicitações',
+                        icon: Icons.list_alt,
+                        onTap: () {
+                          Navigator.push(
+                            context,
+                            MaterialPageRoute(
+                              builder: (_) => const SolicitacoesPage(),
                             ),
-                          ],
-                        ),
-                        child: Row(
-                          children: [
-                            Expanded(
-                              child: Column(
-                                crossAxisAlignment: CrossAxisAlignment.start,
-                                children: [
-                                  const Text(
-                                    'Prefeitura Municipal de Piracuruca-PI',
-                                    style: TextStyle(
-                                      color: Colors.white,
-                                      fontSize: 22,
-                                      fontWeight: FontWeight.bold,
-                                    ),
-                                  ),
-                                  const SizedBox(height: 8),
-                                  const Text(
-                                    'Sistema de Gestão de Coleta de Entulho',
-                                    style: TextStyle(
-                                      color: Colors.white70,
-                                      fontSize: 16,
-                                    ),
-                                  ),
-                                  const SizedBox(height: 16),
-                                  Container(
-                                    padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-                                    decoration: BoxDecoration(
-                                      color: Colors.white.withOpacity(0.2),
-                                      borderRadius: BorderRadius.circular(20),
-                                    ),
-                                    child: Text(
-                                      'Última atualização: ${DateTime.now().day}/${DateTime.now().month}/${DateTime.now().year} às ${DateTime.now().hour}:${DateTime.now().minute.toString().padLeft(2, '0')}',
-                                      style: const TextStyle(
-                                        color: Colors.white,
-                                        fontSize: 14,
-                                      ),
-                                    ),
-                                  ),
-                                ],
+                          );
+                        },
+                        color: const Color(0xFF667eea),
+                      ),
+                      _buildQuickAction(
+                        title: 'Relatórios',
+                        icon: Icons.analytics,
+                        onTap: () {
+                          // TODO: Implementar navegação para relatórios
+                          ScaffoldMessenger.of(context).showSnackBar(
+                            const SnackBar(
+                              content: Text(
+                                'Funcionalidade em desenvolvimento',
                               ),
                             ),
-                            Container(
-                              width: 80,
-                              height: 80,
-                              decoration: BoxDecoration(
-                                color: Colors.white.withOpacity(0.2),
-                                shape: BoxShape.circle,
-                              ),
-                              child: const Icon(
-                                Icons.location_city,
-                                color: Colors.white,
-                                size: 40,
+                          );
+                        },
+                        color: const Color(0xFF43e97b),
+                      ),
+                      _buildQuickAction(
+                        title: 'Configurações',
+                        icon: Icons.settings,
+                        onTap: () {
+                          // TODO: Implementar navegação para configurações
+                          ScaffoldMessenger.of(context).showSnackBar(
+                            const SnackBar(
+                              content: Text(
+                                'Funcionalidade em desenvolvimento',
                               ),
                             ),
-                          ],
-                        ),
+                          );
+                        },
+                        color: const Color(0xFFf093fb),
                       ),
-                      
-                      const SizedBox(height: 32),
-                      
-                      // Título da seção de estatísticas
-                      const Text(
-                        'Estatísticas de Solicitações',
-                        style: TextStyle(
-                          fontSize: 24,
-                          fontWeight: FontWeight.bold,
-                          color: Colors.black87,
-                        ),
-                      ),
-                      
-                      const SizedBox(height: 16),
-                      
-                      // Cards de estatísticas
-                      Wrap(
-                        alignment: WrapAlignment.center,
-                        spacing: 24,
-                        runSpacing: 24,
-                        children: [
-                          _buildStatCard(
-                            title: 'Total de Solicitações',
-                            value: total,
-                            icon: Icons.all_inbox,
-                            primaryColor: const Color(0xFF667eea),
-                            secondaryColor: const Color(0xFF764ba2),
-                            index: 0,
-                          ),
-                          _buildStatCard(
-                            title: 'Aguardando Coleta',
-                            value: pendentes,
-                            icon: Icons.schedule,
-                            primaryColor: const Color(0xFFf093fb),
-                            secondaryColor: const Color(0xFFf5576c),
-                            index: 1,
-                          ),
-                          _buildStatCard(
-                            title: 'Em Andamento',
-                            value: andamento,
-                            icon: Icons.local_shipping,
-                            primaryColor: const Color(0xFF4facfe),
-                            secondaryColor: const Color(0xFF00f2fe),
-                            index: 2,
-                          ),
-                          _buildStatCard(
-                            title: 'Concluídas',
-                            value: concluidas,
-                            icon: Icons.check_circle,
-                            primaryColor: const Color(0xFF43e97b),
-                            secondaryColor: const Color(0xFF38f9d7),
-                            index: 3,
-                          ),
-                        ],
-                      ),
-                      
-                      const SizedBox(height: 40),
-                      
-                      // Título da seção de ações rápidas
-                      const Text(
-                        'Ações Rápidas',
-                        style: TextStyle(
-                          fontSize: 24,
-                          fontWeight: FontWeight.bold,
-                          color: Colors.black87,
-                        ),
-                      ),
-                      
-                      const SizedBox(height: 16),
-                      
-                      // Ações rápidas
-                      Wrap(
-                        alignment: WrapAlignment.center,
-                        spacing: 16,
-                        runSpacing: 16,
-                        children: [
-                          _buildQuickAction(
-                            title: 'Ver Solicitações',
-                            icon: Icons.list_alt,
-                            onTap: () {
-                              Navigator.push(
-                                context,
-                                MaterialPageRoute(builder: (_) => const SolicitacoesPage()),
-                              );
-                            },
-                            color: const Color(0xFF667eea),
-                          ),
-                          _buildQuickAction(
-                            title: 'Relatórios',
-                            icon: Icons.analytics,
-                            onTap: () {
-                              // TODO: Implementar navegação para relatórios
-                              ScaffoldMessenger.of(context).showSnackBar(
-                                const SnackBar(content: Text('Funcionalidade em desenvolvimento')),
-                              );
-                            },
-                            color: const Color(0xFF43e97b),
-                          ),
-                          _buildQuickAction(
-                            title: 'Configurações',
-                            icon: Icons.settings,
-                            onTap: () {
-                              // TODO: Implementar navegação para configurações
-                              ScaffoldMessenger.of(context).showSnackBar(
-                                const SnackBar(content: Text('Funcionalidade em desenvolvimento')),
-                              );
-                            },
-                            color: const Color(0xFFf093fb),
-                          ),
-                          _buildQuickAction(
-                            title: 'Equipes',
-                            icon: Icons.group,
-                            onTap: () {
-                              // TODO: Implementar navegação para gestão de equipes
-                              ScaffoldMessenger.of(context).showSnackBar(
-                                const SnackBar(content: Text('Funcionalidade em desenvolvimento')),
-                              );
-                            },
-                            color: const Color(0xFF4facfe),
-                          ),
-                        ],
+                      _buildQuickAction(
+                        title: 'Equipes',
+                        icon: Icons.group,
+                        onTap: () {
+                          // TODO: Implementar navegação para gestão de equipes
+                          ScaffoldMessenger.of(context).showSnackBar(
+                            const SnackBar(
+                              content: Text(
+                                'Funcionalidade em desenvolvimento',
+                              ),
+                            ),
+                          );
+                        },
+                        color: const Color(0xFF4facfe),
                       ),
                     ],
                   ),
-                ),
+                ],
+              ),
+            ),
     );
   }
 }

@@ -90,7 +90,7 @@ class DetalhesSolicitacaoPage extends StatelessWidget {
             )
           : null,
       child: SingleChildScrollView(
-        padding: const EdgeInsets.all(AppSpacing.section),
+        padding: const EdgeInsets.symmetric(horizontal: 2, vertical: 2),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
