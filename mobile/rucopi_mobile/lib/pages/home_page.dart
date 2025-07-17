@@ -14,10 +14,10 @@ class HomePage extends StatefulWidget {
   const HomePage({Key? key, this.onAdd, this.onConfig}) : super(key: key);
 
   @override
-  State<HomePage> createState() => _HomePageState();
+  State<HomePage> createState() => HomePageState();
 }
 
-class _HomePageState extends State<HomePage> with WidgetsBindingObserver {
+class HomePageState extends State<HomePage> with WidgetsBindingObserver {
   String nomeUsuario = '';
   int solicitacoesPendentes = 0;
   int solicitacoesTotais = 0;
@@ -93,7 +93,9 @@ class _HomePageState extends State<HomePage> with WidgetsBindingObserver {
     try {
       final resp = await Supabase.instance.client
           .from('solicitacoes')
-          .select('descricao, status, criado_em, endereco, tipo_entulho, fotos')
+          .select(
+            'id, descricao, status, criado_em, endereco, tipo_entulho, fotos',
+          )
           .eq('morador_id', user.id)
           .order(
             'criado_em',
@@ -115,6 +117,11 @@ class _HomePageState extends State<HomePage> with WidgetsBindingObserver {
         solicitacoesRecentes = [];
       });
     }
+  }
+
+  void atualizarDados() {
+    _carregarDados();
+    _carregarSolicitacoesRecentes();
   }
 
   @override
@@ -150,340 +157,348 @@ class _HomePageState extends State<HomePage> with WidgetsBindingObserver {
       ],
       child: loading
           ? const Center(child: CircularProgressIndicator())
-          : Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                // Header com informações do usuário
-                HomeSectionCard(
-                  margin: const EdgeInsets.only(top: 2, bottom: 8),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Row(
-                        children: [
-                          Container(
-                            padding: const EdgeInsets.all(12),
-                            decoration: BoxDecoration(
-                              color: theme.primaryColor.withOpacity(0.15),
-                              borderRadius: BorderRadius.circular(16),
-                            ),
-                            child: Icon(
-                              Icons.person,
-                              color: theme.primaryColor,
-                              size: 24,
-                            ),
-                          ),
-                          const SizedBox(width: 16),
-                          Expanded(
-                            child: Column(
-                              crossAxisAlignment: CrossAxisAlignment.start,
-                              children: [
-                                Text(
-                                  _primeiroNomeESobrenome(nomeUsuario),
-                                  style: theme.textTheme.headlineSmall
-                                      ?.copyWith(
-                                        fontWeight: FontWeight.bold,
-                                        color: theme.primaryColor,
-                                      ),
-                                ),
-                                const SizedBox(height: 4),
-                                Text(
-                                  'Bem-vindo ao sistema de coletas',
-                                  style: theme.textTheme.bodyMedium?.copyWith(
-                                    color: theme.textTheme.bodySmall?.color,
-                                  ),
-                                ),
-                              ],
-                            ),
-                          ),
-                        ],
-                      ),
-                    ],
-                  ),
-                ),
-                const SizedBox(height: 0),
-                // Seção de estatísticas + botão principal em um único card
-                HomeSectionCard(
-                  child: Column(
-                    children: [
-                      Row(
-                        children: [
-                          Expanded(
-                            child: Container(
-                              padding: const EdgeInsets.all(20),
+          : SingleChildScrollView(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  // Header com informações do usuário
+                  HomeSectionCard(
+                    margin: const EdgeInsets.only(top: 2, bottom: 8),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Row(
+                          children: [
+                            Container(
+                              padding: const EdgeInsets.all(12),
                               decoration: BoxDecoration(
-                                color: theme.primaryColor.withOpacity(0.08),
+                                color: theme.primaryColor.withOpacity(0.15),
                                 borderRadius: BorderRadius.circular(16),
                               ),
+                              child: Icon(
+                                Icons.person,
+                                color: theme.primaryColor,
+                                size: 24,
+                              ),
+                            ),
+                            const SizedBox(width: 16),
+                            Expanded(
                               child: Column(
                                 crossAxisAlignment: CrossAxisAlignment.start,
                                 children: [
                                   Text(
-                                    'Pendentes',
-                                    style: theme.textTheme.bodyMedium?.copyWith(
-                                      color: theme.primaryColor,
-                                      fontWeight: FontWeight.w500,
-                                    ),
-                                  ),
-                                  const SizedBox(height: 8),
-                                  Row(
-                                    children: [
-                                      Container(
-                                        padding: const EdgeInsets.all(10),
-                                        decoration: BoxDecoration(
-                                          color: theme.primaryColor.withOpacity(
-                                            0.15,
-                                          ),
-                                          borderRadius: BorderRadius.circular(
-                                            12,
-                                          ),
-                                        ),
-                                        child: Icon(
-                                          Icons.schedule_outlined,
+                                    _primeiroNomeESobrenome(nomeUsuario),
+                                    style: theme.textTheme.headlineSmall
+                                        ?.copyWith(
+                                          fontWeight: FontWeight.bold,
                                           color: theme.primaryColor,
-                                          size: 24,
                                         ),
-                                      ),
-                                      const SizedBox(width: 16),
-                                      Text(
-                                        solicitacoesPendentes.toString(),
-                                        style: theme.textTheme.headlineMedium
-                                            ?.copyWith(
-                                              fontWeight: FontWeight.bold,
-                                              color: theme.primaryColor,
-                                            ),
-                                      ),
-                                    ],
                                   ),
-                                ],
-                              ),
-                            ),
-                          ),
-                          const SizedBox(width: 8),
-                          Expanded(
-                            child: Container(
-                              padding: const EdgeInsets.all(20),
-                              decoration: BoxDecoration(
-                                color: theme.brightness == Brightness.dark
-                                    ? Colors.orange.withOpacity(
-                                        0.15,
-                                      ) // fundo laranja suave no escuro
-                                    : theme.colorScheme.secondary.withOpacity(
-                                        0.08,
-                                      ),
-                                borderRadius: BorderRadius.circular(16),
-                              ),
-                              child: Column(
-                                crossAxisAlignment: CrossAxisAlignment.start,
-                                children: [
+                                  const SizedBox(height: 4),
                                   Text(
-                                    'Total',
+                                    'Bem-vindo ao sistema de coletas',
                                     style: theme.textTheme.bodyMedium?.copyWith(
-                                      color: theme.brightness == Brightness.dark
-                                          ? Colors
-                                                .orange // cor do status 'Pendente'
-                                          : theme.colorScheme.secondary,
-                                      fontWeight: FontWeight.w500,
+                                      color: theme.textTheme.bodySmall?.color,
                                     ),
                                   ),
-                                  const SizedBox(height: 8),
-                                  Row(
-                                    children: [
-                                      Container(
-                                        padding: const EdgeInsets.all(10),
-                                        decoration: BoxDecoration(
-                                          color:
-                                              theme.brightness ==
-                                                  Brightness.dark
-                                              ? Colors.orange.withOpacity(
-                                                  0.15,
-                                                ) // fundo laranja suave
-                                              : theme.colorScheme.secondary
-                                                    .withOpacity(0.15),
-                                          borderRadius: BorderRadius.circular(
-                                            12,
-                                          ),
-                                        ),
-                                        child: Icon(
-                                          Icons.analytics_outlined,
-                                          color:
-                                              theme.brightness ==
-                                                  Brightness.dark
-                                              ? Colors
-                                                    .orange // ícone laranja
-                                              : theme.colorScheme.secondary,
-                                          size: 24,
-                                        ),
-                                      ),
-                                      const SizedBox(width: 16),
-                                      Text(
-                                        solicitacoesTotais.toString(),
-                                        style: theme.textTheme.headlineMedium
-                                            ?.copyWith(
-                                              fontWeight: FontWeight.bold,
-                                              color:
-                                                  theme.brightness ==
-                                                      Brightness.dark
-                                                  ? Colors
-                                                        .orange // valor laranja
-                                                  : theme.colorScheme.secondary,
-                                            ),
-                                      ),
-                                    ],
-                                  ),
                                 ],
                               ),
                             ),
-                          ),
-                        ],
-                      ),
-                      const SizedBox(height: 12),
-                      // Botão principal
-                      GestureDetector(
-                        onTap: () async {
-                          final result = await Navigator.push(
-                            context,
-                            MaterialPageRoute(
-                              builder: (context) => const NovaSolicitacaoPage(),
-                            ),
-                          );
-                          if (result == true) {
-                            _carregarDados();
-                            _carregarSolicitacoesRecentes();
-                          }
-                        },
-                        child: Container(
-                          width: double.infinity,
-                          padding: const EdgeInsets.symmetric(
-                            vertical: 16,
-                            horizontal: 20,
-                          ),
-                          decoration: BoxDecoration(
-                            gradient: LinearGradient(
-                              begin: Alignment.topLeft,
-                              end: Alignment.bottomRight,
-                              colors: [
-                                theme.primaryColor,
-                                theme.primaryColor.withOpacity(0.8),
-                              ],
-                            ),
-                            borderRadius: BorderRadius.circular(16),
-                            boxShadow: [
-                              BoxShadow(
-                                color: theme.primaryColor.withOpacity(0.2),
-                                blurRadius: 8,
-                                offset: const Offset(0, 4),
-                              ),
-                            ],
-                          ),
-                          child: Row(
-                            mainAxisAlignment: MainAxisAlignment.center,
-                            children: [
-                              Icon(
-                                Icons.add_circle_outline,
-                                color: Colors.white,
-                                size: 22,
-                              ),
-                              const SizedBox(width: 12),
-                              Text(
-                                'Solicitar Nova Coleta',
-                                style: theme.textTheme.titleMedium?.copyWith(
-                                  color: Colors.white,
-                                  fontWeight: FontWeight.w600,
-                                ),
-                              ),
-                            ],
-                          ),
+                          ],
                         ),
-                      ),
-                    ],
+                      ],
+                    ),
                   ),
-                ),
-                const SizedBox(height: 0),
-                // Seção Histórico de Solicitações em um único card
-                HomeSectionCard(
-                  margin: const EdgeInsets.only(top: 5, bottom: 2),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      // Separador visual com texto
-                      Row(
-                        children: [
-                          Expanded(
-                            child: Divider(
-                              thickness: 1.5,
-                              color: theme.dividerColor.withOpacity(0.5),
-                            ),
-                          ),
-                          Padding(
-                            padding: const EdgeInsets.symmetric(horizontal: 12),
-                            child: Text(
-                              'Histórico de Solicitações',
-                              style: theme.textTheme.bodySmall?.copyWith(
-                                color: theme.textTheme.bodySmall?.color
-                                    ?.withOpacity(0.7),
-                                fontWeight: FontWeight.w600,
-                              ),
-                            ),
-                          ),
-                          Expanded(
-                            child: Divider(
-                              thickness: 1.5,
-                              color: theme.dividerColor.withOpacity(0.5),
-                            ),
-                          ),
-                        ],
-                      ),
-                      const SizedBox(height: 15),
-                      if (solicitacoesRecentes.isEmpty)
-                        Text(
-                          'Nenhuma solicitação recente.',
-                          style: theme.textTheme.bodyMedium,
-                        ),
-                      for (final solicitacao in solicitacoesRecentes)
-                        _buildSolicitacaoResumoCard(context, solicitacao),
-                      if (solicitacoesRecentes.isNotEmpty) ...[
-                        const SizedBox(height: 0),
-                        Center(
-                          child: SizedBox(
-                            width: double.infinity,
-                            child: ElevatedButton.icon(
-                              onPressed: () {
-                                Navigator.push(
-                                  context,
-                                  MaterialPageRoute(
-                                    builder: (context) =>
-                                        const HistoricoSolicitacoesPage(),
-                                  ),
-                                );
-                              },
-                              icon: const Icon(Icons.list_alt),
-                              label: const Text('Ver todas as solicitações'),
-                              style: ElevatedButton.styleFrom(
-                                backgroundColor: theme.primaryColor,
-                                foregroundColor: Colors.white,
-                                shape: RoundedRectangleBorder(
+                  const SizedBox(height: 0),
+                  // Seção de estatísticas + botão principal em um único card
+                  HomeSectionCard(
+                    child: Column(
+                      children: [
+                        Row(
+                          children: [
+                            Expanded(
+                              child: Container(
+                                padding: const EdgeInsets.all(20),
+                                decoration: BoxDecoration(
+                                  color: theme.primaryColor.withOpacity(0.08),
                                   borderRadius: BorderRadius.circular(16),
                                 ),
-                                padding: const EdgeInsets.symmetric(
-                                  vertical: 16,
-                                  horizontal: 20,
-                                ),
-                                textStyle: theme.textTheme.titleMedium
-                                    ?.copyWith(
-                                      color: Colors.white,
-                                      fontWeight: FontWeight.w600,
+                                child: Column(
+                                  crossAxisAlignment: CrossAxisAlignment.start,
+                                  children: [
+                                    Text(
+                                      'Pendentes',
+                                      style: theme.textTheme.bodyMedium
+                                          ?.copyWith(
+                                            color: theme.primaryColor,
+                                            fontWeight: FontWeight.w500,
+                                          ),
                                     ),
+                                    const SizedBox(height: 8),
+                                    Row(
+                                      children: [
+                                        Container(
+                                          padding: const EdgeInsets.all(10),
+                                          decoration: BoxDecoration(
+                                            color: theme.primaryColor
+                                                .withOpacity(0.15),
+                                            borderRadius: BorderRadius.circular(
+                                              12,
+                                            ),
+                                          ),
+                                          child: Icon(
+                                            Icons.schedule_outlined,
+                                            color: theme.primaryColor,
+                                            size: 24,
+                                          ),
+                                        ),
+                                        const SizedBox(width: 16),
+                                        Text(
+                                          solicitacoesPendentes.toString(),
+                                          style: theme.textTheme.headlineMedium
+                                              ?.copyWith(
+                                                fontWeight: FontWeight.bold,
+                                                color: theme.primaryColor,
+                                              ),
+                                        ),
+                                      ],
+                                    ),
+                                  ],
+                                ),
                               ),
+                            ),
+                            const SizedBox(width: 8),
+                            Expanded(
+                              child: Container(
+                                padding: const EdgeInsets.all(20),
+                                decoration: BoxDecoration(
+                                  color: theme.brightness == Brightness.dark
+                                      ? Colors.orange.withOpacity(
+                                          0.15,
+                                        ) // fundo laranja suave no escuro
+                                      : theme.colorScheme.secondary.withOpacity(
+                                          0.08,
+                                        ),
+                                  borderRadius: BorderRadius.circular(16),
+                                ),
+                                child: Column(
+                                  crossAxisAlignment: CrossAxisAlignment.start,
+                                  children: [
+                                    Text(
+                                      'Total',
+                                      style: theme.textTheme.bodyMedium?.copyWith(
+                                        color:
+                                            theme.brightness == Brightness.dark
+                                            ? Colors
+                                                  .orange // cor do status 'Pendente'
+                                            : theme.colorScheme.secondary,
+                                        fontWeight: FontWeight.w500,
+                                      ),
+                                    ),
+                                    const SizedBox(height: 8),
+                                    Row(
+                                      children: [
+                                        Container(
+                                          padding: const EdgeInsets.all(10),
+                                          decoration: BoxDecoration(
+                                            color:
+                                                theme.brightness ==
+                                                    Brightness.dark
+                                                ? Colors.orange.withOpacity(
+                                                    0.15,
+                                                  ) // fundo laranja suave
+                                                : theme.colorScheme.secondary
+                                                      .withOpacity(0.15),
+                                            borderRadius: BorderRadius.circular(
+                                              12,
+                                            ),
+                                          ),
+                                          child: Icon(
+                                            Icons.analytics_outlined,
+                                            color:
+                                                theme.brightness ==
+                                                    Brightness.dark
+                                                ? Colors
+                                                      .orange // ícone laranja
+                                                : theme.colorScheme.secondary,
+                                            size: 24,
+                                          ),
+                                        ),
+                                        const SizedBox(width: 16),
+                                        Text(
+                                          solicitacoesTotais.toString(),
+                                          style: theme.textTheme.headlineMedium
+                                              ?.copyWith(
+                                                fontWeight: FontWeight.bold,
+                                                color:
+                                                    theme.brightness ==
+                                                        Brightness.dark
+                                                    ? Colors
+                                                          .orange // valor laranja
+                                                    : theme
+                                                          .colorScheme
+                                                          .secondary,
+                                              ),
+                                        ),
+                                      ],
+                                    ),
+                                  ],
+                                ),
+                              ),
+                            ),
+                          ],
+                        ),
+                        const SizedBox(height: 12),
+                        // Botão principal
+                        GestureDetector(
+                          onTap: () async {
+                            final result = await Navigator.push(
+                              context,
+                              MaterialPageRoute(
+                                builder: (context) =>
+                                    const NovaSolicitacaoPage(),
+                              ),
+                            );
+                            if (result == true) {
+                              await _carregarDados();
+                              await _carregarSolicitacoesRecentes();
+                            }
+                          },
+                          child: Container(
+                            width: double.infinity,
+                            padding: const EdgeInsets.symmetric(
+                              vertical: 16,
+                              horizontal: 20,
+                            ),
+                            decoration: BoxDecoration(
+                              gradient: LinearGradient(
+                                begin: Alignment.topLeft,
+                                end: Alignment.bottomRight,
+                                colors: [
+                                  theme.primaryColor,
+                                  theme.primaryColor.withOpacity(0.8),
+                                ],
+                              ),
+                              borderRadius: BorderRadius.circular(16),
+                              boxShadow: [
+                                BoxShadow(
+                                  color: theme.primaryColor.withOpacity(0.2),
+                                  blurRadius: 8,
+                                  offset: const Offset(0, 4),
+                                ),
+                              ],
+                            ),
+                            child: Row(
+                              mainAxisAlignment: MainAxisAlignment.center,
+                              children: [
+                                Icon(
+                                  Icons.add_circle_outline,
+                                  color: Colors.white,
+                                  size: 22,
+                                ),
+                                const SizedBox(width: 12),
+                                Text(
+                                  'Solicitar Nova Coleta',
+                                  style: theme.textTheme.titleMedium?.copyWith(
+                                    color: Colors.white,
+                                    fontWeight: FontWeight.w600,
+                                  ),
+                                ),
+                              ],
                             ),
                           ),
                         ),
                       ],
-                    ],
+                    ),
                   ),
-                ),
-                const SizedBox(height: 15),
-              ],
+                  const SizedBox(height: 0),
+                  // Seção Histórico de Solicitações em um único card
+                  HomeSectionCard(
+                    margin: const EdgeInsets.only(top: 5, bottom: 2),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        // Separador visual com texto
+                        Row(
+                          children: [
+                            Expanded(
+                              child: Divider(
+                                thickness: 1.5,
+                                color: theme.dividerColor.withOpacity(0.5),
+                              ),
+                            ),
+                            Padding(
+                              padding: const EdgeInsets.symmetric(
+                                horizontal: 12,
+                              ),
+                              child: Text(
+                                'Histórico de Solicitações',
+                                style: theme.textTheme.bodySmall?.copyWith(
+                                  color: theme.textTheme.bodySmall?.color
+                                      ?.withOpacity(0.7),
+                                  fontWeight: FontWeight.w600,
+                                ),
+                              ),
+                            ),
+                            Expanded(
+                              child: Divider(
+                                thickness: 1.5,
+                                color: theme.dividerColor.withOpacity(0.5),
+                              ),
+                            ),
+                          ],
+                        ),
+                        const SizedBox(height: 15),
+                        if (solicitacoesRecentes.isEmpty)
+                          Text(
+                            'Nenhuma solicitação recente.',
+                            style: theme.textTheme.bodyMedium,
+                          ),
+                        for (final solicitacao in solicitacoesRecentes)
+                          _buildSolicitacaoResumoCard(context, solicitacao),
+                        if (solicitacoesRecentes.isNotEmpty) ...[
+                          const SizedBox(height: 0),
+                          Center(
+                            child: SizedBox(
+                              width: double.infinity,
+                              child: ElevatedButton.icon(
+                                onPressed: () {
+                                  Navigator.push(
+                                    context,
+                                    MaterialPageRoute(
+                                      builder: (context) =>
+                                          const HistoricoSolicitacoesPage(),
+                                    ),
+                                  );
+                                },
+                                icon: const Icon(Icons.list_alt),
+                                label: const Text('Ver todas as solicitações'),
+                                style: ElevatedButton.styleFrom(
+                                  backgroundColor: theme.primaryColor,
+                                  foregroundColor: Colors.white,
+                                  shape: RoundedRectangleBorder(
+                                    borderRadius: BorderRadius.circular(16),
+                                  ),
+                                  padding: const EdgeInsets.symmetric(
+                                    vertical: 16,
+                                    horizontal: 20,
+                                  ),
+                                  textStyle: theme.textTheme.titleMedium
+                                      ?.copyWith(
+                                        color: Colors.white,
+                                        fontWeight: FontWeight.w600,
+                                      ),
+                                ),
+                              ),
+                            ),
+                          ),
+                        ],
+                      ],
+                    ),
+                  ),
+                  const SizedBox(height: 15),
+                ],
+              ),
             ),
     );
   }
@@ -599,6 +614,7 @@ class _HomePageState extends State<HomePage> with WidgetsBindingObserver {
     final statusColor = isConcluida ? Colors.green : Colors.orange;
     final statusText = isConcluida ? 'Concluída' : 'Pendente';
     final endereco = solicitacao['endereco'] ?? 'Sem endereço';
+    final tipoEntulho = solicitacao['tipo_entulho'] ?? 'Não informado';
     final data = solicitacao['criado_em'] != null
         ? DateTime.tryParse(solicitacao['criado_em'])
         : null;
@@ -607,14 +623,18 @@ class _HomePageState extends State<HomePage> with WidgetsBindingObserver {
         : 'Data não disponível';
     return InkWell(
       borderRadius: BorderRadius.circular(16),
-      onTap: () {
-        Navigator.push(
+      onTap: () async {
+        final result = await Navigator.push(
           context,
           MaterialPageRoute(
             builder: (context) =>
                 DetalhesSolicitacaoPage(solicitacao: solicitacao),
           ),
         );
+        if (result == true) {
+          await _carregarDados();
+          await _carregarSolicitacoesRecentes();
+        }
       },
       child: Container(
         width: double.infinity,
@@ -659,7 +679,7 @@ class _HomePageState extends State<HomePage> with WidgetsBindingObserver {
             const SizedBox(height: 6),
             Center(
               child: Text(
-                endereco,
+                'Tipo de entulho: $tipoEntulho',
                 style: theme.textTheme.bodySmall,
                 maxLines: 2,
                 overflow: TextOverflow.ellipsis,

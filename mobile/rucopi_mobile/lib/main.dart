@@ -98,50 +98,55 @@ class MainNavigation extends StatefulWidget {
 
 class _MainNavigationState extends State<MainNavigation> {
   int _currentIndex = 0;
+  final GlobalKey<HomePageState> homeKey = GlobalKey<HomePageState>();
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      body: Builder(
-        builder: (context) {
-          // Só a HomePage fica no IndexedStack
-          return IndexedStack(
-            index: _currentIndex,
-            children: [
-              HomePage(
-                onAdd: () {
-                  Navigator.push(
-                    context,
-                    MaterialPageRoute(
-                      builder: (context) => const NovaSolicitacaoPage(),
-                    ),
-                  );
-                },
-                onConfig: () {
-                  Navigator.push(
-                    context,
-                    MaterialPageRoute(
-                      builder: (context) => const ConfiguracoesPage(),
-                    ),
-                  );
-                },
-              ),
-            ],
-          );
-        },
+      body: IndexedStack(
+        index: _currentIndex,
+        children: [
+          HomePage(
+            key: homeKey,
+            onAdd: () async {
+              final result = await Navigator.push(
+                context,
+                MaterialPageRoute(
+                  builder: (context) => const NovaSolicitacaoPage(),
+                ),
+              );
+              if (result == true) {
+                homeKey.currentState?.atualizarDados();
+              }
+            },
+            onConfig: () {
+              Navigator.push(
+                context,
+                MaterialPageRoute(
+                  builder: (context) => const ConfiguracoesPage(),
+                ),
+              );
+            },
+          ),
+        ],
       ),
       bottomNavigationBar: BottomNavBar(
         currentIndex: _currentIndex,
-        onTap: (index) {
+        onTap: (index) async {
           if (index == 0) {
             setState(() => _currentIndex = 0);
+            // Sempre que voltar para Home, atualiza
+            homeKey.currentState?.atualizarDados();
           } else if (index == 1) {
-            Navigator.push(
+            final result = await Navigator.push(
               context,
               MaterialPageRoute(
                 builder: (context) => const NovaSolicitacaoPage(),
               ),
             );
+            if (result == true) {
+              homeKey.currentState?.atualizarDados();
+            }
           } else if (index == 2) {
             Navigator.push(
               context,
