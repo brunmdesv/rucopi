@@ -2,9 +2,22 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../theme/theme_provider.dart';
 import '../widgets/app_padrao.dart';
+import 'package:supabase_flutter/supabase_flutter.dart';
+import 'package:go_router/go_router.dart';
+import 'package:rucopi_dashboard/pages/usuarios_dashboard.dart';
 
-class ConfiguracoesPage extends StatelessWidget {
+class ConfiguracoesPage extends StatefulWidget {
   const ConfiguracoesPage({Key? key}) : super(key: key);
+
+  @override
+  State<ConfiguracoesPage> createState() => _ConfiguracoesPageState();
+}
+
+class _ConfiguracoesPageState extends State<ConfiguracoesPage> {
+  @override
+  void initState() {
+    super.initState();
+  }
 
   PreferredSizeWidget _buildCustomAppBar(ThemeData theme) {
     return PreferredSize(
@@ -35,7 +48,6 @@ class ConfiguracoesPage extends StatelessWidget {
                   ),
                 ),
                 const Spacer(),
-                // Nenhum ícone à direita
               ],
             ),
           ),
@@ -48,40 +60,113 @@ class ConfiguracoesPage extends StatelessWidget {
   Widget build(BuildContext context) {
     final themeProvider = Provider.of<ThemeProvider>(context);
     final theme = Theme.of(context);
-    return Row(
-      crossAxisAlignment: CrossAxisAlignment.center,
-      children: [
-        Icon(Icons.brightness_6, size: 28, color: theme.colorScheme.primary),
-        const SizedBox(width: 16),
-        Expanded(
-          child: Text(
-            'Tema do sistema',
-            style: theme.textTheme.titleMedium?.copyWith(
-              fontWeight: FontWeight.bold,
+    final user = Supabase.instance.client.auth.currentUser;
+    return FutureBuilder(
+      future: user == null
+          ? Future.value(null)
+          : Supabase.instance.client
+                .from('usuarios')
+                .select('cargo')
+                .eq('id', user.id)
+                .single(),
+      builder: (context, snapshot) {
+        final isAdmin =
+            snapshot.hasData &&
+            snapshot.data != null &&
+            (snapshot.data as Map<String, dynamic>)['cargo'] == 'administrador';
+        return Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Row(
+              crossAxisAlignment: CrossAxisAlignment.center,
+              children: [
+                Icon(
+                  Icons.brightness_6,
+                  size: 28,
+                  color: theme.colorScheme.primary,
+                ),
+                const SizedBox(width: 16),
+                Expanded(
+                  child: Text(
+                    'Tema do sistema',
+                    style: theme.textTheme.titleMedium?.copyWith(
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
+                ),
+                _ThemeIconButton(
+                  icon: Icons.light_mode,
+                  tooltip: 'Claro',
+                  selected: themeProvider.themeMode == ThemeMode.light,
+                  onTap: () => themeProvider.setTheme(ThemeMode.light),
+                ),
+                const SizedBox(width: 8),
+                _ThemeIconButton(
+                  icon: Icons.dark_mode,
+                  tooltip: 'Escuro',
+                  selected: themeProvider.themeMode == ThemeMode.dark,
+                  onTap: () => themeProvider.setTheme(ThemeMode.dark),
+                ),
+                const SizedBox(width: 8),
+                _ThemeIconButton(
+                  icon: Icons.brightness_auto,
+                  tooltip: 'Automático',
+                  selected: themeProvider.themeMode == ThemeMode.system,
+                  onTap: () => themeProvider.setTheme(ThemeMode.system),
+                ),
+              ],
             ),
-          ),
-        ),
-        _ThemeIconButton(
-          icon: Icons.light_mode,
-          tooltip: 'Claro',
-          selected: themeProvider.themeMode == ThemeMode.light,
-          onTap: () => themeProvider.setTheme(ThemeMode.light),
-        ),
-        const SizedBox(width: 8),
-        _ThemeIconButton(
-          icon: Icons.dark_mode,
-          tooltip: 'Escuro',
-          selected: themeProvider.themeMode == ThemeMode.dark,
-          onTap: () => themeProvider.setTheme(ThemeMode.dark),
-        ),
-        const SizedBox(width: 8),
-        _ThemeIconButton(
-          icon: Icons.brightness_auto,
-          tooltip: 'Automático',
-          selected: themeProvider.themeMode == ThemeMode.system,
-          onTap: () => themeProvider.setTheme(ThemeMode.system),
-        ),
-      ],
+            const SizedBox(height: 32),
+            if (isAdmin)
+              Padding(
+                padding: const EdgeInsets.only(bottom: 16),
+                child: ElevatedButton.icon(
+                  icon: const Icon(Icons.manage_accounts),
+                  label: const Text('Gerenciar usuários'),
+                  style: ElevatedButton.styleFrom(
+                    padding: const EdgeInsets.symmetric(
+                      vertical: 16,
+                      horizontal: 24,
+                    ),
+                    backgroundColor: theme.colorScheme.primary,
+                    foregroundColor: Colors.white,
+                    textStyle: theme.textTheme.titleMedium?.copyWith(
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
+                  onPressed: () {
+                    Navigator.of(context).push(
+                      MaterialPageRoute(
+                        builder: (_) => const UsuariosDashboard(),
+                      ),
+                    );
+                  },
+                ),
+              ),
+            ElevatedButton.icon(
+              icon: const Icon(Icons.logout),
+              label: const Text('Logout'),
+              style: ElevatedButton.styleFrom(
+                padding: const EdgeInsets.symmetric(
+                  vertical: 16,
+                  horizontal: 24,
+                ),
+                backgroundColor: theme.colorScheme.error,
+                foregroundColor: Colors.white,
+                textStyle: theme.textTheme.titleMedium?.copyWith(
+                  fontWeight: FontWeight.bold,
+                ),
+              ),
+              onPressed: () async {
+                await Supabase.instance.client.auth.signOut();
+                if (context.mounted) {
+                  context.go('/login');
+                }
+              },
+            ),
+          ],
+        );
+      },
     );
   }
 }
