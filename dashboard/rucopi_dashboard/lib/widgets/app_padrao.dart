@@ -33,48 +33,62 @@ class AppPadrao extends StatelessWidget {
   }
 
   PreferredSizeWidget _defaultAppBar(ThemeData theme) {
+    final isDark = theme.brightness == Brightness.dark;
     return PreferredSize(
-      preferredSize: const Size.fromHeight(72),
+      preferredSize: const Size.fromHeight(80),
       child: Container(
-        color: theme.brightness == Brightness.dark
-            ? const Color(0xFF1A1A1A)
-            : Colors.white,
+        height: 80,
         padding: const EdgeInsets.symmetric(horizontal: 32),
-        alignment: Alignment.centerLeft,
-        child: SafeArea(
-          bottom: false,
-          child: SizedBox(
-            height: 72,
-            child: Row(
-              crossAxisAlignment: CrossAxisAlignment.center,
-              children: [
-                if (leading != null)
-                  Container(
+        decoration: BoxDecoration(
+          color:
+              theme.appBarTheme.backgroundColor ??
+              (isDark ? const Color(0xFF1A1A1A) : Colors.white),
+          border: Border(
+            bottom: BorderSide(
+              color: isDark ? const Color(0xFF2A2A2A) : const Color(0xFFE2E8F0),
+              width: 1,
+            ),
+          ),
+        ),
+        child: Row(
+          crossAxisAlignment: CrossAxisAlignment.center,
+          children: [
+            if (leading != null)
+              Container(
+                padding: const EdgeInsets.all(8),
+                decoration: BoxDecoration(
+                  color: theme.primaryColor.withOpacity(0.1),
+                  borderRadius: BorderRadius.circular(8),
+                ),
+                child: leading,
+              ),
+            if (titulo != null)
+              Padding(
+                padding: const EdgeInsets.only(right: 24, left: 8),
+                child: Text(
+                  titulo!,
+                  style: theme.textTheme.headlineSmall?.copyWith(
+                    fontWeight: FontWeight.bold,
+                    color: theme.primaryColor,
+                  ),
+                ),
+              ),
+            const Spacer(),
+            if (actions != null)
+              ...actions!.map(
+                (action) => Padding(
+                  padding: const EdgeInsets.only(left: 8),
+                  child: Container(
                     padding: const EdgeInsets.all(8),
                     decoration: BoxDecoration(
                       color: theme.primaryColor.withOpacity(0.1),
                       borderRadius: BorderRadius.circular(8),
                     ),
-                    child: leading,
+                    child: action,
                   ),
-                if (titulo != null)
-                  Padding(
-                    padding: const EdgeInsets.only(right: 24, left: 8),
-                    child: Text(
-                      titulo!,
-                      style: theme.textTheme.headlineMedium?.copyWith(
-                        fontWeight: FontWeight.bold,
-                        color: theme.brightness == Brightness.dark
-                            ? Colors.white
-                            : const Color(0xFF606A45),
-                      ),
-                    ),
-                  ),
-                const Spacer(),
-                if (actions != null) ...actions!,
-              ],
-            ),
-          ),
+                ),
+              ),
+          ],
         ),
       ),
     );
