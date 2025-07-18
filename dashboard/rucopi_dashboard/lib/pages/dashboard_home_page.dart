@@ -191,60 +191,12 @@ class _DashboardHomePageState extends State<DashboardHomePage> {
     required ThemeData theme,
     required DashboardScreen screenType,
   }) {
-    final isHovered = hoveredScreen == screenType;
-    return MouseRegion(
-      onEnter: (_) => setState(() => hoveredScreen = screenType),
-      onExit: (_) => setState(() => hoveredScreen = null),
-      child: InkWell(
-        borderRadius: BorderRadius.circular(12),
-        onTap: onTap,
-        hoverColor: Colors.transparent,
-        highlightColor: Colors.transparent,
-        splashColor: Colors.transparent,
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            Icon(
-              icon,
-              color: selected ? theme.primaryColor : theme.disabledColor,
-              size: 20,
-            ),
-            const SizedBox(height: 4),
-            Text(
-              label,
-              style: theme.textTheme.bodySmall?.copyWith(
-                fontSize: 12, // Tamanho menor para a label
-                color: selected ? theme.primaryColor : theme.disabledColor,
-                fontWeight: selected ? FontWeight.bold : FontWeight.normal,
-              ),
-            ),
-            const SizedBox(height: 4),
-            AnimatedContainer(
-              duration: const Duration(milliseconds: 180),
-              curve: Curves.ease,
-              height: 3,
-              width: selected || isHovered ? 28 : 0,
-              decoration: BoxDecoration(
-                color: selected
-                    ? theme.primaryColor
-                    : (isHovered
-                          ? theme.primaryColor.withOpacity(0.5)
-                          : Colors.transparent),
-                borderRadius: BorderRadius.circular(2),
-                boxShadow: selected || isHovered
-                    ? [
-                        BoxShadow(
-                          color: theme.primaryColor.withOpacity(0.18),
-                          blurRadius: 4,
-                          offset: const Offset(0, 2),
-                        ),
-                      ]
-                    : [],
-              ),
-            ),
-          ],
-        ),
-      ),
+    return _MenuIcon(
+      icon: icon,
+      label: label,
+      selected: selected,
+      onTap: onTap,
+      theme: theme,
     );
   }
 
@@ -386,69 +338,6 @@ class _DashboardContent extends StatefulWidget {
 }
 
 class _DashboardContentState extends State<_DashboardContent> {
-  int total = 0;
-  int pendentes = 0;
-  int andamento = 0;
-  int concluidas = 0;
-  bool carregando = true;
-  String? erro;
-  List<dynamic> solicitacoesRecentes = [];
-
-  @override
-  void initState() {
-    super.initState();
-    _loadData();
-  }
-
-  Future<void> _loadData() async {
-    await Future.wait([_buscarResumo(), _buscarSolicitacoesRecentes()]);
-  }
-
-  Future<void> _buscarResumo() async {
-    setState(() {
-      carregando = true;
-      erro = null;
-    });
-    try {
-      final response = await Supabase.instance.client
-          .from('solicitacoes')
-          .select('status');
-      setState(() {
-        total = response.length;
-        pendentes = response.where((s) => s['status'] == 'pendente').length;
-        andamento = response.where((s) => s['status'] == 'em andamento').length;
-        concluidas = response.where((s) => s['status'] == 'concluida').length;
-      });
-    } catch (e) {
-      setState(() {
-        erro = 'Erro ao buscar dados: $e';
-      });
-    } finally {
-      setState(() {
-        carregando = false;
-      });
-    }
-  }
-
-  Future<void> _buscarSolicitacoesRecentes() async {
-    try {
-      final response = await Supabase.instance.client
-          .from('solicitacoes')
-          .select(
-            'id, descricao, status, criado_em, endereco, tipo_entulho, fotos',
-          )
-          .order('criado_em', ascending: false)
-          .limit(8);
-      setState(() {
-        solicitacoesRecentes = response;
-      });
-    } catch (e) {
-      setState(() {
-        solicitacoesRecentes = [];
-      });
-    }
-  }
-
   String? _getPrimeiroNomeUsuario() {
     final user = Supabase.instance.client.auth.currentUser;
     if (user != null) {
@@ -468,54 +357,90 @@ class _DashboardContentState extends State<_DashboardContent> {
     final theme = Theme.of(context);
     final isDark = theme.brightness == Brightness.dark;
     final width = MediaQuery.of(context).size.width;
-    if (carregando) {
-      return const Center(child: CircularProgressIndicator());
-    }
-    if (erro != null) {
-      return Center(
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            Icon(Icons.error_outline, size: 48, color: theme.colorScheme.error),
-            const SizedBox(height: 16),
-            Text(
-              'Erro ao carregar dados',
-              style: theme.textTheme.headlineSmall?.copyWith(
-                color: theme.colorScheme.error,
+    // StreamBuilder para atualização em tempo real
+    return StreamBuilder<List<Map<String, dynamic>>>(
+      stream: Supabase.instance.client
+          .from('solicitacoes')
+          .stream(primaryKey: ['id'])
+          .order('criado_em', ascending: false),
+      builder: (context, snapshot) {
+        if (snapshot.connectionState == ConnectionState.waiting) {
+          return const Center(child: CircularProgressIndicator());
+        }
+        if (snapshot.hasError) {
+          return Center(
+            child: Column(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                Icon(
+                  Icons.error_outline,
+                  size: 48,
+                  color: theme.colorScheme.error,
+                ),
+                const SizedBox(height: 16),
+                Text(
+                  'Erro ao carregar dados',
+                  style: theme.textTheme.headlineSmall?.copyWith(
+                    color: theme.colorScheme.error,
+                  ),
+                ),
+                const SizedBox(height: 8),
+                Text(
+                  snapshot.error.toString(),
+                  style: theme.textTheme.bodyMedium,
+                ),
+              ],
+            ),
+          );
+        }
+        final solicitacoes = snapshot.data ?? [];
+        final total = solicitacoes.length;
+        final pendentes = solicitacoes
+            .where((s) => s['status'] == 'pendente')
+            .length;
+        final andamento = solicitacoes
+            .where((s) => s['status'] == 'em andamento')
+            .length;
+        final concluidas = solicitacoes
+            .where((s) => s['status'] == 'concluida')
+            .length;
+        final solicitacoesRecentes = solicitacoes.take(8).toList();
+        // Responsividade: padding menor em telas pequenas
+        final horizontalPadding = width < 600
+            ? 8.0
+            : (width < 900 ? 16.0 : 32.0);
+        return SingleChildScrollView(
+          padding: EdgeInsets.symmetric(
+            horizontal: horizontalPadding,
+            vertical: 24,
+          ),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              _buildWelcomeHeader(theme, isDark, width),
+              const SizedBox(height: 24),
+              _buildStatsGrid(
+                theme,
+                isDark,
+                width,
+                total,
+                pendentes,
+                andamento,
+                concluidas,
               ),
-            ),
-            const SizedBox(height: 8),
-            Text(
-              erro ?? 'Erro desconhecido',
-              style: theme.textTheme.bodyMedium,
-            ),
-            const SizedBox(height: 24),
-            ElevatedButton.icon(
-              onPressed: _loadData,
-              icon: const Icon(Icons.refresh),
-              label: const Text('Tentar novamente'),
-            ),
-          ],
-        ),
-      );
-    }
-    // Responsividade: padding menor em telas pequenas
-    final horizontalPadding = width < 600 ? 8.0 : (width < 900 ? 16.0 : 32.0);
-    return SingleChildScrollView(
-      padding: EdgeInsets.symmetric(
-        horizontal: horizontalPadding,
-        vertical: 24,
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          _buildWelcomeHeader(theme, isDark, width),
-          const SizedBox(height: 24),
-          _buildStatsGrid(theme, isDark, width),
-          const SizedBox(height: 24),
-          _buildMainContentResponsive(theme, isDark, width),
-        ],
-      ),
+              const SizedBox(height: 24),
+              _buildMainContentResponsive(
+                theme,
+                isDark,
+                width,
+                solicitacoesRecentes,
+                total: total,
+                concluidas: concluidas,
+              ),
+            ],
+          ),
+        );
+      },
     );
   }
 
@@ -575,7 +500,15 @@ class _DashboardContentState extends State<_DashboardContent> {
     );
   }
 
-  Widget _buildStatsGrid(ThemeData theme, bool isDark, double width) {
+  Widget _buildStatsGrid(
+    ThemeData theme,
+    bool isDark,
+    double width,
+    int total,
+    int pendentes,
+    int andamento,
+    int concluidas,
+  ) {
     int crossAxisCount = 4;
     if (width < 1100) crossAxisCount = 2;
     if (width < 700) crossAxisCount = 1;
@@ -709,6 +642,7 @@ class _DashboardContentState extends State<_DashboardContent> {
     ThemeData theme,
     bool isDark,
     double width,
+    List<dynamic> solicitacoesRecentes,
   ) {
     return Container(
       decoration: BoxDecoration(
@@ -875,7 +809,13 @@ class _DashboardContentState extends State<_DashboardContent> {
     );
   }
 
-  Widget _buildQuickStats(ThemeData theme, bool isDark, double width) {
+  Widget _buildQuickStats(
+    ThemeData theme,
+    bool isDark,
+    double width, {
+    int total = 0,
+    int concluidas = 0,
+  }) {
     return Container(
       padding: EdgeInsets.all(width < 600 ? 12 : 20),
       decoration: BoxDecoration(
@@ -1002,7 +942,7 @@ class _DashboardContentState extends State<_DashboardContent> {
           SizedBox(
             width: double.infinity,
             child: OutlinedButton.icon(
-              onPressed: _loadData,
+              onPressed: () {},
               icon: Icon(Icons.refresh_rounded, size: width < 600 ? 14 : 18),
               label: Text(
                 'Atualizar Dados',
@@ -1064,14 +1004,28 @@ class _DashboardContentState extends State<_DashboardContent> {
     ThemeData theme,
     bool isDark,
     double width,
-  ) {
+    List<dynamic> solicitacoesRecentes, {
+    int total = 0,
+    int concluidas = 0,
+  }) {
     if (width < 900) {
       // Tablet/mobile: empilha as colunas
       return Column(
         children: [
-          _buildRecentRequestsSection(theme, isDark, width),
+          _buildRecentRequestsSection(
+            theme,
+            isDark,
+            width,
+            solicitacoesRecentes,
+          ),
           const SizedBox(height: 16),
-          _buildQuickStats(theme, isDark, width),
+          _buildQuickStats(
+            theme,
+            isDark,
+            width,
+            total: total,
+            concluidas: concluidas,
+          ),
           const SizedBox(height: 16),
           _buildQuickActions(theme, isDark, width),
         ],
@@ -1083,14 +1037,25 @@ class _DashboardContentState extends State<_DashboardContent> {
         children: [
           Expanded(
             flex: 2,
-            child: _buildRecentRequestsSection(theme, isDark, width),
+            child: _buildRecentRequestsSection(
+              theme,
+              isDark,
+              width,
+              solicitacoesRecentes,
+            ),
           ),
           const SizedBox(width: 24),
           Expanded(
             flex: 1,
             child: Column(
               children: [
-                _buildQuickStats(theme, isDark, width),
+                _buildQuickStats(
+                  theme,
+                  isDark,
+                  width,
+                  total: total,
+                  concluidas: concluidas,
+                ),
                 const SizedBox(height: 24),
                 _buildQuickActions(theme, isDark, width),
               ],
@@ -1128,6 +1093,94 @@ class _PlaceholderContent extends StatelessWidget {
             ),
           ),
         ],
+      ),
+    );
+  }
+}
+
+class _MenuIcon extends StatefulWidget {
+  final IconData icon;
+  final String label;
+  final bool selected;
+  final VoidCallback onTap;
+  final ThemeData theme;
+
+  const _MenuIcon({
+    required this.icon,
+    required this.label,
+    required this.selected,
+    required this.onTap,
+    required this.theme,
+    Key? key,
+  }) : super(key: key);
+
+  @override
+  State<_MenuIcon> createState() => _MenuIconState();
+}
+
+class _MenuIconState extends State<_MenuIcon> {
+  bool isHovered = false;
+
+  @override
+  Widget build(BuildContext context) {
+    return MouseRegion(
+      onEnter: (_) => setState(() => isHovered = true),
+      onExit: (_) => setState(() => isHovered = false),
+      child: InkWell(
+        borderRadius: BorderRadius.circular(12),
+        onTap: widget.onTap,
+        hoverColor: Colors.transparent,
+        highlightColor: Colors.transparent,
+        splashColor: Colors.transparent,
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Icon(
+              widget.icon,
+              color: widget.selected
+                  ? widget.theme.primaryColor
+                  : widget.theme.disabledColor,
+              size: 20,
+            ),
+            const SizedBox(height: 4),
+            Text(
+              widget.label,
+              style: widget.theme.textTheme.bodySmall?.copyWith(
+                fontSize: 12,
+                color: widget.selected
+                    ? widget.theme.primaryColor
+                    : widget.theme.disabledColor,
+                fontWeight: widget.selected
+                    ? FontWeight.bold
+                    : FontWeight.normal,
+              ),
+            ),
+            const SizedBox(height: 4),
+            AnimatedContainer(
+              duration: const Duration(milliseconds: 180),
+              curve: Curves.ease,
+              height: 3,
+              width: widget.selected || isHovered ? 28 : 0,
+              decoration: BoxDecoration(
+                color: widget.selected
+                    ? widget.theme.primaryColor
+                    : (isHovered
+                          ? widget.theme.primaryColor.withOpacity(0.5)
+                          : Colors.transparent),
+                borderRadius: BorderRadius.circular(2),
+                boxShadow: widget.selected || isHovered
+                    ? [
+                        BoxShadow(
+                          color: widget.theme.primaryColor.withOpacity(0.18),
+                          blurRadius: 4,
+                          offset: const Offset(0, 2),
+                        ),
+                      ]
+                    : [],
+              ),
+            ),
+          ],
+        ),
       ),
     );
   }

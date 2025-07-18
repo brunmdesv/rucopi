@@ -24,13 +24,20 @@ Future<void> main() async {
   );
 }
 
-class MyApp extends StatelessWidget {
+class MyApp extends StatefulWidget {
   const MyApp({super.key});
 
   @override
-  Widget build(BuildContext context) {
-    final themeProvider = Provider.of<ThemeProvider>(context);
-    final GoRouter _router = GoRouter(
+  State<MyApp> createState() => _MyAppState();
+}
+
+class _MyAppState extends State<MyApp> {
+  late final GoRouter _router;
+
+  @override
+  void initState() {
+    super.initState();
+    _router = GoRouter(
       initialLocation: '/home',
       redirect: (context, state) {
         final session = Supabase.instance.client.auth.currentSession;
@@ -65,7 +72,11 @@ class MyApp extends StatelessWidget {
         ),
       ],
     );
+  }
 
+  @override
+  Widget build(BuildContext context) {
+    final themeProvider = Provider.of<ThemeProvider>(context);
     return MaterialApp.router(
       title: 'Dashboard Rucopi',
       debugShowCheckedModeBanner: false,
