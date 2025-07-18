@@ -14,6 +14,9 @@
 - [x] Garantir que apenas usuários autenticados acessem o dashboard
 - [x] (Opcional) Implementar lógica para diferenciar administradores de operadores (campo extra no perfil, role, etc)
 - [x] Testar login com usuário criado manualmente no Supabase
+- [x] Criar sistema de tema e cores no dashboard igual ao do mobile (arquivos app_styles.dart e theme_provider.dart)
+- [x] Integrar ThemeProvider no main.dart do dashboard, usando provider e Consumer
+- [x] Recriar a tela de login do dashboard igual à do mobile, usando o novo sistema de tema e estilos
 
 ### 2. Estrutura de Navegação
 - [x] Definir rotas principais do dashboard (login, dashboard inicial, lista de solicitações, detalhes, etc)

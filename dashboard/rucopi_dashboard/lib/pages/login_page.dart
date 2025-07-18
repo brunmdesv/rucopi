@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
-import 'dashboard_home_page.dart';
+import '../theme/app_styles.dart';
+import '../theme/theme_provider.dart';
 
 class LoginPage extends StatefulWidget {
   const LoginPage({super.key});
@@ -13,6 +14,7 @@ class _LoginPageState extends State<LoginPage> {
   final emailController = TextEditingController();
   final senhaController = TextEditingController();
   bool carregando = false;
+  bool _obscurePassword = true;
   String? erro;
 
   void login() async {
@@ -26,10 +28,20 @@ class _LoginPageState extends State<LoginPage> {
         password: senhaController.text,
       );
       if (response.user != null) {
-        Navigator.pushReplacement(
-          context,
-          MaterialPageRoute(builder: (_) => const DashboardHomePage()),
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: const Text('Login realizado com sucesso'),
+            backgroundColor: Colors.green.shade600,
+            behavior: SnackBarBehavior.floating,
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(12),
+            ),
+          ),
         );
+        // Redirecionar para a home do dashboard
+        Future.delayed(const Duration(milliseconds: 300), () {
+          Navigator.pushReplacementNamed(context, '/home');
+        });
       } else {
         setState(() {
           erro = 'Usuário ou senha inválidos.';
@@ -39,6 +51,16 @@ class _LoginPageState extends State<LoginPage> {
       setState(() {
         erro = e.message;
       });
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(e.message),
+          backgroundColor: Colors.red.shade600,
+          behavior: SnackBarBehavior.floating,
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(12),
+          ),
+        ),
+      );
     } catch (e) {
       setState(() {
         erro = 'Erro inesperado. Tente novamente.';
@@ -52,41 +74,83 @@ class _LoginPageState extends State<LoginPage> {
 
   @override
   Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final isDark = theme.brightness == Brightness.dark;
     return Scaffold(
-      appBar: AppBar(title: const Text('Login - Dashboard Rucopi')),
+      backgroundColor: theme.scaffoldBackgroundColor,
       body: Center(
         child: SingleChildScrollView(
-          padding: const EdgeInsets.all(24),
-          child: Column(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              TextField(
-                controller: emailController,
-                decoration: const InputDecoration(labelText: 'E-mail'),
-                keyboardType: TextInputType.emailAddress,
-              ),
-              const SizedBox(height: 16),
-              TextField(
-                controller: senhaController,
-                decoration: const InputDecoration(labelText: 'Senha'),
-                obscureText: true,
-              ),
-              const SizedBox(height: 24),
-              if (erro != null)
-                Padding(
-                  padding: const EdgeInsets.only(bottom: 12),
-                  child: Text(erro!, style: const TextStyle(color: Colors.red)),
+          padding: EdgeInsets.zero,
+          child: Container(
+            constraints: const BoxConstraints(maxWidth: 400),
+            padding: const EdgeInsets.all(AppSpacing.page),
+            decoration: BoxDecoration(
+              color: theme.cardColor,
+              borderRadius: BorderRadius.circular(AppRadius.card),
+              boxShadow: isDark ? AppShadows.dark : AppShadows.light,
+            ),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              children: [
+                const SizedBox(height: AppSpacing.item),
+                Text(
+                  'Entrar',
+                  style: theme.textTheme.titleLarge,
+                  textAlign: TextAlign.left,
                 ),
-              SizedBox(
-                width: double.infinity,
-                child: ElevatedButton(
-                  onPressed: carregando ? null : login,
-                  child: carregando
-                      ? const CircularProgressIndicator(color: Colors.white)
-                      : const Text('Entrar'),
+                const SizedBox(height: AppSpacing.section * 2),
+                TextField(
+                  controller: emailController,
+                  keyboardType: TextInputType.emailAddress,
+                  decoration: const InputDecoration(
+                    labelText: 'Endereço de e-mail',
+                    prefixIcon: Icon(Icons.email_outlined),
+                  ),
                 ),
-              ),
-            ],
+                const SizedBox(height: AppSpacing.section),
+                TextField(
+                  controller: senhaController,
+                  obscureText: _obscurePassword,
+                  decoration: InputDecoration(
+                    labelText: 'Senha',
+                    prefixIcon: const Icon(Icons.lock_outline),
+                    suffixIcon: IconButton(
+                      icon: Icon(
+                        _obscurePassword
+                            ? Icons.visibility_off_outlined
+                            : Icons.visibility_outlined,
+                      ),
+                      onPressed: () =>
+                          setState(() => _obscurePassword = !_obscurePassword),
+                    ),
+                  ),
+                ),
+                const SizedBox(height: AppSpacing.item),
+                SizedBox(
+                  height: 52,
+                  child: ElevatedButton(
+                    onPressed: carregando ? null : login,
+                    child: carregando
+                        ? const CircularProgressIndicator(
+                            valueColor: AlwaysStoppedAnimation<Color>(
+                              Colors.white,
+                            ),
+                          )
+                        : const Text('Continuar'),
+                  ),
+                ),
+                if (erro != null)
+                  Padding(
+                    padding: const EdgeInsets.only(top: 12),
+                    child: Text(
+                      erro!,
+                      style: const TextStyle(color: Colors.red),
+                      textAlign: TextAlign.center,
+                    ),
+                  ),
+                const SizedBox(height: AppSpacing.section * 1.5),
+              ],
+            ),
           ),
         ),
       ),

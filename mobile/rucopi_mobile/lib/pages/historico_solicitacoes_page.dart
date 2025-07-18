@@ -3,6 +3,7 @@ import 'package:supabase_flutter/supabase_flutter.dart';
 import '../widgets/app_padrao.dart';
 import '../theme/app_styles.dart';
 import 'detalhes_solicitacao_page.dart';
+import 'editar_solicitacao_page.dart';
 
 class HistoricoSolicitacoesPage extends StatefulWidget {
   const HistoricoSolicitacoesPage({Key? key}) : super(key: key);
@@ -123,16 +124,16 @@ class _HistoricoSolicitacoesPageState extends State<HistoricoSolicitacoesPage> {
           ? const Center(child: CircularProgressIndicator())
           : solicitacoes.isEmpty
           ? _buildEmptyState(theme)
-          : RefreshIndicator(
-              onRefresh: _carregarSolicitacoes,
-              child: ListView.separated(
-                padding: const EdgeInsets.all(AppSpacing.section),
-                itemCount: solicitacoes.length,
-                separatorBuilder: (_, __) => const SizedBox(height: 16),
-                itemBuilder: (context, index) {
-                  final solicitacao = solicitacoes[index];
-                  return _buildSolicitacaoCard(solicitacao, theme);
-                },
+          : SingleChildScrollView(
+              child: Padding(
+                padding: const EdgeInsets.only(top: 8),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.stretch,
+                  children: [
+                    for (final solicitacao in solicitacoes)
+                      _buildSolicitacaoCard(solicitacao, theme),
+                  ],
+                ),
               ),
             ),
     );
@@ -172,183 +173,233 @@ class _HistoricoSolicitacoesPageState extends State<HistoricoSolicitacoesPage> {
     final statusColor = _getStatusColor(status, theme);
     final statusIcon = _getStatusIcon(status);
     final statusText = _getStatusText(status);
+    final fotos = solicitacao['fotos'] is List
+        ? List<String>.from(solicitacao['fotos'])
+        : <String>[];
 
     return InkWell(
-      borderRadius: BorderRadius.circular(AppRadius.card),
-      onTap: () {
-        Navigator.push(
+      borderRadius: BorderRadius.circular(16),
+      onTap: () async {
+        final result = await Navigator.push(
           context,
           MaterialPageRoute(
             builder: (_) => DetalhesSolicitacaoPage(solicitacao: solicitacao),
           ),
         );
+        if (result == true) {
+          await _carregarSolicitacoes();
+        }
       },
-      child: Card(
-        color: theme.cardColor,
-        elevation: 4,
-        shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(AppRadius.card),
+      child: Container(
+        margin: const EdgeInsets.only(bottom: 16),
+        padding: const EdgeInsets.all(20),
+        decoration: BoxDecoration(
+          color: theme.primaryColor.withOpacity(0.08),
+          borderRadius: BorderRadius.circular(16),
         ),
-        child: Padding(
-          padding: const EdgeInsets.all(AppSpacing.section),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              // Cabeçalho com status
-              Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                children: [
-                  Expanded(
-                    child: Text(
-                      solicitacao['descricao'] ?? 'Sem descrição',
-                      style: theme.textTheme.titleMedium?.copyWith(
-                        fontWeight: FontWeight.bold,
-                      ),
-                      maxLines: 2,
-                      overflow: TextOverflow.ellipsis,
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            // Cabeçalho com status à esquerda e ícones à direita
+            Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                // Status à esquerda
+                Container(
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 12,
+                    vertical: 6,
+                  ),
+                  decoration: BoxDecoration(
+                    color: statusColor.withOpacity(0.1),
+                    borderRadius: BorderRadius.circular(20),
+                    border: Border.all(
+                      color: statusColor.withOpacity(0.3),
+                      width: 1,
                     ),
                   ),
-                  const SizedBox(width: 12),
-                  Container(
-                    padding: const EdgeInsets.symmetric(
-                      horizontal: 12,
-                      vertical: 6,
-                    ),
-                    decoration: BoxDecoration(
-                      color: statusColor.withOpacity(0.1),
-                      borderRadius: BorderRadius.circular(20),
-                      border: Border.all(
-                        color: statusColor.withOpacity(0.3),
-                        width: 1,
-                      ),
-                    ),
-                    child: Row(
-                      mainAxisSize: MainAxisSize.min,
-                      children: [
-                        Icon(statusIcon, color: statusColor, size: 16),
-                        const SizedBox(width: 4),
-                        Text(
-                          statusText,
-                          style: theme.textTheme.bodySmall?.copyWith(
-                            color: statusColor,
-                            fontWeight: FontWeight.w600,
-                          ),
+                  child: Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      Icon(statusIcon, color: statusColor, size: 16),
+                      const SizedBox(width: 4),
+                      Text(
+                        statusText,
+                        style: theme.textTheme.bodySmall?.copyWith(
+                          color: statusColor,
+                          fontWeight: FontWeight.w600,
                         ),
-                      ],
-                    ),
+                      ),
+                    ],
                   ),
-                ],
-              ),
-
-              const SizedBox(height: 16),
-
-              // Informações adicionais
-              if (solicitacao['tipo_entulho'] != null) ...[
+                ),
+                // Ícones de editar e excluir à direita
                 Row(
                   children: [
-                    Icon(
-                      Icons.category_outlined,
-                      color: theme.primaryColor,
-                      size: 16,
+                    IconButton(
+                      icon: const Icon(Icons.edit, size: 20),
+                      tooltip: 'Editar',
+                      onPressed: () async {
+                        final result = await Navigator.push(
+                          context,
+                          MaterialPageRoute(
+                            builder: (_) =>
+                                EditarSolicitacaoPage(solicitacao: solicitacao),
+                          ),
+                        );
+                        if (result == true) {
+                          await _carregarSolicitacoes();
+                        }
+                      },
                     ),
-                    const SizedBox(width: 8),
-                    Text(
-                      'Tipo:',
-                      style: theme.textTheme.bodySmall?.copyWith(
-                        fontWeight: FontWeight.w600,
-                        color: theme.primaryColor,
-                      ),
-                    ),
-                    const SizedBox(width: 4),
-                    Expanded(
-                      child: Text(
-                        solicitacao['tipo_entulho'],
-                        style: theme.textTheme.bodySmall,
-                      ),
+                    IconButton(
+                      icon: const Icon(Icons.delete_outline, size: 20),
+                      tooltip: 'Excluir',
+                      onPressed: () async {
+                        final confirm = await showDialog<bool>(
+                          context: context,
+                          builder: (context) => AlertDialog(
+                            title: const Text('Excluir Solicitação'),
+                            content: const Text(
+                              'Tem certeza que deseja excluir esta solicitação? Esta ação não poderá ser desfeita.',
+                            ),
+                            actions: [
+                              TextButton(
+                                onPressed: () =>
+                                    Navigator.of(context).pop(false),
+                                child: const Text('Cancelar'),
+                              ),
+                              TextButton(
+                                onPressed: () =>
+                                    Navigator.of(context).pop(true),
+                                child: const Text('Excluir'),
+                              ),
+                            ],
+                          ),
+                        );
+                        if (confirm == true) {
+                          try {
+                            final supabase = Supabase.instance.client;
+                            await supabase
+                                .from('solicitacoes')
+                                .delete()
+                                .eq('id', solicitacao['id']);
+                            await _carregarSolicitacoes();
+                          } catch (e) {
+                            ScaffoldMessenger.of(context).showSnackBar(
+                              SnackBar(content: Text('Erro ao excluir: $e')),
+                            );
+                          }
+                        }
+                      },
                     ),
                   ],
                 ),
-                const SizedBox(height: 8),
               ],
-
-              if (solicitacao['endereco'] != null) ...[
-                Row(
-                  children: [
-                    Icon(
-                      Icons.location_on_outlined,
-                      color: theme.primaryColor,
-                      size: 16,
-                    ),
-                    const SizedBox(width: 8),
-                    Text(
-                      'Endereço:',
-                      style: theme.textTheme.bodySmall?.copyWith(
-                        fontWeight: FontWeight.w600,
-                        color: theme.primaryColor,
-                      ),
-                    ),
-                    const SizedBox(width: 4),
-                    Expanded(
-                      child: Text(
-                        solicitacao['endereco'],
-                        style: theme.textTheme.bodySmall,
-                        maxLines: 2,
-                        overflow: TextOverflow.ellipsis,
-                      ),
-                    ),
-                  ],
-                ),
-                const SizedBox(height: 8),
-              ],
-
-              // Data da solicitação
+            ),
+            const SizedBox(height: 16),
+            // Informações adicionais
+            if (solicitacao['tipo_entulho'] != null) ...[
               Row(
                 children: [
                   Icon(
-                    Icons.calendar_today_outlined,
+                    Icons.category_outlined,
                     color: theme.primaryColor,
                     size: 16,
                   ),
                   const SizedBox(width: 8),
                   Text(
-                    'Data:',
+                    'Tipo:',
                     style: theme.textTheme.bodySmall?.copyWith(
                       fontWeight: FontWeight.w600,
                       color: theme.primaryColor,
                     ),
                   ),
                   const SizedBox(width: 4),
-                  Text(
-                    _formatDate(solicitacao['criado_em']),
-                    style: theme.textTheme.bodySmall,
+                  Expanded(
+                    child: Text(
+                      solicitacao['tipo_entulho'],
+                      style: theme.textTheme.bodySmall,
+                    ),
                   ),
                 ],
               ),
-
-              // Indicador de fotos se existirem
-              if (solicitacao['fotos'] != null &&
-                  solicitacao['fotos'].toString().isNotEmpty) ...[
-                const SizedBox(height: 12),
-                Row(
-                  children: [
-                    Icon(
-                      Icons.photo_outlined,
-                      color: theme.colorScheme.secondary,
-                      size: 16,
+              const SizedBox(height: 8),
+            ],
+            if (solicitacao['endereco'] != null) ...[
+              Row(
+                children: [
+                  Icon(
+                    Icons.location_on_outlined,
+                    color: theme.primaryColor,
+                    size: 16,
+                  ),
+                  const SizedBox(width: 8),
+                  Text(
+                    'Endereço:',
+                    style: theme.textTheme.bodySmall?.copyWith(
+                      fontWeight: FontWeight.w600,
+                      color: theme.primaryColor,
                     ),
-                    const SizedBox(width: 8),
-                    Text(
-                      'Possui fotos anexadas',
-                      style: theme.textTheme.bodySmall?.copyWith(
-                        color: theme.colorScheme.secondary,
-                        fontStyle: FontStyle.italic,
-                      ),
+                  ),
+                  const SizedBox(width: 4),
+                  Expanded(
+                    child: Text(
+                      solicitacao['endereco'],
+                      style: theme.textTheme.bodySmall,
+                      maxLines: 2,
+                      overflow: TextOverflow.ellipsis,
                     ),
-                  ],
+                  ),
+                ],
+              ),
+              const SizedBox(height: 8),
+            ],
+            // Data da solicitação
+            Row(
+              children: [
+                Icon(
+                  Icons.calendar_today_outlined,
+                  color: theme.primaryColor,
+                  size: 16,
+                ),
+                const SizedBox(width: 8),
+                Text(
+                  'Data:',
+                  style: theme.textTheme.bodySmall?.copyWith(
+                    fontWeight: FontWeight.w600,
+                    color: theme.primaryColor,
+                  ),
+                ),
+                const SizedBox(width: 4),
+                Text(
+                  _formatDate(solicitacao['criado_em']),
+                  style: theme.textTheme.bodySmall,
                 ),
               ],
+            ),
+            // Indicador de fotos se existirem
+            if (fotos.isNotEmpty) ...[
+              const SizedBox(height: 12),
+              Row(
+                children: [
+                  Icon(
+                    Icons.photo_outlined,
+                    color: theme.colorScheme.secondary,
+                    size: 16,
+                  ),
+                  const SizedBox(width: 8),
+                  Text(
+                    '${fotos.length} Fotos anexadas',
+                    style: theme.textTheme.bodySmall?.copyWith(
+                      color: theme.colorScheme.secondary,
+                      fontStyle: FontStyle.italic,
+                    ),
+                  ),
+                ],
+              ),
             ],
-          ),
+          ],
         ),
       ),
     );
