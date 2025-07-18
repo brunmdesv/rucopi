@@ -37,6 +37,10 @@ class _CadastroPageState extends State<CadastroPage> {
       );
       final userId = authResponse.user?.id;
       if (userId != null) {
+        // Atualiza o user_metadata do Auth com o nome completo
+        await Supabase.instance.client.auth.updateUser(
+          UserAttributes(data: {'name': nomeController.text}),
+        );
         await Supabase.instance.client.from('moradores').insert({
           'id': userId,
           'nome': nomeController.text,

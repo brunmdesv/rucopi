@@ -449,6 +449,20 @@ class _DashboardContentState extends State<_DashboardContent> {
     }
   }
 
+  String? _getPrimeiroNomeUsuario() {
+    final user = Supabase.instance.client.auth.currentUser;
+    if (user != null) {
+      final name =
+          user.userMetadata?['name'] ??
+          user.userMetadata?['full_name'] ??
+          user.email;
+      if (name != null && name is String && name.isNotEmpty) {
+        return name.split(' ').first;
+      }
+    }
+    return null;
+  }
+
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
@@ -506,6 +520,7 @@ class _DashboardContentState extends State<_DashboardContent> {
   }
 
   Widget _buildWelcomeHeader(ThemeData theme, bool isDark, double width) {
+    final primeiroNome = _getPrimeiroNomeUsuario();
     return Container(
       padding: EdgeInsets.all(width < 600 ? 12 : 24),
       decoration: BoxDecoration(
@@ -524,7 +539,7 @@ class _DashboardContentState extends State<_DashboardContent> {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text(
-                  'Bem-vindo ao Sistema Rucopi',
+                  'Olá${primeiroNome != null ? ' $primeiroNome,' : ''} bem-vindo ao Sistema Rucopi',
                   style: theme.textTheme.headlineSmall?.copyWith(
                     color: Colors.white,
                     fontWeight: FontWeight.bold,
