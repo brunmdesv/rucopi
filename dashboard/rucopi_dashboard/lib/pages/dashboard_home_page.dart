@@ -1,15 +1,16 @@
 import 'package:flutter/material.dart';
-import 'package:supabase_flutter/supabase_flutter.dart';
 import '../theme/app_styles.dart';
 import 'solicitacoes_page.dart';
 import 'configuracoes_page.dart';
-import '../widgets/sidebar.dart';
+import 'package:supabase_flutter/supabase_flutter.dart';
 
+// Enum para as telas
 enum DashboardScreen {
   dashboard,
   solicitacoes,
+  mapa,
+  relatorios,
   configuracoes,
-  // Adicione outros se necessário
 }
 
 class DashboardHomePage extends StatefulWidget {
@@ -20,6 +21,192 @@ class DashboardHomePage extends StatefulWidget {
 }
 
 class _DashboardHomePageState extends State<DashboardHomePage> {
+  DashboardScreen currentScreen = DashboardScreen.dashboard;
+
+  void _onMenuTap(DashboardScreen screen) {
+    setState(() {
+      currentScreen = screen;
+    });
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final isDark = theme.brightness == Brightness.dark;
+    return Scaffold(
+      backgroundColor: theme.scaffoldBackgroundColor,
+      body: Column(
+        children: [
+          _buildMenuBar(theme, isDark),
+          Expanded(
+            child: AnimatedSwitcher(
+              duration: const Duration(milliseconds: 200),
+              child: _buildScreenContent(),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildMenuBar(ThemeData theme, bool isDark) {
+    return Material(
+      elevation: 2,
+      color: isDark ? AppColors.darkCard : AppColors.lightCard,
+      child: Container(
+        height: 72,
+        padding: const EdgeInsets.symmetric(horizontal: 32),
+        child: Row(
+          children: [
+            // Esquerda: Logo
+            Row(
+              children: [
+                Icon(Icons.eco_rounded, color: theme.primaryColor, size: 32),
+                const SizedBox(width: 8),
+                Text(
+                  'RUCOPI',
+                  style: theme.textTheme.titleLarge?.copyWith(
+                    fontWeight: FontWeight.bold,
+                    color: theme.primaryColor,
+                  ),
+                ),
+              ],
+            ),
+            const Spacer(),
+            // Centro: Navegação
+            Row(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                _buildMenuIcon(
+                  icon: Icons.dashboard_rounded,
+                  label: 'Dashboard',
+                  selected: currentScreen == DashboardScreen.dashboard,
+                  onTap: () => _onMenuTap(DashboardScreen.dashboard),
+                  theme: theme,
+                ),
+                const SizedBox(width: 32),
+                _buildMenuIcon(
+                  icon: Icons.list_alt_rounded,
+                  label: 'Solicitações',
+                  selected: currentScreen == DashboardScreen.solicitacoes,
+                  onTap: () => _onMenuTap(DashboardScreen.solicitacoes),
+                  theme: theme,
+                ),
+                const SizedBox(width: 32),
+                _buildMenuIcon(
+                  icon: Icons.map_rounded,
+                  label: 'Mapa',
+                  selected: currentScreen == DashboardScreen.mapa,
+                  onTap: () => _onMenuTap(DashboardScreen.mapa),
+                  theme: theme,
+                ),
+                const SizedBox(width: 32),
+                _buildMenuIcon(
+                  icon: Icons.bar_chart_rounded,
+                  label: 'Relatórios',
+                  selected: currentScreen == DashboardScreen.relatorios,
+                  onTap: () => _onMenuTap(DashboardScreen.relatorios),
+                  theme: theme,
+                ),
+                const SizedBox(width: 32),
+                _buildMenuIcon(
+                  icon: Icons.settings_rounded,
+                  label: 'Configurações',
+                  selected: currentScreen == DashboardScreen.configuracoes,
+                  onTap: () => _onMenuTap(DashboardScreen.configuracoes),
+                  theme: theme,
+                ),
+              ],
+            ),
+            const Spacer(),
+            // Direita: 3 pontinhos
+            IconButton(
+              icon: const Icon(Icons.more_vert_rounded, size: 20),
+              onPressed: () {
+                // Aqui pode abrir um menu de opções futuramente
+                showMenu(
+                  context: context,
+                  position: const RelativeRect.fromLTRB(1000, 60, 16, 0),
+                  items: [
+                    const PopupMenuItem(child: Text('Opção 1')),
+                    const PopupMenuItem(child: Text('Opção 2')),
+                  ],
+                );
+              },
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildMenuIcon({
+    required IconData icon,
+    required String label,
+    required bool selected,
+    required VoidCallback onTap,
+    required ThemeData theme,
+  }) {
+    return InkWell(
+      borderRadius: BorderRadius.circular(12),
+      onTap: onTap,
+      child: Column(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          Icon(
+            icon,
+            color: selected ? theme.primaryColor : theme.disabledColor,
+            size: 20,
+          ),
+          const SizedBox(height: 4),
+          Text(
+            label,
+            style: theme.textTheme.bodySmall?.copyWith(
+              fontSize: 12, // Tamanho menor para a label
+              color: selected ? theme.primaryColor : theme.disabledColor,
+              fontWeight: selected ? FontWeight.bold : FontWeight.normal,
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildScreenContent() {
+    switch (currentScreen) {
+      case DashboardScreen.dashboard:
+        return _DashboardContent(key: const ValueKey('dashboard'));
+      case DashboardScreen.solicitacoes:
+        return const SolicitacoesPage(key: ValueKey('solicitacoes'));
+      case DashboardScreen.configuracoes:
+        return const ConfiguracoesPage(key: ValueKey('configuracoes'));
+      case DashboardScreen.mapa:
+        return _PlaceholderContent(
+          icon: Icons.map_rounded,
+          label: 'Mapa',
+          key: const ValueKey('mapa'),
+        );
+      case DashboardScreen.relatorios:
+        return _PlaceholderContent(
+          icon: Icons.bar_chart_rounded,
+          label: 'Relatórios',
+          key: const ValueKey('relatorios'),
+        );
+      default:
+        return const SizedBox.shrink();
+    }
+  }
+}
+
+// Conteúdo do Dashboard (exemplo)
+class _DashboardContent extends StatefulWidget {
+  const _DashboardContent({super.key});
+
+  @override
+  State<_DashboardContent> createState() => _DashboardContentState();
+}
+
+class _DashboardContentState extends State<_DashboardContent> {
   int total = 0;
   int pendentes = 0;
   int andamento = 0;
@@ -27,8 +214,6 @@ class _DashboardHomePageState extends State<DashboardHomePage> {
   bool carregando = true;
   String? erro;
   List<dynamic> solicitacoesRecentes = [];
-  bool sidebarExpanded = true;
-  DashboardScreen currentScreen = DashboardScreen.dashboard;
 
   @override
   void initState() {
@@ -37,10 +222,10 @@ class _DashboardHomePageState extends State<DashboardHomePage> {
   }
 
   Future<void> _loadData() async {
-    await Future.wait([buscarResumo(), buscarSolicitacoesRecentes()]);
+    await Future.wait([_buscarResumo(), _buscarSolicitacoesRecentes()]);
   }
 
-  Future<void> buscarResumo() async {
+  Future<void> _buscarResumo() async {
     setState(() {
       carregando = true;
       erro = null;
@@ -66,7 +251,7 @@ class _DashboardHomePageState extends State<DashboardHomePage> {
     }
   }
 
-  Future<void> buscarSolicitacoesRecentes() async {
+  Future<void> _buscarSolicitacoesRecentes() async {
     try {
       final response = await Supabase.instance.client
           .from('solicitacoes')
@@ -85,160 +270,69 @@ class _DashboardHomePageState extends State<DashboardHomePage> {
     }
   }
 
-  void _onSidebarSelect(DashboardScreen screen) {
-    setState(() {
-      currentScreen = screen;
-    });
-  }
-
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     final isDark = theme.brightness == Brightness.dark;
-    return Scaffold(
-      backgroundColor: isDark
-          ? const Color(0xFF0F0F0F)
-          : const Color(0xFFF8FAFC),
-      body: Row(
-        children: [
-          Sidebar(
-            sidebarExpanded: sidebarExpanded,
-            onToggle: () {
-              setState(() {
-                sidebarExpanded = !sidebarExpanded;
-              });
-            },
-            theme: theme,
-            isDark: isDark,
-            parentContext: context,
-            onSelect: _onSidebarSelect,
-            currentScreen: currentScreen,
-          ),
-          Expanded(child: _buildScreenContent(theme, isDark)),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildScreenContent(ThemeData theme, bool isDark) {
-    switch (currentScreen) {
-      case DashboardScreen.dashboard:
-        return carregando
-            ? _buildLoadingScreen(theme)
-            : erro != null
-            ? _buildErrorScreen(theme)
-            : _buildMainContent(theme, isDark);
-      case DashboardScreen.solicitacoes:
-        return const SolicitacoesPage();
-      case DashboardScreen.configuracoes:
-        return const ConfiguracoesPage();
-      default:
-        return const SizedBox.shrink();
+    if (carregando) {
+      return const Center(child: CircularProgressIndicator());
     }
-  }
-
-  Widget _buildLoadingScreen(ThemeData theme) {
-    return const Center(child: CircularProgressIndicator());
-  }
-
-  Widget _buildErrorScreen(ThemeData theme) {
-    return Center(
-      child: Column(
-        mainAxisAlignment: MainAxisAlignment.center,
-        children: [
-          Icon(Icons.error_outline, size: 48, color: theme.colorScheme.error),
-          const SizedBox(height: 16),
-          Text(
-            'Erro ao carregar dados',
-            style: theme.textTheme.headlineSmall?.copyWith(
-              color: theme.colorScheme.error,
+    if (erro != null) {
+      return Center(
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Icon(Icons.error_outline, size: 48, color: theme.colorScheme.error),
+            const SizedBox(height: 16),
+            Text(
+              'Erro ao carregar dados',
+              style: theme.textTheme.headlineSmall?.copyWith(
+                color: theme.colorScheme.error,
+              ),
             ),
-          ),
-          const SizedBox(height: 8),
-          Text(erro ?? 'Erro desconhecido', style: theme.textTheme.bodyMedium),
-          const SizedBox(height: 24),
-          ElevatedButton.icon(
-            onPressed: _loadData,
-            icon: const Icon(Icons.refresh),
-            label: const Text('Tentar novamente'),
-          ),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildMainContent(ThemeData theme, bool isDark) {
-    return Column(
-      children: [
-        _buildTopBar(theme, isDark),
-        Expanded(
-          child: SingleChildScrollView(
-            padding: const EdgeInsets.all(32),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                _buildWelcomeHeader(theme, isDark),
-                const SizedBox(height: 32),
-                _buildStatsGrid(theme, isDark),
-                const SizedBox(height: 32),
-                Row(
-                  crossAxisAlignment: CrossAxisAlignment.start,
+            const SizedBox(height: 8),
+            Text(
+              erro ?? 'Erro desconhecido',
+              style: theme.textTheme.bodyMedium,
+            ),
+            const SizedBox(height: 24),
+            ElevatedButton.icon(
+              onPressed: _loadData,
+              icon: const Icon(Icons.refresh),
+              label: const Text('Tentar novamente'),
+            ),
+          ],
+        ),
+      );
+    }
+    return SingleChildScrollView(
+      padding: const EdgeInsets.all(32),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          _buildWelcomeHeader(theme, isDark),
+          const SizedBox(height: 32),
+          _buildStatsGrid(theme, isDark),
+          const SizedBox(height: 32),
+          Row(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Expanded(
+                flex: 2,
+                child: _buildRecentRequestsSection(theme, isDark),
+              ),
+              const SizedBox(width: 24),
+              Expanded(
+                flex: 1,
+                child: Column(
                   children: [
-                    Expanded(
-                      flex: 2,
-                      child: _buildRecentRequestsSection(theme, isDark),
-                    ),
-                    const SizedBox(width: 24),
-                    Expanded(
-                      flex: 1,
-                      child: Column(
-                        children: [
-                          _buildQuickStats(theme, isDark),
-                          const SizedBox(height: 24),
-                          _buildQuickActions(theme, isDark),
-                        ],
-                      ),
-                    ),
+                    _buildQuickStats(theme, isDark),
+                    const SizedBox(height: 24),
+                    _buildQuickActions(theme, isDark),
                   ],
                 ),
-              ],
-            ),
-          ),
-        ),
-      ],
-    );
-  }
-
-  Widget _buildTopBar(ThemeData theme, bool isDark) {
-    return Container(
-      height: 80,
-      padding: const EdgeInsets.symmetric(horizontal: 32),
-      decoration: BoxDecoration(
-        color: isDark ? const Color(0xFF1A1A1A) : Colors.white,
-        border: Border(
-          bottom: BorderSide(
-            color: isDark ? const Color(0xFF2A2A2A) : const Color(0xFFE2E8F0),
-            width: 1,
-          ),
-        ),
-      ),
-      child: Row(
-        children: [
-          Text(
-            'Dashboard',
-            style: theme.textTheme.headlineSmall?.copyWith(
-              fontWeight: FontWeight.bold,
-              color: theme.primaryColor,
-            ),
-          ),
-          const Spacer(),
-          Container(
-            padding: const EdgeInsets.all(8),
-            decoration: BoxDecoration(
-              color: theme.primaryColor.withOpacity(0.1),
-              borderRadius: BorderRadius.circular(8),
-            ),
-            child: Icon(Icons.person_rounded, color: theme.primaryColor),
+              ),
+            ],
           ),
         ],
       ),
@@ -433,12 +527,7 @@ class _DashboardHomePageState extends State<DashboardHomePage> {
                 ),
                 TextButton.icon(
                   onPressed: () {
-                    Navigator.push(
-                      context,
-                      MaterialPageRoute(
-                        builder: (_) => const SolicitacoesPage(),
-                      ),
-                    );
+                    // Aqui pode navegar para a tela de todas as solicitações
                   },
                   icon: const Icon(Icons.arrow_forward_rounded, size: 16),
                   label: const Text('Ver todas'),
@@ -665,10 +754,7 @@ class _DashboardHomePageState extends State<DashboardHomePage> {
             width: double.infinity,
             child: ElevatedButton.icon(
               onPressed: () {
-                Navigator.push(
-                  context,
-                  MaterialPageRoute(builder: (_) => const SolicitacoesPage()),
-                );
+                // Aqui pode navegar para a tela de solicitações
               },
               icon: const Icon(Icons.list_alt_rounded, size: 18),
               label: const Text('Ver Solicitações'),
@@ -681,9 +767,7 @@ class _DashboardHomePageState extends State<DashboardHomePage> {
           SizedBox(
             width: double.infinity,
             child: OutlinedButton.icon(
-              onPressed: () {
-                _loadData();
-              },
+              onPressed: _loadData,
               icon: const Icon(Icons.refresh_rounded, size: 18),
               label: const Text('Atualizar Dados'),
               style: OutlinedButton.styleFrom(
@@ -735,5 +819,36 @@ class _DashboardHomePageState extends State<DashboardHomePage> {
           'text': 'Pendente',
         };
     }
+  }
+}
+
+// Placeholder para telas não implementadas
+class _PlaceholderContent extends StatelessWidget {
+  final IconData icon;
+  final String label;
+  const _PlaceholderContent({
+    required this.icon,
+    required this.label,
+    super.key,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    return Center(
+      child: Column(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          Icon(icon, size: 64, color: theme.disabledColor),
+          const SizedBox(height: 16),
+          Text(
+            '$label em breve',
+            style: theme.textTheme.titleLarge?.copyWith(
+              color: theme.disabledColor,
+            ),
+          ),
+        ],
+      ),
+    );
   }
 }

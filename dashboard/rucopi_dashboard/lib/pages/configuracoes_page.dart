@@ -48,43 +48,40 @@ class ConfiguracoesPage extends StatelessWidget {
   Widget build(BuildContext context) {
     final themeProvider = Provider.of<ThemeProvider>(context);
     final theme = Theme.of(context);
-    return AppPadrao(
-      customAppBar: _buildCustomAppBar(theme),
-      child: Row(
-        crossAxisAlignment: CrossAxisAlignment.center,
-        children: [
-          Icon(Icons.brightness_6, size: 28, color: theme.colorScheme.primary),
-          const SizedBox(width: 16),
-          Expanded(
-            child: Text(
-              'Tema do sistema',
-              style: theme.textTheme.titleMedium?.copyWith(
-                fontWeight: FontWeight.bold,
-              ),
+    return Row(
+      crossAxisAlignment: CrossAxisAlignment.center,
+      children: [
+        Icon(Icons.brightness_6, size: 28, color: theme.colorScheme.primary),
+        const SizedBox(width: 16),
+        Expanded(
+          child: Text(
+            'Tema do sistema',
+            style: theme.textTheme.titleMedium?.copyWith(
+              fontWeight: FontWeight.bold,
             ),
           ),
-          _ThemeIconButton(
-            icon: Icons.light_mode,
-            tooltip: 'Claro',
-            selected: themeProvider.themeMode == ThemeMode.light,
-            onTap: () => themeProvider.setTheme(ThemeMode.light),
-          ),
-          const SizedBox(width: 8),
-          _ThemeIconButton(
-            icon: Icons.dark_mode,
-            tooltip: 'Escuro',
-            selected: themeProvider.themeMode == ThemeMode.dark,
-            onTap: () => themeProvider.setTheme(ThemeMode.dark),
-          ),
-          const SizedBox(width: 8),
-          _ThemeIconButton(
-            icon: Icons.brightness_auto,
-            tooltip: 'Automático',
-            selected: themeProvider.themeMode == ThemeMode.system,
-            onTap: () => themeProvider.setTheme(ThemeMode.system),
-          ),
-        ],
-      ),
+        ),
+        _ThemeIconButton(
+          icon: Icons.light_mode,
+          tooltip: 'Claro',
+          selected: themeProvider.themeMode == ThemeMode.light,
+          onTap: () => themeProvider.setTheme(ThemeMode.light),
+        ),
+        const SizedBox(width: 8),
+        _ThemeIconButton(
+          icon: Icons.dark_mode,
+          tooltip: 'Escuro',
+          selected: themeProvider.themeMode == ThemeMode.dark,
+          onTap: () => themeProvider.setTheme(ThemeMode.dark),
+        ),
+        const SizedBox(width: 8),
+        _ThemeIconButton(
+          icon: Icons.brightness_auto,
+          tooltip: 'Automático',
+          selected: themeProvider.themeMode == ThemeMode.system,
+          onTap: () => themeProvider.setTheme(ThemeMode.system),
+        ),
+      ],
     );
   }
 }

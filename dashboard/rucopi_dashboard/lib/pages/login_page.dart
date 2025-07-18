@@ -1,7 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
+import 'package:go_router/go_router.dart';
 import '../theme/app_styles.dart';
 import '../theme/theme_provider.dart';
+import '../widgets/app_padrao.dart';
 
 class LoginPage extends StatefulWidget {
   const LoginPage({super.key});
@@ -40,7 +42,7 @@ class _LoginPageState extends State<LoginPage> {
         );
         // Redirecionar para a home do dashboard
         Future.delayed(const Duration(milliseconds: 300), () {
-          Navigator.pushReplacementNamed(context, '/home');
+          if (context.mounted) context.go('/home');
         });
       } else {
         setState(() {
@@ -76,9 +78,9 @@ class _LoginPageState extends State<LoginPage> {
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     final isDark = theme.brightness == Brightness.dark;
-    return Scaffold(
-      backgroundColor: theme.scaffoldBackgroundColor,
-      body: Center(
+    return AppPadrao(
+      mostrarAppBar: false,
+      child: Center(
         child: SingleChildScrollView(
           padding: EdgeInsets.zero,
           child: Container(

@@ -309,136 +309,132 @@ class _SolicitacoesPageState extends State<SolicitacoesPage> {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
-    return AppPadrao(
-      customAppBar: _buildCustomAppBar(theme),
-      child: carregando
-          ? const Center(child: CircularProgressIndicator())
-          : erro != null
-          ? Center(
-              child: Text(
-                erro!,
-                style: theme.textTheme.bodyLarge?.copyWith(
-                  color: theme.colorScheme.error,
-                ),
-              ),
-            )
-          : Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                // Filtros e pesquisa
-                Row(
-                  children: [
-                    Expanded(
-                      child: TextField(
-                        controller: _searchController,
-                        decoration: InputDecoration(
-                          hintText:
-                              'Pesquisar por descrição, endereço ou morador...',
-                          prefixIcon: const Icon(Icons.search),
-                          border: OutlineInputBorder(
-                            borderRadius: BorderRadius.circular(12),
-                            borderSide: BorderSide.none,
-                          ),
-                          filled: true,
-                          fillColor: theme.brightness == Brightness.dark
-                              ? const Color(0xFF1A1A1A)
-                              : Colors.white,
-                          contentPadding: const EdgeInsets.all(16),
-                          suffixIcon: termoPesquisa.isNotEmpty
-                              ? IconButton(
-                                  icon: const Icon(Icons.clear),
-                                  onPressed: () {
-                                    _searchController.clear();
-                                    setState(() {
-                                      termoPesquisa = '';
-                                    });
-                                    filtrarSolicitacoes();
-                                  },
-                                )
-                              : null,
-                        ),
-                        onChanged: (value) {
-                          setState(() {
-                            termoPesquisa = value;
-                          });
-                          filtrarSolicitacoes();
-                        },
-                      ),
-                    ),
-                    const SizedBox(width: 16),
-                    _buildFilterChip(
-                      label: 'Todas',
-                      value: 'todas',
-                      isSelected: filtroStatus == 'todas',
-                      onTap: () {
-                        setState(() {
-                          filtroStatus = 'todas';
-                        });
-                        filtrarSolicitacoes();
-                      },
-                    ),
-                    const SizedBox(width: 8),
-                    _buildFilterChip(
-                      label: 'Pendentes',
-                      value: 'pendente',
-                      isSelected: filtroStatus == 'pendente',
-                      onTap: () {
-                        setState(() {
-                          filtroStatus = 'pendente';
-                        });
-                        filtrarSolicitacoes();
-                      },
-                    ),
-                    const SizedBox(width: 8),
-                    _buildFilterChip(
-                      label: 'Em Andamento',
-                      value: 'em andamento',
-                      isSelected: filtroStatus == 'em andamento',
-                      onTap: () {
-                        setState(() {
-                          filtroStatus = 'em andamento';
-                        });
-                        filtrarSolicitacoes();
-                      },
-                    ),
-                    const SizedBox(width: 8),
-                    _buildFilterChip(
-                      label: 'Concluídas',
-                      value: 'concluida',
-                      isSelected: filtroStatus == 'concluida',
-                      onTap: () {
-                        setState(() {
-                          filtroStatus = 'concluida';
-                        });
-                        filtrarSolicitacoes();
-                      },
-                    ),
-                  ],
-                ),
-                const SizedBox(height: 24),
-                Expanded(
-                  child: solicitacoesFiltradas.isEmpty
-                      ? Center(
-                          child: Text(
-                            termoPesquisa.isNotEmpty || filtroStatus != 'todas'
-                                ? 'Nenhuma solicitação encontrada com os filtros aplicados.'
-                                : 'Nenhuma solicitação encontrada.',
-                            style: theme.textTheme.bodyLarge?.copyWith(
-                              color: theme.disabledColor,
-                            ),
-                          ),
-                        )
-                      : ListView.builder(
-                          itemCount: solicitacoesFiltradas.length,
-                          itemBuilder: (context, index) {
-                            return _buildSolicitacaoCard(
-                              solicitacoesFiltradas[index],
-                            );
+    if (carregando) {
+      return const Center(child: CircularProgressIndicator());
+    }
+    if (erro != null) {
+      return Center(
+        child: Text(
+          erro!,
+          style: theme.textTheme.bodyLarge?.copyWith(
+            color: theme.colorScheme.error,
+          ),
+        ),
+      );
+    }
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        // Filtros e pesquisa
+        Row(
+          children: [
+            Expanded(
+              child: TextField(
+                controller: _searchController,
+                decoration: InputDecoration(
+                  hintText: 'Pesquisar por descrição, endereço ou morador...',
+                  prefixIcon: const Icon(Icons.search),
+                  border: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(12),
+                    borderSide: BorderSide.none,
+                  ),
+                  filled: true,
+                  fillColor: theme.brightness == Brightness.dark
+                      ? const Color(0xFF1A1A1A)
+                      : Colors.white,
+                  contentPadding: const EdgeInsets.all(16),
+                  suffixIcon: termoPesquisa.isNotEmpty
+                      ? IconButton(
+                          icon: const Icon(Icons.clear),
+                          onPressed: () {
+                            _searchController.clear();
+                            setState(() {
+                              termoPesquisa = '';
+                            });
+                            filtrarSolicitacoes();
                           },
-                        ),
+                        )
+                      : null,
                 ),
-              ],
+                onChanged: (value) {
+                  setState(() {
+                    termoPesquisa = value;
+                  });
+                  filtrarSolicitacoes();
+                },
+              ),
             ),
+            const SizedBox(width: 16),
+            _buildFilterChip(
+              label: 'Todas',
+              value: 'todas',
+              isSelected: filtroStatus == 'todas',
+              onTap: () {
+                setState(() {
+                  filtroStatus = 'todas';
+                });
+                filtrarSolicitacoes();
+              },
+            ),
+            const SizedBox(width: 8),
+            _buildFilterChip(
+              label: 'Pendentes',
+              value: 'pendente',
+              isSelected: filtroStatus == 'pendente',
+              onTap: () {
+                setState(() {
+                  filtroStatus = 'pendente';
+                });
+                filtrarSolicitacoes();
+              },
+            ),
+            const SizedBox(width: 8),
+            _buildFilterChip(
+              label: 'Em Andamento',
+              value: 'em andamento',
+              isSelected: filtroStatus == 'em andamento',
+              onTap: () {
+                setState(() {
+                  filtroStatus = 'em andamento';
+                });
+                filtrarSolicitacoes();
+              },
+            ),
+            const SizedBox(width: 8),
+            _buildFilterChip(
+              label: 'Concluídas',
+              value: 'concluida',
+              isSelected: filtroStatus == 'concluida',
+              onTap: () {
+                setState(() {
+                  filtroStatus = 'concluida';
+                });
+                filtrarSolicitacoes();
+              },
+            ),
+          ],
+        ),
+        const SizedBox(height: 24),
+        Expanded(
+          child: solicitacoesFiltradas.isEmpty
+              ? Center(
+                  child: Text(
+                    termoPesquisa.isNotEmpty || filtroStatus != 'todas'
+                        ? 'Nenhuma solicitação encontrada com os filtros aplicados.'
+                        : 'Nenhuma solicitação encontrada.',
+                    style: theme.textTheme.bodyLarge?.copyWith(
+                      color: theme.disabledColor,
+                    ),
+                  ),
+                )
+              : ListView.builder(
+                  itemCount: solicitacoesFiltradas.length,
+                  itemBuilder: (context, index) {
+                    return _buildSolicitacaoCard(solicitacoesFiltradas[index]);
+                  },
+                ),
+        ),
+      ],
     );
   }
 }

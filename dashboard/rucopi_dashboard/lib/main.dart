@@ -2,10 +2,12 @@ import 'package:flutter/material.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:provider/provider.dart';
+import 'package:go_router/go_router.dart';
 import 'theme/theme_provider.dart';
 import 'pages/login_page.dart';
 import 'pages/dashboard_home_page.dart';
-import 'pages/configuracoes_page.dart';
+import 'pages/solicitacoes_route.dart';
+import 'pages/configuracoes_route.dart';
 
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -27,21 +29,50 @@ class MyApp extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Consumer<ThemeProvider>(
-      builder: (context, themeProvider, _) {
-        return MaterialApp(
-          title: 'Dashboard Rucopi',
-          debugShowCheckedModeBanner: false,
-          theme: themeProvider.lightTheme,
-          darkTheme: themeProvider.darkTheme,
-          themeMode: themeProvider.themeMode,
-          home: const LoginPage(),
-          routes: {
-            '/home': (_) => const DashboardHomePage(),
-            '/configuracoes': (_) => const ConfiguracoesPage(),
-          },
-        );
+    final themeProvider = Provider.of<ThemeProvider>(context);
+    final GoRouter _router = GoRouter(
+      initialLocation: '/home',
+      redirect: (context, state) {
+        final session = Supabase.instance.client.auth.currentSession;
+        final loggingIn = state.uri.toString() == '/login';
+        if (session == null && !loggingIn) return '/login';
+        if (session != null && loggingIn) return '/home';
+        return null;
       },
+      routes: [
+        GoRoute(
+          path: '/login',
+          builder: (context, state) =>
+              LoginPage(key: ValueKey(DateTime.now().millisecondsSinceEpoch)),
+        ),
+        GoRoute(
+          path: '/home',
+          builder: (context, state) => DashboardHomePage(
+            key: ValueKey(DateTime.now().millisecondsSinceEpoch),
+          ),
+        ),
+        GoRoute(
+          path: '/solicitacoes',
+          builder: (context, state) => SolicitacoesRoute(
+            key: ValueKey(DateTime.now().millisecondsSinceEpoch),
+          ),
+        ),
+        GoRoute(
+          path: '/configuracoes',
+          builder: (context, state) => ConfiguracoesRoute(
+            key: ValueKey(DateTime.now().millisecondsSinceEpoch),
+          ),
+        ),
+      ],
+    );
+
+    return MaterialApp.router(
+      title: 'Dashboard Rucopi',
+      debugShowCheckedModeBanner: false,
+      theme: themeProvider.lightTheme,
+      darkTheme: themeProvider.darkTheme,
+      themeMode: themeProvider.themeMode,
+      routerConfig: _router,
     );
   }
 }
