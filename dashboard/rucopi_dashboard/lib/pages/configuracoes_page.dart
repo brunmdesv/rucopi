@@ -70,10 +70,11 @@ class _ConfiguracoesPageState extends State<ConfiguracoesPage> {
                 .eq('id', user.id)
                 .single(),
       builder: (context, snapshot) {
-        final isAdmin =
-            snapshot.hasData &&
-            snapshot.data != null &&
-            (snapshot.data as Map<String, dynamic>)['cargo'] == 'administrador';
+        final cargo = snapshot.hasData && snapshot.data != null
+            ? (snapshot.data as Map<String, dynamic>)['cargo'] as String?
+            : null;
+        final isAdmin = cargo == 'administrador';
+        final isOperador = cargo == 'operador';
         return Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
@@ -117,7 +118,7 @@ class _ConfiguracoesPageState extends State<ConfiguracoesPage> {
               ],
             ),
             const SizedBox(height: 32),
-            if (isAdmin)
+            if (isAdmin || isOperador)
               Padding(
                 padding: const EdgeInsets.only(bottom: 16),
                 child: ElevatedButton.icon(

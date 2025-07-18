@@ -13,6 +13,7 @@ class UsuariosDashboard extends StatefulWidget {
 class _UsuariosDashboardState extends State<UsuariosDashboard> {
   late Future<List<dynamic>> _usuariosFuture;
   bool _isAdmin = false;
+  String? _cargoUsuario;
 
   @override
   void initState() {
@@ -30,7 +31,8 @@ class _UsuariosDashboardState extends State<UsuariosDashboard> {
         .eq('id', user.id)
         .single();
     setState(() {
-      _isAdmin = response != null && response['cargo'] == 'administrador';
+      _cargoUsuario = response != null ? response['cargo'] as String? : null;
+      _isAdmin = _cargoUsuario == 'administrador';
     });
   }
 
@@ -61,6 +63,7 @@ class _UsuariosDashboardState extends State<UsuariosDashboard> {
       appBar: AppBar(
         title: const Text('Gerenciar Usuários'),
         actions: [
+          // Apenas administradores veem o botão de adicionar usuário
           if (_isAdmin)
             IconButton(
               icon: const Icon(Icons.person_add),
