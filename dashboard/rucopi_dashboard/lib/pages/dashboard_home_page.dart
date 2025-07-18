@@ -22,6 +22,7 @@ class DashboardHomePage extends StatefulWidget {
 
 class _DashboardHomePageState extends State<DashboardHomePage> {
   DashboardScreen currentScreen = DashboardScreen.dashboard;
+  DashboardScreen? hoveredScreen;
 
   void _onMenuTap(DashboardScreen screen) {
     setState(() {
@@ -83,6 +84,7 @@ class _DashboardHomePageState extends State<DashboardHomePage> {
                   selected: currentScreen == DashboardScreen.dashboard,
                   onTap: () => _onMenuTap(DashboardScreen.dashboard),
                   theme: theme,
+                  screenType: DashboardScreen.dashboard,
                 ),
                 const SizedBox(width: 32),
                 _buildMenuIcon(
@@ -91,6 +93,7 @@ class _DashboardHomePageState extends State<DashboardHomePage> {
                   selected: currentScreen == DashboardScreen.solicitacoes,
                   onTap: () => _onMenuTap(DashboardScreen.solicitacoes),
                   theme: theme,
+                  screenType: DashboardScreen.solicitacoes,
                 ),
                 const SizedBox(width: 32),
                 _buildMenuIcon(
@@ -99,6 +102,7 @@ class _DashboardHomePageState extends State<DashboardHomePage> {
                   selected: currentScreen == DashboardScreen.mapa,
                   onTap: () => _onMenuTap(DashboardScreen.mapa),
                   theme: theme,
+                  screenType: DashboardScreen.mapa,
                 ),
                 const SizedBox(width: 32),
                 _buildMenuIcon(
@@ -107,6 +111,7 @@ class _DashboardHomePageState extends State<DashboardHomePage> {
                   selected: currentScreen == DashboardScreen.relatorios,
                   onTap: () => _onMenuTap(DashboardScreen.relatorios),
                   theme: theme,
+                  screenType: DashboardScreen.relatorios,
                 ),
                 const SizedBox(width: 32),
                 _buildMenuIcon(
@@ -115,6 +120,7 @@ class _DashboardHomePageState extends State<DashboardHomePage> {
                   selected: currentScreen == DashboardScreen.configuracoes,
                   onTap: () => _onMenuTap(DashboardScreen.configuracoes),
                   theme: theme,
+                  screenType: DashboardScreen.configuracoes,
                 ),
               ],
             ),
@@ -146,28 +152,61 @@ class _DashboardHomePageState extends State<DashboardHomePage> {
     required bool selected,
     required VoidCallback onTap,
     required ThemeData theme,
+    required DashboardScreen screenType,
   }) {
-    return InkWell(
-      borderRadius: BorderRadius.circular(12),
-      onTap: onTap,
-      child: Column(
-        mainAxisAlignment: MainAxisAlignment.center,
-        children: [
-          Icon(
-            icon,
-            color: selected ? theme.primaryColor : theme.disabledColor,
-            size: 20,
-          ),
-          const SizedBox(height: 4),
-          Text(
-            label,
-            style: theme.textTheme.bodySmall?.copyWith(
-              fontSize: 12, // Tamanho menor para a label
+    final isHovered = hoveredScreen == screenType;
+    return MouseRegion(
+      onEnter: (_) => setState(() => hoveredScreen = screenType),
+      onExit: (_) => setState(() => hoveredScreen = null),
+      child: InkWell(
+        borderRadius: BorderRadius.circular(12),
+        onTap: onTap,
+        hoverColor: Colors.transparent,
+        highlightColor: Colors.transparent,
+        splashColor: Colors.transparent,
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Icon(
+              icon,
               color: selected ? theme.primaryColor : theme.disabledColor,
-              fontWeight: selected ? FontWeight.bold : FontWeight.normal,
+              size: 20,
             ),
-          ),
-        ],
+            const SizedBox(height: 4),
+            Text(
+              label,
+              style: theme.textTheme.bodySmall?.copyWith(
+                fontSize: 12, // Tamanho menor para a label
+                color: selected ? theme.primaryColor : theme.disabledColor,
+                fontWeight: selected ? FontWeight.bold : FontWeight.normal,
+              ),
+            ),
+            const SizedBox(height: 4),
+            AnimatedContainer(
+              duration: const Duration(milliseconds: 180),
+              curve: Curves.ease,
+              height: 3,
+              width: selected || isHovered ? 28 : 0,
+              decoration: BoxDecoration(
+                color: selected
+                    ? theme.primaryColor
+                    : (isHovered
+                          ? theme.primaryColor.withOpacity(0.5)
+                          : Colors.transparent),
+                borderRadius: BorderRadius.circular(2),
+                boxShadow: selected || isHovered
+                    ? [
+                        BoxShadow(
+                          color: theme.primaryColor.withOpacity(0.18),
+                          blurRadius: 4,
+                          offset: const Offset(0, 2),
+                        ),
+                      ]
+                    : [],
+              ),
+            ),
+          ],
+        ),
       ),
     );
   }
