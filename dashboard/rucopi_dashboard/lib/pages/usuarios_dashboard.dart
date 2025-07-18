@@ -119,6 +119,7 @@ class _NovoUsuarioDialogState extends State<NovoUsuarioDialog> {
   final _formKey = GlobalKey<FormState>();
   final _nomeController = TextEditingController();
   final _emailController = TextEditingController();
+  final _senhaController = TextEditingController();
   String _cargo = 'operador';
   bool _loading = false;
   String? _erro;
@@ -129,17 +130,11 @@ class _NovoUsuarioDialogState extends State<NovoUsuarioDialog> {
       _erro = null;
     });
     try {
-      // 1. Obtenha o JWT do usuário autenticado
       final session = Supabase.instance.client.auth.currentSession;
       final jwt = session?.accessToken;
       if (jwt == null)
         throw Exception('Sessão expirada. Faça login novamente.');
-
-      // 2. Defina a URL da Edge Function
-      //const url ='https://iwfjrqmpbtuqnfrierij.functions.supabase.co/criar-usuario';
       const url = 'http://localhost:8010/proxy/criar-usuario';
-
-      // 3. Faça a requisição POST para a Edge Function
       final response = await http.post(
         Uri.parse(url),
         headers: {
@@ -150,9 +145,9 @@ class _NovoUsuarioDialogState extends State<NovoUsuarioDialog> {
           'nome': _nomeController.text.trim(),
           'email': _emailController.text.trim(),
           'cargo': _cargo,
+          'senha': _senhaController.text.trim(),
         }),
       );
-
       if (response.statusCode == 200) {
         widget.onUsuarioCriado();
         Navigator.of(context).pop();
@@ -200,6 +195,13 @@ class _NovoUsuarioDialogState extends State<NovoUsuarioDialog> {
               validator: (v) =>
                   v == null || v.isEmpty ? 'Informe o e-mail' : null,
               keyboardType: TextInputType.emailAddress,
+            ),
+            TextFormField(
+              controller: _senhaController,
+              decoration: const InputDecoration(labelText: 'Senha'),
+              obscureText: true,
+              validator: (v) =>
+                  v == null || v.length < 6 ? 'Mínimo 6 caracteres' : null,
             ),
             DropdownButtonFormField<String>(
               value: _cargo,
