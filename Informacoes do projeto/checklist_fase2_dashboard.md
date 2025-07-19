@@ -42,6 +42,7 @@
 ### 6. Interface e Usabilidade
 - [x] Criar dashboard inicial moderna e bonita, com cards de totais e atalhos úteis
 - [x] Melhorar layout dos cards de solicitações com informações organizadas (status, data/hora, morador, endereço, descrição, tipo de entulho)
+- [x] Implementar visualização em tabela moderna e responsiva para melhor organização das solicitações
 - [ ] Garantir responsividade e boa experiência de uso
 - [ ] Adicionar feedbacks visuais (loadings, mensagens de sucesso/erro)
 - [x] Implementação da tela inicial do rucopi_mobile com AppBar, saudação, card de solicitações e botão de solicitar coleta.
