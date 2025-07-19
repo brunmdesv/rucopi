@@ -59,12 +59,22 @@ class _NovaSolicitacaoPageState extends State<NovaSolicitacaoPage> {
       return;
     }
     try {
+      // Buscar dados do morador
+      final moradorResponse = await Supabase.instance.client
+          .from('moradores')
+          .select('nome')
+          .eq('id', user.id)
+          .single();
+
+      final nomeMorador = moradorResponse['nome'] ?? 'Morador não identificado';
+
       List<String> fotosUrls = [];
       if (imagensSelecionadas.isNotEmpty) {
         fotosUrls = await uploadImagens(user.id);
       }
       await Supabase.instance.client.from('solicitacoes').insert({
         'morador_id': user.id,
+        'nome_morador': nomeMorador,
         'descricao': descricaoController.text,
         'tipo_entulho': tipoEntulho,
         'endereco': enderecoController.text,

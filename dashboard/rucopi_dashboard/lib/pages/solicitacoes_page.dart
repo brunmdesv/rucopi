@@ -160,105 +160,251 @@ class _SolicitacoesPageState extends State<SolicitacoesPage> {
     final statusColor = _getStatusColor(solicitacao['status']);
     final statusIcon = _getStatusIcon(solicitacao['status']);
     final statusText = _getStatusText(solicitacao['status']);
+
+    // Formatação da data e hora
     final data = solicitacao['criado_em'] != null
         ? DateTime.tryParse(solicitacao['criado_em'])
         : null;
     final dataStr = data != null
         ? '${data.day.toString().padLeft(2, '0')}/${data.month.toString().padLeft(2, '0')}/${data.year}'
         : 'Sem data';
+    final horaStr = data != null
+        ? '${data.hour.toString().padLeft(2, '0')}:${data.minute.toString().padLeft(2, '0')}'
+        : '';
+
     return Container(
       margin: const EdgeInsets.symmetric(vertical: 8),
-      padding: const EdgeInsets.all(20),
+      padding: const EdgeInsets.all(24),
       decoration: BoxDecoration(
         color: theme.brightness == Brightness.dark
             ? const Color(0xFF1A1A1A)
             : Colors.white,
-        borderRadius: BorderRadius.circular(12),
+        borderRadius: BorderRadius.circular(16),
         border: Border.all(
           color: theme.brightness == Brightness.dark
               ? const Color(0xFF2A2A2A)
               : const Color(0xFFE2E8F0),
           width: 1,
         ),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withOpacity(0.05),
+            blurRadius: 8,
+            offset: const Offset(0, 2),
+          ),
+        ],
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
+          // Header com status e data/hora
           Row(
-            crossAxisAlignment: CrossAxisAlignment.center,
             children: [
+              // Status com ícone
               Container(
-                padding: const EdgeInsets.all(10),
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 12,
+                  vertical: 8,
+                ),
                 decoration: BoxDecoration(
                   color: statusColor.withOpacity(0.1),
+                  borderRadius: BorderRadius.circular(20),
+                  border: Border.all(
+                    color: statusColor.withOpacity(0.3),
+                    width: 1,
+                  ),
+                ),
+                child: Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Icon(statusIcon, color: statusColor, size: 16),
+                    const SizedBox(width: 6),
+                    Text(
+                      statusText,
+                      style: theme.textTheme.bodySmall?.copyWith(
+                        color: statusColor,
+                        fontWeight: FontWeight.w600,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+              const Spacer(),
+              // Data e hora
+              Column(
+                crossAxisAlignment: CrossAxisAlignment.end,
+                children: [
+                  Text(
+                    dataStr,
+                    style: theme.textTheme.bodySmall?.copyWith(
+                      color: theme.disabledColor,
+                      fontWeight: FontWeight.w500,
+                    ),
+                  ),
+                  if (horaStr.isNotEmpty)
+                    Text(
+                      horaStr,
+                      style: theme.textTheme.bodySmall?.copyWith(
+                        color: theme.disabledColor,
+                        fontSize: 12,
+                      ),
+                    ),
+                ],
+              ),
+            ],
+          ),
+
+          const SizedBox(height: 20),
+
+          // Informações do morador
+          Row(
+            children: [
+              Container(
+                padding: const EdgeInsets.all(8),
+                decoration: BoxDecoration(
+                  color: theme.primaryColor.withOpacity(0.1),
                   borderRadius: BorderRadius.circular(8),
                 ),
-                child: Icon(statusIcon, color: statusColor, size: 24),
+                child: Icon(Icons.person, color: theme.primaryColor, size: 16),
               ),
-              const SizedBox(width: 16),
+              const SizedBox(width: 12),
               Expanded(
-                child: Text(
-                  statusText,
-                  style: theme.textTheme.titleSmall?.copyWith(
-                    fontWeight: FontWeight.w600,
-                  ),
-                  overflow: TextOverflow.ellipsis,
-                  maxLines: 2,
-                ),
-              ),
-              const SizedBox(width: 16),
-              Text(
-                dataStr,
-                style: theme.textTheme.bodySmall?.copyWith(
-                  color: theme.disabledColor,
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      'Morador',
+                      style: theme.textTheme.bodySmall?.copyWith(
+                        color: theme.disabledColor,
+                        fontWeight: FontWeight.w500,
+                      ),
+                    ),
+                    const SizedBox(height: 2),
+                    Text(
+                      solicitacao['nome_morador'] ??
+                          solicitacao['morador_id'] ??
+                          'Morador não identificado',
+                      style: theme.textTheme.bodyMedium?.copyWith(
+                        fontWeight: FontWeight.w600,
+                      ),
+                    ),
+                  ],
                 ),
               ),
             ],
           ),
+
           const SizedBox(height: 16),
+
+          // Endereço
           Row(
-            crossAxisAlignment: CrossAxisAlignment.center,
+            crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Icon(Icons.description, color: theme.primaryColor, size: 18),
-              const SizedBox(width: 8),
+              Container(
+                padding: const EdgeInsets.all(8),
+                decoration: BoxDecoration(
+                  color: Colors.red.withOpacity(0.1),
+                  borderRadius: BorderRadius.circular(8),
+                ),
+                child: Icon(Icons.location_on, color: Colors.red, size: 16),
+              ),
+              const SizedBox(width: 12),
               Expanded(
-                child: Text(
-                  solicitacao['descricao'] ?? 'Sem descrição',
-                  style: theme.textTheme.bodyMedium?.copyWith(
-                    fontWeight: FontWeight.w600,
-                  ),
-                  overflow: TextOverflow.ellipsis,
-                  maxLines: 2,
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      'Endereço',
+                      style: theme.textTheme.bodySmall?.copyWith(
+                        color: theme.disabledColor,
+                        fontWeight: FontWeight.w500,
+                      ),
+                    ),
+                    const SizedBox(height: 2),
+                    Text(
+                      solicitacao['endereco'] ?? 'Endereço não informado',
+                      style: theme.textTheme.bodyMedium?.copyWith(
+                        fontWeight: FontWeight.w500,
+                      ),
+                    ),
+                  ],
                 ),
               ),
             ],
           ),
-          const SizedBox(height: 12),
+
+          const SizedBox(height: 16),
+
+          // Descrição
           Row(
+            crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Icon(Icons.location_on, color: Colors.red, size: 18),
-              const SizedBox(width: 8),
+              Container(
+                padding: const EdgeInsets.all(8),
+                decoration: BoxDecoration(
+                  color: Colors.blue.withOpacity(0.1),
+                  borderRadius: BorderRadius.circular(8),
+                ),
+                child: Icon(Icons.description, color: Colors.blue, size: 16),
+              ),
+              const SizedBox(width: 12),
               Expanded(
-                child: Text(
-                  solicitacao['endereco'] ?? '-',
-                  style: theme.textTheme.bodySmall,
-                  overflow: TextOverflow.ellipsis,
-                  maxLines: 2,
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      'Descrição',
+                      style: theme.textTheme.bodySmall?.copyWith(
+                        color: theme.disabledColor,
+                        fontWeight: FontWeight.w500,
+                      ),
+                    ),
+                    const SizedBox(height: 2),
+                    Text(
+                      solicitacao['descricao'] ?? 'Descrição não informada',
+                      style: theme.textTheme.bodyMedium?.copyWith(
+                        fontWeight: FontWeight.w500,
+                      ),
+                    ),
+                  ],
                 ),
               ),
             ],
           ),
-          const SizedBox(height: 12),
+
+          const SizedBox(height: 16),
+
+          // Tipo de entulho
           Row(
             children: [
-              Icon(Icons.category, color: Colors.orange, size: 18),
-              const SizedBox(width: 8),
+              Container(
+                padding: const EdgeInsets.all(8),
+                decoration: BoxDecoration(
+                  color: Colors.orange.withOpacity(0.1),
+                  borderRadius: BorderRadius.circular(8),
+                ),
+                child: Icon(Icons.category, color: Colors.orange, size: 16),
+              ),
+              const SizedBox(width: 12),
               Expanded(
-                child: Text(
-                  solicitacao['tipo_entulho'] ?? '-',
-                  style: theme.textTheme.bodySmall,
-                  overflow: TextOverflow.ellipsis,
-                  maxLines: 2,
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      'Tipo de Entulho',
+                      style: theme.textTheme.bodySmall?.copyWith(
+                        color: theme.disabledColor,
+                        fontWeight: FontWeight.w500,
+                      ),
+                    ),
+                    const SizedBox(height: 2),
+                    Text(
+                      solicitacao['tipo_entulho'] ?? 'Tipo não informado',
+                      style: theme.textTheme.bodyMedium?.copyWith(
+                        fontWeight: FontWeight.w500,
+                      ),
+                    ),
+                  ],
                 ),
               ),
             ],

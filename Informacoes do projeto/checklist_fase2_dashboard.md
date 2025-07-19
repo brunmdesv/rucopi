@@ -27,6 +27,7 @@
 - [x] Buscar dados da tabela `solicitacoes` no Supabase
 - [x] Exibir campos principais: descrição, status, data, morador, etc
 - [x] Permitir que administradores/operadores vejam todas as solicitações (ajuste de RLS)
+- [x] Adicionar coluna `nome_morador` na tabela `solicitacoes` e atualizar código para exibir nome do morador
 - [ ] Implementar filtros por status, data, bairro, etc
 - [ ] Permitir visualização dos detalhes de cada solicitação (incluindo fotos)
 
@@ -40,6 +41,7 @@
 
 ### 6. Interface e Usabilidade
 - [x] Criar dashboard inicial moderna e bonita, com cards de totais e atalhos úteis
+- [x] Melhorar layout dos cards de solicitações com informações organizadas (status, data/hora, morador, endereço, descrição, tipo de entulho)
 - [ ] Garantir responsividade e boa experiência de uso
 - [ ] Adicionar feedbacks visuais (loadings, mensagens de sucesso/erro)
 - [x] Implementação da tela inicial do rucopi_mobile com AppBar, saudação, card de solicitações e botão de solicitar coleta.
