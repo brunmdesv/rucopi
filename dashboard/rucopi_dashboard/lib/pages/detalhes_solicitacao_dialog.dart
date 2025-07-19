@@ -17,10 +17,13 @@ class DetalhesSolicitacaoDialog extends StatefulWidget {
 class _DetalhesSolicitacaoDialogState extends State<DetalhesSolicitacaoDialog> {
   Map<String, dynamic>? morador;
   bool loading = true;
+  late String statusSelecionado;
+  bool atualizandoStatus = false;
 
   @override
   void initState() {
     super.initState();
+    statusSelecionado = widget.solicitacao['status'] ?? 'pendente';
     _carregarMorador();
   }
 
@@ -48,6 +51,63 @@ class _DetalhesSolicitacaoDialogState extends State<DetalhesSolicitacaoDialog> {
         loading = false;
       });
     }
+  }
+
+  Future<void> _atualizarStatus(String novoStatus) async {
+    setState(() {
+      atualizandoStatus = true;
+    });
+    try {
+      await Supabase.instance.client
+          .from('solicitacoes')
+          .update({'status': novoStatus})
+          .eq('id', widget.solicitacao['id']);
+      setState(() {
+        statusSelecionado = novoStatus;
+        widget.solicitacao['status'] = novoStatus;
+      });
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Status atualizado para "$novoStatus"!')),
+        );
+      }
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(SnackBar(content: Text('Erro ao atualizar status: $e')));
+      }
+    } finally {
+      setState(() {
+        atualizandoStatus = false;
+      });
+    }
+  }
+
+  Widget _buildStatusDropdown() {
+    final statusList = [
+      'pendente',
+      'agendada',
+      'coletando',
+      'concluido',
+      'cancelado',
+    ];
+    return DropdownButton<String>(
+      value: statusSelecionado,
+      items: statusList.map((status) {
+        return DropdownMenuItem(
+          value: status,
+          child: Text(status[0].toUpperCase() + status.substring(1)),
+        );
+      }).toList(),
+      onChanged: atualizandoStatus
+          ? null
+          : (novoStatus) {
+              if (novoStatus != null && novoStatus != statusSelecionado) {
+                _atualizarStatus(novoStatus);
+              }
+            },
+    );
   }
 
   @override
@@ -301,30 +361,21 @@ class _DetalhesSolicitacaoDialogState extends State<DetalhesSolicitacaoDialog> {
         label = status.isNotEmpty ? status : 'Indefinido';
         icon = Icons.help_outline_rounded;
     }
-    return Container(
-      margin: EdgeInsets.zero,
-      decoration: BoxDecoration(
-        color: theme.brightness == Brightness.dark
-            ? color.withOpacity(0.25)
-            : color.withOpacity(0.12),
-        borderRadius: BorderRadius.circular(16),
-      ),
-      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
-      child: Row(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          Icon(icon, color: color, size: 18),
+    return Row(
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        Icon(icon, color: color, size: 18),
+        const SizedBox(width: 8),
+        _buildStatusDropdown(),
+        if (atualizandoStatus) ...[
           const SizedBox(width: 8),
-          Text(
-            label,
-            style: theme.textTheme.bodyMedium?.copyWith(
-              fontWeight: FontWeight.bold,
-              color: theme.brightness == Brightness.dark ? Colors.white : color,
-              fontSize: 13,
-            ),
+          SizedBox(
+            width: 16,
+            height: 16,
+            child: CircularProgressIndicator(strokeWidth: 2),
           ),
         ],
-      ),
+      ],
     );
   }
 
