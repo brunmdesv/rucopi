@@ -6,7 +6,6 @@ import 'detalhes_solicitacao_dialog.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import 'perfil_usuario_page.dart';
 
-// Enum para as telas
 enum DashboardScreen {
   dashboard,
   solicitacoes,
@@ -61,7 +60,7 @@ class _DashboardHomePageState extends State<DashboardHomePage> {
       // MOBILE/TABLET: menu hamburguer
       return Material(
         elevation: 2,
-        color: isDark ? AppColors.darkCard : AppColors.lightCard,
+        color: theme.appBarTheme.backgroundColor ?? AppColors.lightAppBar,
         child: SizedBox(
           height: 56,
           child: Row(
@@ -94,7 +93,7 @@ class _DashboardHomePageState extends State<DashboardHomePage> {
     // DESKTOP/TABLET: menu bar tradicional
     return Material(
       elevation: 2,
-      color: isDark ? AppColors.darkCard : AppColors.lightCard,
+      color: theme.appBarTheme.backgroundColor ?? AppColors.lightAppBar,
       child: Container(
         height: 72,
         padding: const EdgeInsets.symmetric(horizontal: 32),
@@ -353,7 +352,6 @@ class _DashboardHomePageState extends State<DashboardHomePage> {
   }
 }
 
-// Conteúdo do Dashboard (exemplo)
 class _DashboardContent extends StatefulWidget {
   const _DashboardContent({super.key});
 
@@ -585,12 +583,9 @@ class _DashboardContentState extends State<_DashboardContent> {
       ),
       padding: EdgeInsets.all(width < 600 ? 10 : 16),
       decoration: BoxDecoration(
-        color: isDark ? const Color(0xFF1A1A1A) : Colors.white,
+        color: isDark ? theme.cardColor : theme.primaryColor.withOpacity(0.08),
         borderRadius: BorderRadius.circular(width < 600 ? 8 : 12),
-        border: Border.all(
-          color: isDark ? const Color(0xFF2A2A2A) : const Color(0xFFE2E8F0),
-          width: 1,
-        ),
+        border: Border.all(color: theme.dividerColor, width: 1),
       ),
       child: Row(
         crossAxisAlignment: CrossAxisAlignment.center,
@@ -658,22 +653,9 @@ class _DashboardContentState extends State<_DashboardContent> {
     final totalPendentes = solicitacoesPendentes.length;
     final restantes = totalPendentes - solicitacoesExibidas.length;
 
-    return Container(
-      decoration: BoxDecoration(
-        color: isDark ? const Color(0xFF1A1A1A) : Colors.white,
-        borderRadius: BorderRadius.circular(12),
-        border: Border.all(
-          color: isDark ? const Color(0xFF2A2A2A) : const Color(0xFFE2E8F0),
-          width: 1,
-        ),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withOpacity(0.05),
-            blurRadius: 8,
-            offset: const Offset(0, 2),
-          ),
-        ],
-      ),
+    return _buildSectionContainer(
+      theme: theme,
+      width: width,
       child: Column(
         children: [
           // Header compacto
@@ -683,7 +665,7 @@ class _DashboardContentState extends State<_DashboardContent> {
               vertical: width < 600 ? 8 : 12,
             ),
             decoration: BoxDecoration(
-              color: theme.primaryColor.withOpacity(0.05),
+              color: theme.primaryColor.withOpacity(0.08),
               borderRadius: const BorderRadius.only(
                 topLeft: Radius.circular(12),
                 topRight: Radius.circular(12),
@@ -777,9 +759,7 @@ class _DashboardContentState extends State<_DashboardContent> {
             Container(
               padding: EdgeInsets.all(width < 600 ? 8 : 12),
               decoration: BoxDecoration(
-                color: theme.brightness == Brightness.dark
-                    ? const Color(0xFF0F0F0F)
-                    : Colors.grey.shade50,
+                color: theme.primaryColor.withOpacity(0.08),
                 borderRadius: const BorderRadius.only(
                   bottomLeft: Radius.circular(12),
                   bottomRight: Radius.circular(12),
@@ -887,7 +867,9 @@ class _DashboardContentState extends State<_DashboardContent> {
       child: Container(
         padding: EdgeInsets.all(width < 600 ? 8 : 10),
         decoration: BoxDecoration(
-          color: isDark ? const Color(0xFF0F0F0F) : const Color(0xFFF8FAFC),
+          color: isDark
+              ? theme.cardColor
+              : theme.primaryColor.withOpacity(0.08),
           borderRadius: BorderRadius.circular(8),
           border: Border.all(
             color: theme.primaryColor.withOpacity(0.1),
@@ -1011,23 +993,24 @@ class _DashboardContentState extends State<_DashboardContent> {
         vertical: width < 600 ? 12 : 16,
       ),
       decoration: BoxDecoration(
-        color: isDark ? const Color(0xFF1A1A1A) : Colors.white,
-        borderRadius: BorderRadius.circular(12),
-        border: Border.all(
-          color: isDark ? const Color(0xFF2A2A2A) : const Color(0xFFE2E8F0),
-          width: 1,
-        ),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withOpacity(0.05),
-            blurRadius: 8,
-            offset: const Offset(0, 2),
-          ),
-        ],
+        color: theme.primaryColor.withOpacity(0.08),
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(color: Colors.transparent, width: 0),
       ),
       child: Row(
         children: [
-          Icon(Icons.handshake_rounded, color: theme.primaryColor, size: 32),
+          Container(
+            padding: const EdgeInsets.all(12),
+            decoration: BoxDecoration(
+              color: theme.primaryColor.withOpacity(0.15),
+              borderRadius: BorderRadius.circular(16),
+            ),
+            child: Icon(
+              Icons.handshake_rounded,
+              color: theme.primaryColor,
+              size: 24,
+            ),
+          ),
           const SizedBox(width: 12),
           Expanded(
             child: Column(
@@ -1038,13 +1021,14 @@ class _DashboardContentState extends State<_DashboardContent> {
                   style: theme.textTheme.titleMedium?.copyWith(
                     fontWeight: FontWeight.bold,
                     fontSize: width < 600 ? 16 : null,
+                    color: theme.primaryColor,
                   ),
                 ),
                 const SizedBox(height: 4),
                 Text(
                   'Seu sistema de gestão de coleta de resíduos.',
                   style: theme.textTheme.bodyMedium?.copyWith(
-                    color: theme.disabledColor,
+                    color: theme.textTheme.bodySmall?.color,
                     fontSize: width < 600 ? 12 : null,
                   ),
                 ),
@@ -1074,12 +1058,9 @@ class _DashboardContentState extends State<_DashboardContent> {
     return Container(
       padding: EdgeInsets.all(width < 600 ? 12 : 20),
       decoration: BoxDecoration(
-        color: isDark ? const Color(0xFF1A1A1A) : Colors.white,
+        color: theme.primaryColor.withOpacity(0.08),
         borderRadius: BorderRadius.circular(width < 600 ? 8 : 12),
-        border: Border.all(
-          color: isDark ? const Color(0xFF2A2A2A) : const Color(0xFFE2E8F0),
-          width: 1,
-        ),
+        border: Border.all(color: Colors.transparent, width: 0),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -1222,22 +1203,9 @@ class _DashboardContentState extends State<_DashboardContent> {
     final solicitacoesExibidas = solicitacoesAgendadas.take(3).toList();
     final totalAgendadas = solicitacoesAgendadas.length;
     final restantes = totalAgendadas - solicitacoesExibidas.length;
-    return Container(
-      decoration: BoxDecoration(
-        color: isDark ? const Color(0xFF1A1A1A) : Colors.white,
-        borderRadius: BorderRadius.circular(12),
-        border: Border.all(
-          color: isDark ? const Color(0xFF2A2A2A) : const Color(0xFFE2E8F0),
-          width: 1,
-        ),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withOpacity(0.05),
-            blurRadius: 8,
-            offset: const Offset(0, 2),
-          ),
-        ],
-      ),
+    return _buildSectionContainer(
+      theme: theme,
+      width: width,
       child: Column(
         children: [
           // Header compacto
@@ -1247,7 +1215,7 @@ class _DashboardContentState extends State<_DashboardContent> {
               vertical: width < 600 ? 8 : 12,
             ),
             decoration: BoxDecoration(
-              color: const Color(0xFF2196F3).withOpacity(0.05),
+              color: theme.primaryColor.withOpacity(0.08),
               borderRadius: const BorderRadius.only(
                 topLeft: Radius.circular(12),
                 topRight: Radius.circular(12),
@@ -1358,9 +1326,7 @@ class _DashboardContentState extends State<_DashboardContent> {
             Container(
               padding: EdgeInsets.all(width < 600 ? 8 : 12),
               decoration: BoxDecoration(
-                color: theme.brightness == Brightness.dark
-                    ? const Color(0xFF0F0F0F)
-                    : Colors.grey.shade50,
+                color: theme.primaryColor.withOpacity(0.08),
                 borderRadius: const BorderRadius.only(
                   bottomLeft: Radius.circular(12),
                   bottomRight: Radius.circular(12),
@@ -1476,7 +1442,6 @@ class _DashboardContentState extends State<_DashboardContent> {
   }
 }
 
-// Placeholder para telas não implementadas
 class _PlaceholderContent extends StatelessWidget {
   final IconData icon;
   final String label;
@@ -1532,6 +1497,10 @@ class _MenuIconState extends State<_MenuIcon> {
 
   @override
   Widget build(BuildContext context) {
+    final isLight = widget.theme.brightness == Brightness.light;
+    final Color baseColor = widget.selected
+        ? widget.theme.primaryColor
+        : (isLight ? AppColors.lightText : widget.theme.disabledColor);
     return MouseRegion(
       onEnter: (_) => setState(() => isHovered = true),
       onExit: (_) => setState(() => isHovered = false),
@@ -1544,21 +1513,13 @@ class _MenuIconState extends State<_MenuIcon> {
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            Icon(
-              widget.icon,
-              color: widget.selected
-                  ? widget.theme.primaryColor
-                  : widget.theme.disabledColor,
-              size: 20,
-            ),
+            Icon(widget.icon, color: baseColor, size: 20),
             const SizedBox(height: 4),
             Text(
               widget.label,
               style: widget.theme.textTheme.bodySmall?.copyWith(
                 fontSize: 12,
-                color: widget.selected
-                    ? widget.theme.primaryColor
-                    : widget.theme.disabledColor,
+                color: baseColor,
                 fontWeight: widget.selected
                     ? FontWeight.bold
                     : FontWeight.normal,
@@ -1593,4 +1554,19 @@ class _MenuIconState extends State<_MenuIcon> {
       ),
     );
   }
+}
+
+Widget _buildSectionContainer({
+  required Widget child,
+  required ThemeData theme,
+  double? width,
+}) {
+  return Container(
+    decoration: BoxDecoration(
+      color: theme.primaryColor.withOpacity(0.08),
+      borderRadius: BorderRadius.circular(12),
+      border: Border.all(color: Colors.transparent, width: 0),
+    ),
+    child: child,
+  );
 }

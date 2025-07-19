@@ -97,8 +97,7 @@ class _ConfiguracoesPageState extends State<ConfiguracoesPage> {
                                 tooltip: 'Claro',
                                 selected:
                                     themeProvider.themeMode == ThemeMode.light,
-                                onTap: () =>
-                                    themeProvider.setTheme(ThemeMode.light),
+                                onTap: () => themeProvider.toggleTheme(false),
                               ),
                               const SizedBox(width: 16),
                               _ThemeIconButton(
@@ -106,8 +105,7 @@ class _ConfiguracoesPageState extends State<ConfiguracoesPage> {
                                 tooltip: 'Escuro',
                                 selected:
                                     themeProvider.themeMode == ThemeMode.dark,
-                                onTap: () =>
-                                    themeProvider.setTheme(ThemeMode.dark),
+                                onTap: () => themeProvider.toggleTheme(true),
                               ),
                               const SizedBox(width: 16),
                               _ThemeIconButton(

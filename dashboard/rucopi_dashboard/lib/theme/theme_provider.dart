@@ -12,41 +12,8 @@ class ThemeProvider extends ChangeNotifier {
     _loadTheme();
   }
 
-  Future<void> _loadTheme() async {
-    final prefs = await SharedPreferences.getInstance();
-    final themeString = prefs.getString(_themeKey);
-    if (themeString != null) {
-      switch (themeString) {
-        case 'light':
-          _themeMode = ThemeMode.light;
-          break;
-        case 'dark':
-          _themeMode = ThemeMode.dark;
-          break;
-        default:
-          _themeMode = ThemeMode.system;
-      }
-      notifyListeners();
-    }
-  }
-
-  Future<void> setTheme(ThemeMode mode) async {
-    _themeMode = mode;
-    notifyListeners();
-    final prefs = await SharedPreferences.getInstance();
-    switch (mode) {
-      case ThemeMode.light:
-        await prefs.setString(_themeKey, 'light');
-        break;
-      case ThemeMode.dark:
-        await prefs.setString(_themeKey, 'dark');
-        break;
-      default:
-        await prefs.setString(_themeKey, 'system');
-    }
-  }
-
   ThemeData get lightTheme => ThemeData(
+    useMaterial3: true,
     brightness: Brightness.light,
     primaryColor: AppColors.lightPrimary,
     scaffoldBackgroundColor: AppColors.lightBackground,
@@ -199,6 +166,7 @@ class ThemeProvider extends ChangeNotifier {
   );
 
   ThemeData get darkTheme => ThemeData(
+    useMaterial3: true,
     brightness: Brightness.dark,
     primaryColor: AppColors.darkPrimary,
     scaffoldBackgroundColor: AppColors.darkBackground,
@@ -349,4 +317,50 @@ class ThemeProvider extends ChangeNotifier {
       ),
     ),
   );
+
+  void setTheme(ThemeMode mode) async {
+    _themeMode = mode;
+    notifyListeners();
+    final prefs = await SharedPreferences.getInstance();
+    switch (mode) {
+      case ThemeMode.light:
+        await prefs.setString(_themeKey, 'light');
+        break;
+      case ThemeMode.dark:
+        await prefs.setString(_themeKey, 'dark');
+        break;
+      case ThemeMode.system:
+      default:
+        await prefs.setString(_themeKey, 'system');
+    }
+  }
+
+  void toggleTheme(bool isDark) {
+    setTheme(isDark ? ThemeMode.dark : ThemeMode.light);
+  }
+
+  Future<void> _loadTheme() async {
+    final prefs = await SharedPreferences.getInstance();
+    final themeString = prefs.getString(_themeKey);
+    switch (themeString) {
+      case 'light':
+        _themeMode = ThemeMode.light;
+        break;
+      case 'dark':
+        _themeMode = ThemeMode.dark;
+        break;
+      case 'system':
+      default:
+        _themeMode = ThemeMode.system;
+    }
+    notifyListeners();
+  }
+
+  Future<void> _saveTheme() async {
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setString(
+      _themeKey,
+      _themeMode == ThemeMode.dark ? 'dark' : 'light',
+    );
+  }
 }
