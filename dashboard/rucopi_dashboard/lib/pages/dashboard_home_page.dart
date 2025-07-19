@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import '../theme/app_styles.dart';
 import 'solicitacoes_page.dart';
 import 'configuracoes_page.dart';
-import 'detalhes_solicitacao_morador.dart';
+import 'detalhes_solicitacao_dialog.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import 'perfil_usuario_page.dart';
 
@@ -814,11 +814,10 @@ class _DashboardContentState extends State<_DashboardContent> {
 
     return InkWell(
       onTap: () {
-        Navigator.of(context).push(
-          MaterialPageRoute(
-            builder: (context) =>
-                DetalhesSolicitacaoMoradorPage(solicitacao: solicitacao),
-          ),
+        showDialog(
+          context: context,
+          builder: (context) =>
+              DetalhesSolicitacaoDialog(solicitacao: solicitacao),
         );
       },
       borderRadius: BorderRadius.circular(8),
