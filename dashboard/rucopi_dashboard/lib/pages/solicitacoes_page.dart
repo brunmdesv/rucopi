@@ -311,36 +311,38 @@ class _SolicitacoesPageState extends State<SolicitacoesPage> {
     final theme = Theme.of(context);
     final width = MediaQuery.of(context).size.width;
     final isMobile = width < 700;
+    // Responsividade: padding menor em telas pequenas (igual ao dashboard)
+    final horizontalPadding = width < 600 ? 8.0 : (width < 900 ? 16.0 : 32.0);
     return Center(
       child: SingleChildScrollView(
         padding: EdgeInsets.symmetric(
-          vertical: 32,
-          horizontal: width < 600 ? 8 : 0,
+          horizontal: horizontalPadding,
+          vertical: 24,
         ),
         child: ConstrainedBox(
-          constraints: const BoxConstraints(maxWidth: 900),
+          constraints: const BoxConstraints(maxWidth: 1400),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
-              // Título destacado + ações mobile
-              Row(
-                children: [
-                  Icon(
-                    Icons.list_alt_rounded,
-                    color: theme.primaryColor,
-                    size: 32,
-                  ),
-                  const SizedBox(width: 12),
-                  Expanded(
-                    child: Text(
-                      'Solicitações',
-                      style: theme.textTheme.headlineSmall?.copyWith(
-                        fontWeight: FontWeight.bold,
-                        color: theme.primaryColor,
+              if (isMobile) ...[
+                // Título destacado + ações mobile
+                Row(
+                  children: [
+                    Icon(
+                      Icons.list_alt_rounded,
+                      color: theme.primaryColor,
+                      size: 32,
+                    ),
+                    const SizedBox(width: 12),
+                    Expanded(
+                      child: Text(
+                        'Solicitações',
+                        style: theme.textTheme.headlineSmall?.copyWith(
+                          fontWeight: FontWeight.bold,
+                          color: theme.primaryColor,
+                        ),
                       ),
                     ),
-                  ),
-                  if (isMobile) ...[
                     IconButton(
                       icon: const Icon(Icons.search),
                       tooltip: 'Buscar',
@@ -478,9 +480,9 @@ class _SolicitacoesPageState extends State<SolicitacoesPage> {
                       },
                     ),
                   ],
-                ],
-              ),
-              const SizedBox(height: 32),
+                ),
+                const SizedBox(height: 32),
+              ],
               if (!isMobile) ...[
                 // Filtros e busca em card (desktop/tablet)
                 Card(
@@ -502,7 +504,7 @@ class _SolicitacoesPageState extends State<SolicitacoesPage> {
                             children: [
                               ConstrainedBox(
                                 constraints: const BoxConstraints(
-                                  maxWidth: 320,
+                                  maxWidth: 400,
                                 ),
                                 child: TextField(
                                   controller: _searchController,
