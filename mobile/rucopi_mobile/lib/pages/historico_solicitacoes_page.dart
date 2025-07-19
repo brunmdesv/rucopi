@@ -88,8 +88,10 @@ class _HistoricoSolicitacoesPageState extends State<HistoricoSolicitacoesPage> {
     switch (status.toLowerCase()) {
       case 'pendente':
         return 'Pendente';
-      case 'em_andamento':
-        return 'Em Andamento';
+      case 'agendada':
+        return 'Agendada';
+      case 'coletando':
+        return 'Coletando';
       case 'concluido':
         return 'Concluído';
       case 'cancelado':

@@ -418,11 +418,17 @@ class _DashboardContentState extends State<_DashboardContent> {
         final pendentes = solicitacoes
             .where((s) => s['status'] == 'pendente')
             .length;
-        final andamento = solicitacoes
-            .where((s) => s['status'] == 'em andamento')
+        final agendadas = solicitacoes
+            .where((s) => s['status'] == 'agendada')
+            .length;
+        final coletando = solicitacoes
+            .where((s) => s['status'] == 'coletando')
             .length;
         final concluidas = solicitacoes
-            .where((s) => s['status'] == 'concluida')
+            .where((s) => s['status'] == 'concluido')
+            .length;
+        final canceladas = solicitacoes
+            .where((s) => s['status'] == 'cancelado')
             .length;
         final solicitacoesRecentes = solicitacoes.take(8).toList();
         // Responsividade: padding menor em telas pequenas
@@ -449,8 +455,10 @@ class _DashboardContentState extends State<_DashboardContent> {
                   width,
                   total,
                   pendentes,
-                  andamento,
+                  agendadas,
+                  coletando,
                   concluidas,
+                  canceladas,
                 ),
                 const SizedBox(height: 24),
                 _buildMainContentResponsive(
@@ -475,10 +483,12 @@ class _DashboardContentState extends State<_DashboardContent> {
     double width,
     int total,
     int pendentes,
-    int andamento,
+    int agendadas,
+    int coletando,
     int concluidas,
+    int canceladas,
   ) {
-    int crossAxisCount = 4;
+    int crossAxisCount = 5;
     if (width < 1100) crossAxisCount = 2;
     if (width < 700) crossAxisCount = 1;
     return LayoutBuilder(
@@ -508,7 +518,7 @@ class _DashboardContentState extends State<_DashboardContent> {
             SizedBox(
               width: cardWidth,
               child: _buildStatCard(
-                title: 'Aguardando Coleta',
+                title: 'Pendentes',
                 value: pendentes,
                 icon: Icons.access_time_rounded,
                 color: const Color(0xFFFF9800),
@@ -520,10 +530,22 @@ class _DashboardContentState extends State<_DashboardContent> {
             SizedBox(
               width: cardWidth,
               child: _buildStatCard(
-                title: 'Em Andamento',
-                value: andamento,
-                icon: Icons.local_shipping_rounded,
+                title: 'Agendadas',
+                value: agendadas,
+                icon: Icons.event_available,
                 color: const Color(0xFF2196F3),
+                theme: theme,
+                isDark: isDark,
+                width: width,
+              ),
+            ),
+            SizedBox(
+              width: cardWidth,
+              child: _buildStatCard(
+                title: 'Coletando',
+                value: coletando,
+                icon: Icons.local_shipping,
+                color: const Color(0xFF673AB7),
                 theme: theme,
                 isDark: isDark,
                 width: width,
@@ -534,8 +556,20 @@ class _DashboardContentState extends State<_DashboardContent> {
               child: _buildStatCard(
                 title: 'Concluídas',
                 value: concluidas,
-                icon: Icons.check_circle_rounded,
+                icon: Icons.check_circle,
                 color: const Color(0xFF4CAF50),
+                theme: theme,
+                isDark: isDark,
+                width: width,
+              ),
+            ),
+            SizedBox(
+              width: cardWidth,
+              child: _buildStatCard(
+                title: 'Canceladas',
+                value: canceladas,
+                icon: Icons.cancel,
+                color: const Color(0xFFF44336),
                 theme: theme,
                 isDark: isDark,
                 width: width,
@@ -1098,72 +1132,6 @@ class _DashboardContentState extends State<_DashboardContent> {
     );
   }
 
-  Widget _buildQuickActions(ThemeData theme, bool isDark, double width) {
-    return Container(
-      padding: EdgeInsets.all(width < 600 ? 12 : 20),
-      decoration: BoxDecoration(
-        color: isDark ? const Color(0xFF1A1A1A) : Colors.white,
-        borderRadius: BorderRadius.circular(width < 600 ? 8 : 12),
-        border: Border.all(
-          color: isDark ? const Color(0xFF2A2A2A) : const Color(0xFFE2E8F0),
-          width: 1,
-        ),
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Text(
-            'Ações Rápidas',
-            style: theme.textTheme.titleMedium?.copyWith(
-              fontWeight: FontWeight.bold,
-              fontSize: width < 600 ? 14 : null,
-            ),
-          ),
-          const SizedBox(height: 12),
-          ElevatedButton.icon(
-            onPressed: () {},
-            icon: Icon(Icons.list_alt_rounded, size: width < 600 ? 14 : 18),
-            label: Text(
-              'Ver Solicitações',
-              style: TextStyle(fontSize: width < 600 ? 12 : null),
-            ),
-            style: ElevatedButton.styleFrom(
-              padding: const EdgeInsets.symmetric(vertical: 16),
-              backgroundColor: theme.colorScheme.primary,
-              foregroundColor: Colors.white,
-              textStyle: theme.textTheme.titleMedium?.copyWith(
-                fontWeight: FontWeight.bold,
-              ),
-              shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(AppRadius.button),
-              ),
-            ),
-          ),
-          const SizedBox(height: 8),
-          ElevatedButton.icon(
-            onPressed: () {},
-            icon: Icon(Icons.refresh_rounded, size: width < 600 ? 14 : 18),
-            label: Text(
-              'Atualizar Dados',
-              style: TextStyle(fontSize: width < 600 ? 12 : null),
-            ),
-            style: ElevatedButton.styleFrom(
-              padding: const EdgeInsets.symmetric(vertical: 16),
-              backgroundColor: theme.colorScheme.primary,
-              foregroundColor: Colors.white,
-              textStyle: theme.textTheme.titleMedium?.copyWith(
-                fontWeight: FontWeight.bold,
-              ),
-              shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(AppRadius.button),
-              ),
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-
   Widget _buildEmptyStateCompact(ThemeData theme) {
     return Center(
       child: Column(
@@ -1189,13 +1157,13 @@ class _DashboardContentState extends State<_DashboardContent> {
 
   Map<String, dynamic> _getStatusConfig(String status) {
     switch (status) {
-      case 'concluida':
+      case 'concluido':
         return {
           'color': const Color(0xFF4CAF50),
           'icon': Icons.check_circle_rounded,
           'text': 'Concluída',
         };
-      case 'em andamento':
+      case 'coletando':
         return {
           'color': const Color(0xFF2196F3),
           'icon': Icons.local_shipping_rounded,
@@ -1237,8 +1205,8 @@ class _DashboardContentState extends State<_DashboardContent> {
             total: total,
             concluidas: concluidas,
           ),
-          const SizedBox(height: 16),
-          _buildQuickActions(theme, isDark, width),
+          // const SizedBox(height: 16),
+          // _buildQuickActions(theme, isDark, width), // Removido
         ],
       );
     } else {
@@ -1267,8 +1235,8 @@ class _DashboardContentState extends State<_DashboardContent> {
                   total: total,
                   concluidas: concluidas,
                 ),
-                const SizedBox(height: 24),
-                _buildQuickActions(theme, isDark, width),
+                // const SizedBox(height: 24),
+                // _buildQuickActions(theme, isDark, width), // Removido
               ],
             ),
           ),

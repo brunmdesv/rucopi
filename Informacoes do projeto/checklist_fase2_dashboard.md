@@ -54,6 +54,7 @@
 - [x] Corrigir problema de autenticação no rucopi_mobile - aplicativo estava iniciando em tela protegida sem verificar autenticação
 - [x] Implementar AuthWrapper para verificar estado de autenticação automaticamente
 - [x] Configurar redirecionamento automático para tela de login quando usuário não autenticado
+- [x] Padronizar todos os status de solicitação para: pendente, agendada, coletando, concluido, cancelado, em todos os pontos do código e exibição (mobile e dashboard)
 
 ---
 

@@ -86,10 +86,14 @@ class _SolicitacoesPageState extends State<SolicitacoesPage> {
     switch (status) {
       case 'pendente':
         return const Color(0xFFFF9800);
-      case 'em andamento':
+      case 'agendada':
         return const Color(0xFF2196F3);
-      case 'concluida':
+      case 'coletando':
+        return const Color(0xFF673AB7);
+      case 'concluido':
         return const Color(0xFF4CAF50);
+      case 'cancelado':
+        return const Color(0xFFF44336);
       default:
         return Colors.grey;
     }
@@ -99,10 +103,14 @@ class _SolicitacoesPageState extends State<SolicitacoesPage> {
     switch (status) {
       case 'pendente':
         return Icons.schedule;
-      case 'em andamento':
+      case 'agendada':
+        return Icons.event_available;
+      case 'coletando':
         return Icons.local_shipping;
-      case 'concluida':
+      case 'concluido':
         return Icons.check_circle;
+      case 'cancelado':
+        return Icons.cancel;
       default:
         return Icons.help_outline;
     }
@@ -111,11 +119,15 @@ class _SolicitacoesPageState extends State<SolicitacoesPage> {
   String _getStatusText(String? status) {
     switch (status) {
       case 'pendente':
-        return 'Aguardando';
-      case 'em andamento':
-        return 'Em Andamento';
-      case 'concluida':
-        return 'Concluída';
+        return 'Pendente';
+      case 'agendada':
+        return 'Agendada';
+      case 'coletando':
+        return 'Coletando';
+      case 'concluido':
+        return 'Concluído';
+      case 'cancelado':
+        return 'Cancelado';
       default:
         return 'Indefinido';
     }
@@ -321,7 +333,7 @@ class _SolicitacoesPageState extends State<SolicitacoesPage> {
                 const SizedBox(height: 8),
                 _buildFilterOption(
                   theme: theme,
-                  label: 'Aguardando',
+                  label: 'Pendentes',
                   value: 'pendente',
                   isSelected: filtroStatus == 'pendente',
                   icon: Icons.schedule_rounded,
@@ -335,13 +347,27 @@ class _SolicitacoesPageState extends State<SolicitacoesPage> {
                 const SizedBox(height: 8),
                 _buildFilterOption(
                   theme: theme,
-                  label: 'Em Andamento',
-                  value: 'em andamento',
-                  isSelected: filtroStatus == 'em andamento',
-                  icon: Icons.local_shipping_rounded,
+                  label: 'Agendadas',
+                  value: 'agendada',
+                  isSelected: filtroStatus == 'agendada',
+                  icon: Icons.event_available,
                   onTap: () {
                     setState(() {
-                      filtroStatus = 'em andamento';
+                      filtroStatus = 'agendada';
+                    });
+                    Navigator.pop(context);
+                  },
+                ),
+                const SizedBox(height: 8),
+                _buildFilterOption(
+                  theme: theme,
+                  label: 'Coletando',
+                  value: 'coletando',
+                  isSelected: filtroStatus == 'coletando',
+                  icon: Icons.local_shipping,
+                  onTap: () {
+                    setState(() {
+                      filtroStatus = 'coletando';
                     });
                     Navigator.pop(context);
                   },
@@ -350,12 +376,26 @@ class _SolicitacoesPageState extends State<SolicitacoesPage> {
                 _buildFilterOption(
                   theme: theme,
                   label: 'Concluídas',
-                  value: 'concluida',
-                  isSelected: filtroStatus == 'concluida',
-                  icon: Icons.check_circle_rounded,
+                  value: 'concluido',
+                  isSelected: filtroStatus == 'concluido',
+                  icon: Icons.check_circle,
                   onTap: () {
                     setState(() {
-                      filtroStatus = 'concluida';
+                      filtroStatus = 'concluido';
+                    });
+                    Navigator.pop(context);
+                  },
+                ),
+                const SizedBox(height: 8),
+                _buildFilterOption(
+                  theme: theme,
+                  label: 'Canceladas',
+                  value: 'cancelado',
+                  isSelected: filtroStatus == 'cancelado',
+                  icon: Icons.cancel,
+                  onTap: () {
+                    setState(() {
+                      filtroStatus = 'cancelado';
                     });
                     Navigator.pop(context);
                   },
@@ -881,7 +921,7 @@ class _SolicitacoesPageState extends State<SolicitacoesPage> {
                           const SizedBox(height: 6),
                           _buildFilterOption(
                             theme: theme,
-                            label: 'Aguardando',
+                            label: 'Pendentes',
                             value: 'pendente',
                             isSelected: filtroStatus == 'pendente',
                             icon: Icons.schedule_rounded,
@@ -895,13 +935,27 @@ class _SolicitacoesPageState extends State<SolicitacoesPage> {
                           const SizedBox(height: 6),
                           _buildFilterOption(
                             theme: theme,
-                            label: 'Em Andamento',
-                            value: 'em andamento',
-                            isSelected: filtroStatus == 'em andamento',
-                            icon: Icons.local_shipping_rounded,
+                            label: 'Agendadas',
+                            value: 'agendada',
+                            isSelected: filtroStatus == 'agendada',
+                            icon: Icons.event_available,
                             onTap: () {
                               setState(() {
-                                filtroStatus = 'em andamento';
+                                filtroStatus = 'agendada';
+                              });
+                              Navigator.pop(context);
+                            },
+                          ),
+                          const SizedBox(height: 6),
+                          _buildFilterOption(
+                            theme: theme,
+                            label: 'Coletando',
+                            value: 'coletando',
+                            isSelected: filtroStatus == 'coletando',
+                            icon: Icons.local_shipping,
+                            onTap: () {
+                              setState(() {
+                                filtroStatus = 'coletando';
                               });
                               Navigator.pop(context);
                             },
@@ -910,12 +964,26 @@ class _SolicitacoesPageState extends State<SolicitacoesPage> {
                           _buildFilterOption(
                             theme: theme,
                             label: 'Concluídas',
-                            value: 'concluida',
-                            isSelected: filtroStatus == 'concluida',
-                            icon: Icons.check_circle_rounded,
+                            value: 'concluido',
+                            isSelected: filtroStatus == 'concluido',
+                            icon: Icons.check_circle,
                             onTap: () {
                               setState(() {
-                                filtroStatus = 'concluida';
+                                filtroStatus = 'concluido';
+                              });
+                              Navigator.pop(context);
+                            },
+                          ),
+                          const SizedBox(height: 6),
+                          _buildFilterOption(
+                            theme: theme,
+                            label: 'Canceladas',
+                            value: 'cancelado',
+                            isSelected: filtroStatus == 'cancelado',
+                            icon: Icons.cancel,
+                            onTap: () {
+                              setState(() {
+                                filtroStatus = 'cancelado';
                               });
                               Navigator.pop(context);
                             },

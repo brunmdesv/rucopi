@@ -119,8 +119,11 @@ class _DetalhesSolicitacaoDialogState extends State<DetalhesSolicitacaoDialog> {
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.stretch,
                         children: [
-                          // Status destacado
-                          _buildStatusCard(theme, solicitacao),
+                          // Status destacado centralizado
+                          Row(
+                            mainAxisAlignment: MainAxisAlignment.center,
+                            children: [_buildStatusCard(theme, solicitacao)],
+                          ),
                           const SizedBox(height: 20),
                           // Card do Morador
                           Card(
@@ -132,34 +135,40 @@ class _DetalhesSolicitacaoDialogState extends State<DetalhesSolicitacaoDialog> {
                               ),
                             ),
                             child: Padding(
-                              padding: const EdgeInsets.all(24),
+                              padding: const EdgeInsets.all(16),
                               child: Column(
                                 crossAxisAlignment: CrossAxisAlignment.start,
                                 children: [
-                                  Row(
-                                    children: [
-                                      Icon(
-                                        Icons.person,
-                                        color: theme.primaryColor,
-                                        size: 24,
-                                      ),
-                                      const SizedBox(width: 8),
-                                      Text(
-                                        'Informações do Morador',
-                                        style: theme.textTheme.titleMedium
-                                            ?.copyWith(
-                                              fontWeight: FontWeight.bold,
-                                              color: theme.primaryColor,
-                                            ),
-                                      ),
-                                    ],
+                                  _sectionSeparatorLabel(
+                                    'Informações do Morador',
+                                    theme,
                                   ),
-                                  const Divider(height: 24),
-                                  _infoRow('Nome', morador?['nome']),
-                                  _infoRow('E-mail', morador?['email']),
-                                  _infoRow('Whatsapp', morador?['whatsapp']),
-                                  _infoRow('CPF', morador?['cpf']),
-                                  _infoRow('Endereço', morador?['endereco']),
+                                  const SizedBox(height: 12),
+                                  _infoRowCompact(
+                                    'Nome',
+                                    morador?['nome'],
+                                    theme,
+                                  ),
+                                  _infoRowCompact(
+                                    'E-mail',
+                                    morador?['email'],
+                                    theme,
+                                  ),
+                                  _infoRowCompact(
+                                    'Whatsapp',
+                                    morador?['whatsapp'],
+                                    theme,
+                                  ),
+                                  _infoRowCompact(
+                                    'CPF',
+                                    morador?['cpf'],
+                                    theme,
+                                  ),
+                                  _infoRowCompact(
+                                    'Endereço',
+                                    morador?['endereco'],
+                                    theme,
+                                  ),
                                 ],
                               ),
                             ),
@@ -175,53 +184,44 @@ class _DetalhesSolicitacaoDialogState extends State<DetalhesSolicitacaoDialog> {
                               ),
                             ),
                             child: Padding(
-                              padding: const EdgeInsets.all(24),
+                              padding: const EdgeInsets.all(16),
                               child: Column(
                                 crossAxisAlignment: CrossAxisAlignment.start,
                                 children: [
-                                  Row(
-                                    children: [
-                                      Icon(
-                                        Icons.assignment,
-                                        color: theme.primaryColor,
-                                        size: 24,
-                                      ),
-                                      const SizedBox(width: 8),
-                                      Text(
-                                        'Informações da Solicitação',
-                                        style: theme.textTheme.titleMedium
-                                            ?.copyWith(
-                                              fontWeight: FontWeight.bold,
-                                              color: theme.primaryColor,
-                                            ),
-                                      ),
-                                    ],
+                                  _sectionSeparatorLabel(
+                                    'Informações da Solicitação',
+                                    theme,
                                   ),
-                                  const Divider(height: 24),
-                                  _infoRow(
+                                  const SizedBox(height: 12),
+                                  _infoRowCompact(
                                     'Descrição',
                                     solicitacao['descricao'],
+                                    theme,
                                   ),
-                                  _infoRow(
+                                  _infoRowCompact(
                                     'Tipo de Entulho',
                                     solicitacao['tipo_entulho'],
+                                    theme,
                                   ),
-                                  _infoRow('Endereço', solicitacao['endereco']),
-                                  _infoRow('Status', solicitacao['status']),
-                                  _infoRow(
+                                  _infoRowCompact(
+                                    'Endereço',
+                                    solicitacao['endereco'],
+                                    theme,
+                                  ),
+                                  _infoRowCompact(
+                                    'Status',
+                                    solicitacao['status'],
+                                    theme,
+                                  ),
+                                  _infoRowCompact(
                                     'Data de Criação',
                                     _formatDate(solicitacao['criado_em']),
+                                    theme,
                                   ),
                                   if (fotos.isNotEmpty) ...[
-                                    const SizedBox(height: 16),
-                                    Text(
-                                      'Fotos Anexadas:',
-                                      style: theme.textTheme.titleMedium
-                                          ?.copyWith(
-                                            fontWeight: FontWeight.bold,
-                                          ),
-                                    ),
-                                    const SizedBox(height: 8),
+                                    const SizedBox(height: 12),
+                                    _cameraSeparator(theme),
+                                    const SizedBox(height: 12),
                                     SizedBox(
                                       height: 100,
                                       child: ListView.separated(
@@ -272,60 +272,58 @@ class _DetalhesSolicitacaoDialogState extends State<DetalhesSolicitacaoDialog> {
     IconData icon;
     switch (status) {
       case 'pendente':
-        color = Colors.orange;
-        label = 'Aguardando Coleta';
+        color = theme.colorScheme.secondary;
+        label = 'Pendente';
         icon = Icons.schedule_rounded;
         break;
-      case 'em andamento':
-        color = Colors.blue;
-        label = 'Em Andamento';
+      case 'agendada':
+        color = theme.colorScheme.primary;
+        label = 'Agendada';
+        icon = Icons.event_available;
+        break;
+      case 'coletando':
+        color = theme.colorScheme.primary;
+        label = 'Coletando';
         icon = Icons.local_shipping_rounded;
         break;
-      case 'concluida':
-      case 'concluído':
-        color = Colors.green;
-        label = 'Concluída';
+      case 'concluido':
+        color = theme.colorScheme.tertiary ?? Colors.green;
+        label = 'Concluído';
         icon = Icons.check_circle_rounded;
+        break;
+      case 'cancelado':
+        color = Colors.red;
+        label = 'Cancelado';
+        icon = Icons.cancel;
         break;
       default:
         color = theme.primaryColor;
         label = status.isNotEmpty ? status : 'Indefinido';
         icon = Icons.help_outline_rounded;
     }
-    return Card(
-      elevation: 4,
+    return Container(
       margin: EdgeInsets.zero,
-      color: color.withOpacity(0.12),
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-      child: Padding(
-        padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 16),
-        child: Row(
-          children: [
-            Icon(icon, color: color, size: 28),
-            const SizedBox(width: 16),
-            Expanded(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    label,
-                    style: theme.textTheme.titleMedium?.copyWith(
-                      fontWeight: FontWeight.bold,
-                      color: color,
-                    ),
-                  ),
-                  const SizedBox(height: 4),
-                  Text(
-                    'Status atual da solicitação',
-                    style: theme.textTheme.bodySmall?.copyWith(
-                      color: theme.disabledColor,
-                    ),
-                  ),
-                ],
-              ),
+      decoration: BoxDecoration(
+        color: theme.brightness == Brightness.dark
+            ? color.withOpacity(0.25)
+            : color.withOpacity(0.12),
+        borderRadius: BorderRadius.circular(16),
+      ),
+      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Icon(icon, color: color, size: 18),
+          const SizedBox(width: 8),
+          Text(
+            label,
+            style: theme.textTheme.bodyMedium?.copyWith(
+              fontWeight: FontWeight.bold,
+              color: theme.brightness == Brightness.dark ? Colors.white : color,
+              fontSize: 13,
             ),
-          ],
-        ),
+          ),
+        ],
       ),
     );
   }
@@ -352,6 +350,37 @@ class _DetalhesSolicitacaoDialogState extends State<DetalhesSolicitacaoDialog> {
             child: Text(
               value?.toString() ?? '-',
               style: theme.textTheme.bodyMedium,
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _infoRowCompact(String label, dynamic value, ThemeData theme) {
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 6),
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          SizedBox(
+            width: 80,
+            child: Text(
+              '$label:',
+              style: theme.textTheme.bodySmall?.copyWith(
+                fontWeight: FontWeight.w600,
+                color: theme.disabledColor,
+                fontSize: 12,
+              ),
+            ),
+          ),
+          const SizedBox(width: 6),
+          Expanded(
+            child: Text(
+              value?.toString() ?? '-',
+              style: theme.textTheme.bodySmall?.copyWith(fontSize: 13),
+              maxLines: 2,
+              overflow: TextOverflow.ellipsis,
             ),
           ),
         ],
@@ -451,5 +480,44 @@ class _DetalhesSolicitacaoDialogState extends State<DetalhesSolicitacaoDialog> {
         context,
       ).showSnackBar(SnackBar(content: Text('Erro ao baixar imagem: $e')));
     }
+  }
+
+  Widget _cameraSeparator(ThemeData theme) {
+    return Row(
+      children: [
+        const Expanded(child: Divider(thickness: 1, indent: 0, endIndent: 8)),
+        Container(
+          decoration: BoxDecoration(
+            color: theme.primaryColor.withOpacity(0.08),
+            borderRadius: BorderRadius.circular(20),
+          ),
+          padding: const EdgeInsets.all(6),
+          child: Icon(
+            Icons.camera_alt_rounded,
+            color: theme.primaryColor,
+            size: 20,
+          ),
+        ),
+        const Expanded(child: Divider(thickness: 1, indent: 8, endIndent: 0)),
+      ],
+    );
+  }
+
+  Widget _sectionSeparatorLabel(String label, ThemeData theme) {
+    return Row(
+      children: [
+        const Expanded(child: Divider(thickness: 1, indent: 0, endIndent: 8)),
+        Text(
+          label,
+          style: theme.textTheme.bodySmall?.copyWith(
+            fontWeight: FontWeight.bold,
+            color: theme.primaryColor,
+            fontSize: 13,
+          ),
+          textAlign: TextAlign.center,
+        ),
+        const Expanded(child: Divider(thickness: 1, indent: 8, endIndent: 0)),
+      ],
+    );
   }
 }
