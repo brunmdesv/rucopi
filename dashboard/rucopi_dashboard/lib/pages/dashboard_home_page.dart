@@ -338,18 +338,14 @@ class _DashboardContent extends StatefulWidget {
 }
 
 class _DashboardContentState extends State<_DashboardContent> {
-  String? _getPrimeiroNomeUsuario() {
-    final user = Supabase.instance.client.auth.currentUser;
-    if (user != null) {
-      final name =
-          user.userMetadata?['name'] ??
-          user.userMetadata?['full_name'] ??
-          user.email;
-      if (name != null && name is String && name.isNotEmpty) {
-        return name.split(' ').first;
-      }
+  void _navegarParaSolicitacoes() {
+    // Encontrar o widget pai que contém o estado de navegação
+    final context = this.context;
+    final dashboardState = context
+        .findAncestorStateOfType<_DashboardHomePageState>();
+    if (dashboardState != null) {
+      dashboardState._onMenuTap(DashboardScreen.solicitacoes);
     }
-    return null;
   }
 
   @override
@@ -414,89 +410,36 @@ class _DashboardContentState extends State<_DashboardContent> {
             horizontal: horizontalPadding,
             vertical: 24,
           ),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              _buildWelcomeHeader(theme, isDark, width),
-              const SizedBox(height: 24),
-              _buildStatsGrid(
-                theme,
-                isDark,
-                width,
-                total,
-                pendentes,
-                andamento,
-                concluidas,
-              ),
-              const SizedBox(height: 24),
-              _buildMainContentResponsive(
-                theme,
-                isDark,
-                width,
-                solicitacoesRecentes,
-                total: total,
-                concluidas: concluidas,
-              ),
-            ],
-          ),
-        );
-      },
-    );
-  }
-
-  Widget _buildWelcomeHeader(ThemeData theme, bool isDark, double width) {
-    final primeiroNome = _getPrimeiroNomeUsuario();
-    return Container(
-      padding: EdgeInsets.all(width < 600 ? 12 : 24),
-      decoration: BoxDecoration(
-        gradient: LinearGradient(
-          begin: Alignment.topLeft,
-          end: Alignment.bottomRight,
-          colors: [theme.primaryColor, theme.primaryColor.withOpacity(0.8)],
-        ),
-        borderRadius: BorderRadius.circular(width < 600 ? 8 : 16),
-      ),
-      child: Row(
-        crossAxisAlignment: CrossAxisAlignment.center,
-        children: [
-          Expanded(
+          child: ConstrainedBox(
+            constraints: const BoxConstraints(maxWidth: 1400),
             child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
+              crossAxisAlignment: CrossAxisAlignment.stretch,
               children: [
-                Text(
-                  'Olá${primeiroNome != null ? ' $primeiroNome,' : ''} bem-vindo ao Sistema Rucopi',
-                  style: theme.textTheme.headlineSmall?.copyWith(
-                    color: Colors.white,
-                    fontWeight: FontWeight.bold,
-                    fontSize: width < 600 ? 18 : null,
-                  ),
+                _buildWelcomeHeader(theme, isDark, width),
+                const SizedBox(height: 24),
+                _buildStatsGrid(
+                  theme,
+                  isDark,
+                  width,
+                  total,
+                  pendentes,
+                  andamento,
+                  concluidas,
                 ),
-                const SizedBox(height: 8),
-                Text(
-                  'Monitore e gerencie todas as solicitações de coleta de entulho',
-                  style: theme.textTheme.bodyLarge?.copyWith(
-                    color: Colors.white.withOpacity(0.9),
-                    fontSize: width < 600 ? 13 : null,
-                  ),
+                const SizedBox(height: 24),
+                _buildMainContentResponsive(
+                  theme,
+                  isDark,
+                  width,
+                  solicitacoesRecentes,
+                  total: total,
+                  concluidas: concluidas,
                 ),
               ],
             ),
           ),
-          if (width > 400)
-            Container(
-              padding: EdgeInsets.all(width < 600 ? 8 : 16),
-              decoration: BoxDecoration(
-                color: Colors.white.withOpacity(0.2),
-                borderRadius: BorderRadius.circular(width < 600 ? 6 : 12),
-              ),
-              child: Icon(
-                Icons.eco_rounded,
-                size: width < 600 ? 24 : 32,
-                color: Colors.white,
-              ),
-            ),
-        ],
-      ),
+        );
+      },
     );
   }
 
@@ -644,165 +587,380 @@ class _DashboardContentState extends State<_DashboardContent> {
     double width,
     List<dynamic> solicitacoesRecentes,
   ) {
+    // Filtrar apenas solicitações pendentes e ordenar por data (mais antigas primeiro)
+    final solicitacoesPendentes =
+        solicitacoesRecentes.where((s) => s['status'] == 'pendente').toList()
+          ..sort((a, b) {
+            final dataA = DateTime.tryParse(a['criado_em'] ?? '');
+            final dataB = DateTime.tryParse(b['criado_em'] ?? '');
+            if (dataA == null && dataB == null) return 0;
+            if (dataA == null) return 1;
+            if (dataB == null) return -1;
+            return dataA.compareTo(
+              dataB,
+            ); // Ordem crescente (mais antigas primeiro)
+          });
+
+    // Pegar apenas as 3 primeiras
+    final solicitacoesExibidas = solicitacoesPendentes.take(3).toList();
+    final totalPendentes = solicitacoesPendentes.length;
+    final restantes = totalPendentes - solicitacoesExibidas.length;
+
     return Container(
       decoration: BoxDecoration(
         color: isDark ? const Color(0xFF1A1A1A) : Colors.white,
-        borderRadius: BorderRadius.circular(width < 600 ? 8 : 12),
+        borderRadius: BorderRadius.circular(12),
         border: Border.all(
           color: isDark ? const Color(0xFF2A2A2A) : const Color(0xFFE2E8F0),
           width: 1,
         ),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withOpacity(0.05),
+            blurRadius: 8,
+            offset: const Offset(0, 2),
+          ),
+        ],
       ),
       child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Padding(
-            padding: EdgeInsets.all(width < 600 ? 12 : 20),
+          // Header compacto
+          Container(
+            padding: EdgeInsets.symmetric(
+              horizontal: width < 600 ? 12 : 16,
+              vertical: width < 600 ? 8 : 12,
+            ),
+            decoration: BoxDecoration(
+              color: theme.primaryColor.withOpacity(0.05),
+              borderRadius: const BorderRadius.only(
+                topLeft: Radius.circular(12),
+                topRight: Radius.circular(12),
+              ),
+            ),
             child: Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
-                Text(
-                  'Solicitações Recentes',
-                  style: theme.textTheme.titleLarge?.copyWith(
-                    fontWeight: FontWeight.bold,
-                    fontSize: width < 600 ? 16 : null,
+                Icon(
+                  Icons.schedule_rounded,
+                  color: theme.primaryColor,
+                  size: width < 600 ? 14 : 16,
+                ),
+                const SizedBox(width: 8),
+                Expanded(
+                  child: Text(
+                    'Solicitações Pendentes',
+                    style: theme.textTheme.titleMedium?.copyWith(
+                      fontWeight: FontWeight.bold,
+                      fontSize: width < 600 ? 13 : null,
+                    ),
                   ),
                 ),
-                TextButton.icon(
-                  onPressed: () {},
-                  icon: Icon(
-                    Icons.arrow_forward_rounded,
-                    size: width < 600 ? 13 : 16,
+                if (restantes > 0)
+                  Container(
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 6,
+                      vertical: 2,
+                    ),
+                    decoration: BoxDecoration(
+                      color: theme.primaryColor.withOpacity(0.1),
+                      borderRadius: BorderRadius.circular(8),
+                      border: Border.all(
+                        color: theme.primaryColor.withOpacity(0.3),
+                        width: 1,
+                      ),
+                    ),
+                    child: Text(
+                      '+$restantes',
+                      style: TextStyle(
+                        color: theme.primaryColor,
+                        fontWeight: FontWeight.bold,
+                        fontSize: 9,
+                      ),
+                    ),
                   ),
-                  label: Text(
-                    'Ver todas',
-                    style: TextStyle(fontSize: width < 600 ? 12 : null),
-                  ),
-                ),
               ],
             ),
           ),
-          const Divider(height: 1),
-          SizedBox(
-            height: width < 600 ? 260 : 400,
-            child: solicitacoesRecentes.isEmpty
-                ? _buildEmptyState(theme)
-                : ListView.separated(
-                    padding: EdgeInsets.all(width < 600 ? 8 : 16),
-                    itemCount: solicitacoesRecentes.length,
-                    separatorBuilder: (context, index) =>
-                        const SizedBox(height: 8),
-                    itemBuilder: (context, index) {
-                      return _buildSolicitacaoListItem(
-                        solicitacoesRecentes[index],
+          // Lista compacta
+          if (solicitacoesExibidas.isNotEmpty)
+            Padding(
+              padding: EdgeInsets.all(width < 600 ? 8 : 12),
+              child: Column(
+                children: solicitacoesExibidas.asMap().entries.map((entry) {
+                  final index = entry.key;
+                  final solicitacao = entry.value;
+                  return Column(
+                    children: [
+                      _buildSolicitacaoCardCompact(
+                        solicitacao,
                         theme,
                         isDark,
                         width,
-                      );
-                    },
+                        index + 1,
+                      ),
+                      if (index < solicitacoesExibidas.length - 1)
+                        Padding(
+                          padding: EdgeInsets.symmetric(
+                            vertical: width < 600 ? 4 : 6,
+                          ),
+                          child: Container(
+                            height: 1,
+                            color: theme.brightness == Brightness.dark
+                                ? const Color(0xFF2A2A2A)
+                                : Colors.grey.shade200,
+                          ),
+                        ),
+                    ],
+                  );
+                }).toList(),
+              ),
+            ),
+          // Estado vazio compacto
+          if (solicitacoesExibidas.isEmpty)
+            Padding(
+              padding: EdgeInsets.all(width < 600 ? 16 : 20),
+              child: _buildEmptyStateCompact(theme),
+            ),
+          // Botão compacto
+          if (restantes > 0)
+            Container(
+              padding: EdgeInsets.all(width < 600 ? 8 : 12),
+              decoration: BoxDecoration(
+                color: theme.brightness == Brightness.dark
+                    ? const Color(0xFF0F0F0F)
+                    : Colors.grey.shade50,
+                borderRadius: const BorderRadius.only(
+                  bottomLeft: Radius.circular(12),
+                  bottomRight: Radius.circular(12),
+                ),
+              ),
+              child: SizedBox(
+                width: double.infinity,
+                child: OutlinedButton.icon(
+                  onPressed: _navegarParaSolicitacoes,
+                  icon: Icon(
+                    Icons.list_alt_rounded,
+                    size: width < 600 ? 10 : 12,
                   ),
-          ),
+                  label: Text(
+                    'Ver mais $restantes solicitações pendentes',
+                    style: TextStyle(fontSize: width < 600 ? 9 : null),
+                  ),
+                  style: OutlinedButton.styleFrom(
+                    padding: EdgeInsets.symmetric(
+                      vertical: width < 600 ? 6 : 8,
+                    ),
+                    side: BorderSide(
+                      color: theme.primaryColor.withOpacity(0.5),
+                      width: 1,
+                    ),
+                  ),
+                ),
+              ),
+            ),
         ],
       ),
     );
   }
 
-  Widget _buildSolicitacaoListItem(
+  Widget _buildSolicitacaoCardCompact(
     dynamic solicitacao,
     ThemeData theme,
     bool isDark,
     double width,
+    int numero,
   ) {
-    final status = (solicitacao['status'] ?? 'pendente').toLowerCase();
-    final statusConfig = _getStatusConfig(status);
+    final nomeMorador =
+        solicitacao['nome_morador'] ??
+        solicitacao['morador_id'] ??
+        'Morador não identificado';
     final endereco = solicitacao['endereco'] ?? 'Sem endereço';
-    final tipoEntulho = solicitacao['tipo_entulho'] ?? 'Não informado';
     final data = solicitacao['criado_em'] != null
         ? DateTime.tryParse(solicitacao['criado_em'])
         : null;
     final dataStr = data != null
         ? '${data.day.toString().padLeft(2, '0')}/${data.month.toString().padLeft(2, '0')}/${data.year}'
         : 'Sem data';
+    final horaStr = data != null
+        ? '${data.hour.toString().padLeft(2, '0')}:${data.minute.toString().padLeft(2, '0')}'
+        : '';
 
     return Container(
-      padding: EdgeInsets.all(width < 600 ? 10 : 16),
+      padding: EdgeInsets.all(width < 600 ? 8 : 10),
       decoration: BoxDecoration(
         color: isDark ? const Color(0xFF0F0F0F) : const Color(0xFFF8FAFC),
-        borderRadius: BorderRadius.circular(width < 600 ? 6 : 8),
+        borderRadius: BorderRadius.circular(8),
         border: Border.all(
-          color: statusConfig['color'].withOpacity(0.2),
+          color: theme.primaryColor.withOpacity(0.1),
           width: 1,
         ),
       ),
       child: Row(
         children: [
+          // Número compacto
           Container(
-            padding: EdgeInsets.all(width < 600 ? 5 : 8),
+            width: width < 600 ? 20 : 24,
+            height: width < 600 ? 20 : 24,
             decoration: BoxDecoration(
-              color: statusConfig['color'].withOpacity(0.1),
-              borderRadius: BorderRadius.circular(6),
+              color: theme.primaryColor.withOpacity(0.1),
+              borderRadius: BorderRadius.circular(4),
             ),
-            child: Icon(
-              statusConfig['icon'],
-              size: width < 600 ? 12 : 16,
-              color: statusConfig['color'],
+            child: Center(
+              child: Text(
+                '$numero',
+                style: TextStyle(
+                  color: theme.primaryColor,
+                  fontWeight: FontWeight.bold,
+                  fontSize: width < 600 ? 8 : 10,
+                ),
+              ),
             ),
           ),
           const SizedBox(width: 8),
+          // Informações compactas
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Row(
+                  children: [
+                    Expanded(
+                      child: Text(
+                        nomeMorador,
+                        style: theme.textTheme.bodySmall?.copyWith(
+                          fontWeight: FontWeight.w600,
+                          fontSize: width < 600 ? 10 : null,
+                        ),
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                      ),
+                    ),
+                    Container(
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 4,
+                        vertical: 1,
+                      ),
+                      decoration: BoxDecoration(
+                        color: const Color(0xFFFF9800).withOpacity(0.1),
+                        borderRadius: BorderRadius.circular(4),
+                        border: Border.all(
+                          color: const Color(0xFFFF9800).withOpacity(0.3),
+                          width: 1,
+                        ),
+                      ),
+                      child: Row(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          Icon(
+                            Icons.schedule_rounded,
+                            color: const Color(0xFFFF9800),
+                            size: 10,
+                          ),
+                          const SizedBox(width: 2),
+                          Text(
+                            'Pendente',
+                            style: TextStyle(
+                              color: const Color(0xFFFF9800),
+                              fontWeight: FontWeight.w600,
+                              fontSize: 10,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ],
+                ),
+                const SizedBox(height: 2),
+                Row(
+                  children: [
+                    Icon(
+                      Icons.location_on_rounded,
+                      size: 11,
+                      color: theme.disabledColor,
+                    ),
+                    const SizedBox(width: 2),
+                    Expanded(
+                      child: Text(
+                        endereco,
+                        style: theme.textTheme.bodySmall?.copyWith(
+                          color: theme.disabledColor,
+                          fontSize: 11,
+                        ),
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                      ),
+                    ),
+                    const SizedBox(width: 8),
+                    Text(
+                      '$dataStr $horaStr',
+                      style: theme.textTheme.bodySmall?.copyWith(
+                        color: theme.disabledColor,
+                        fontSize: 10,
+                      ),
+                    ),
+                  ],
+                ),
+              ],
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildWelcomeHeader(ThemeData theme, bool isDark, double width) {
+    return Container(
+      padding: EdgeInsets.symmetric(
+        horizontal: width < 600 ? 16 : 24,
+        vertical: width < 600 ? 12 : 16,
+      ),
+      decoration: BoxDecoration(
+        color: isDark ? const Color(0xFF1A1A1A) : Colors.white,
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(
+          color: isDark ? const Color(0xFF2A2A2A) : const Color(0xFFE2E8F0),
+          width: 1,
+        ),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withOpacity(0.05),
+            blurRadius: 8,
+            offset: const Offset(0, 2),
+          ),
+        ],
+      ),
+      child: Row(
+        children: [
+          Icon(Icons.handshake_rounded, color: theme.primaryColor, size: 32),
+          const SizedBox(width: 12),
           Expanded(
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text(
-                  endereco,
-                  style: theme.textTheme.bodyMedium?.copyWith(
-                    fontWeight: FontWeight.w500,
-                    fontSize: width < 600 ? 12 : null,
+                  'Bem-vindo ao RUCOPI!',
+                  style: theme.textTheme.titleMedium?.copyWith(
+                    fontWeight: FontWeight.bold,
+                    fontSize: width < 600 ? 16 : null,
                   ),
-                  maxLines: 1,
-                  overflow: TextOverflow.ellipsis,
                 ),
-                const SizedBox(height: 2),
+                const SizedBox(height: 4),
                 Text(
-                  tipoEntulho,
-                  style: theme.textTheme.bodySmall?.copyWith(
+                  'Seu sistema de gestão de coleta de resíduos.',
+                  style: theme.textTheme.bodyMedium?.copyWith(
                     color: theme.disabledColor,
-                    fontSize: width < 600 ? 11 : null,
+                    fontSize: width < 600 ? 12 : null,
                   ),
                 ),
               ],
             ),
           ),
-          Column(
-            crossAxisAlignment: CrossAxisAlignment.end,
-            children: [
-              Container(
-                padding: EdgeInsets.symmetric(
-                  horizontal: width < 600 ? 6 : 8,
-                  vertical: width < 600 ? 2 : 4,
-                ),
-                decoration: BoxDecoration(
-                  color: statusConfig['color'].withOpacity(0.1),
-                  borderRadius: BorderRadius.circular(12),
-                ),
-                child: Text(
-                  statusConfig['text'],
-                  style: TextStyle(
-                    color: statusConfig['color'],
-                    fontSize: width < 600 ? 9 : 11,
-                    fontWeight: FontWeight.w600,
-                  ),
-                ),
-              ),
-              const SizedBox(height: 2),
-              Text(
-                dataStr,
-                style: theme.textTheme.bodySmall?.copyWith(
-                  color: theme.disabledColor,
-                  fontSize: width < 600 ? 9 : 11,
-                ),
-              ),
-            ],
+          IconButton(
+            icon: Icon(
+              Icons.notifications_rounded,
+              color: theme.primaryColor,
+              size: 24,
+            ),
+            onPressed: () {},
           ),
         ],
       ),
@@ -958,17 +1116,22 @@ class _DashboardContentState extends State<_DashboardContent> {
     );
   }
 
-  Widget _buildEmptyState(ThemeData theme) {
+  Widget _buildEmptyStateCompact(ThemeData theme) {
     return Center(
       child: Column(
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
-          Icon(Icons.inbox_outlined, size: 48, color: theme.disabledColor),
-          const SizedBox(height: 16),
+          Icon(
+            Icons.check_circle_outline,
+            size: 32,
+            color: theme.disabledColor,
+          ),
+          const SizedBox(height: 8),
           Text(
-            'Nenhuma solicitação encontrada',
-            style: theme.textTheme.titleMedium?.copyWith(
+            'Nenhuma solicitação pendente',
+            style: theme.textTheme.bodyMedium?.copyWith(
               color: theme.disabledColor,
+              fontSize: 12,
             ),
           ),
         ],
