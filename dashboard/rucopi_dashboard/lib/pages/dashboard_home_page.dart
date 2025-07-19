@@ -41,7 +41,7 @@ class _DashboardHomePageState extends State<DashboardHomePage> {
       body: Column(
         children: [
           _buildMenuBar(theme, isDark),
-          Expanded(
+          Flexible(
             child: AnimatedSwitcher(
               duration: const Duration(milliseconds: 200),
               child: _buildScreenContent(),
@@ -406,9 +406,11 @@ class _DashboardContentState extends State<_DashboardContent> {
             ? 8.0
             : (width < 900 ? 16.0 : 32.0);
         return SingleChildScrollView(
-          padding: EdgeInsets.symmetric(
-            horizontal: horizontalPadding,
-            vertical: 24,
+          padding: EdgeInsets.only(
+            left: horizontalPadding,
+            right: horizontalPadding,
+            top: 24,
+            bottom: 24,
           ),
           child: ConstrainedBox(
             constraints: const BoxConstraints(maxWidth: 1400),
@@ -464,8 +466,8 @@ class _DashboardContentState extends State<_DashboardContent> {
           cardWidth = constraints.maxWidth / crossAxisCount - 16;
         }
         return Wrap(
-          spacing: 16,
-          runSpacing: 16,
+          spacing: 20,
+          runSpacing: 20,
           children: [
             SizedBox(
               width: cardWidth,
@@ -532,10 +534,10 @@ class _DashboardContentState extends State<_DashboardContent> {
   }) {
     return Container(
       constraints: BoxConstraints(
-        minWidth: width < 400 ? 120 : 180,
-        maxWidth: 320,
+        minWidth: width < 400 ? 100 : 150,
+        maxWidth: 280,
       ),
-      padding: EdgeInsets.all(width < 600 ? 12 : 20),
+      padding: EdgeInsets.all(width < 600 ? 10 : 16),
       decoration: BoxDecoration(
         color: isDark ? const Color(0xFF1A1A1A) : Colors.white,
         borderRadius: BorderRadius.circular(width < 600 ? 8 : 12),
@@ -548,29 +550,29 @@ class _DashboardContentState extends State<_DashboardContent> {
         crossAxisAlignment: CrossAxisAlignment.center,
         children: [
           Container(
-            padding: EdgeInsets.all(width < 600 ? 6 : 10),
+            padding: EdgeInsets.all(width < 600 ? 5 : 8),
             decoration: BoxDecoration(
               color: color.withOpacity(0.1),
-              borderRadius: BorderRadius.circular(8),
+              borderRadius: BorderRadius.circular(6),
             ),
-            child: Icon(icon, color: color, size: width < 600 ? 18 : 24),
+            child: Icon(icon, color: color, size: width < 600 ? 16 : 20),
           ),
-          const SizedBox(width: 12),
+          const SizedBox(width: 10),
           Text(
             '$value',
             style: TextStyle(
               color: color,
-              fontSize: width < 600 ? 22 : 32,
+              fontSize: width < 600 ? 20 : 28,
               fontWeight: FontWeight.bold,
             ),
           ),
-          const SizedBox(width: 12),
+          const SizedBox(width: 10),
           Expanded(
             child: Text(
               title,
               style: theme.textTheme.titleSmall?.copyWith(
                 fontWeight: FontWeight.w600,
-                fontSize: width < 600 ? 13 : null,
+                fontSize: width < 600 ? 12 : null,
               ),
               overflow: TextOverflow.ellipsis,
               maxLines: 2,
