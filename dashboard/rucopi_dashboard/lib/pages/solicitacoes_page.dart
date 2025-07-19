@@ -309,158 +309,361 @@ class _SolicitacoesPageState extends State<SolicitacoesPage> {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
-    return StreamBuilder<List<Map<String, dynamic>>>(
-      stream: Supabase.instance.client
-          .from('solicitacoes')
-          .stream(primaryKey: ['id'])
-          .order('criado_em', ascending: false),
-      builder: (context, snapshot) {
-        if (snapshot.connectionState == ConnectionState.waiting) {
-          return const Center(child: CircularProgressIndicator());
-        }
-        if (snapshot.hasError) {
-          return Center(
-            child: Text(
-              'Erro ao buscar solicitações: ${snapshot.error}',
-              style: theme.textTheme.bodyLarge?.copyWith(
-                color: theme.colorScheme.error,
-              ),
-            ),
-          );
-        }
-        final solicitacoes = snapshot.data ?? [];
-        // Aplicar filtro e pesquisa
-        final solicitacoesFiltradas = solicitacoes.where((s) {
-          final matchStatus =
-              filtroStatus == 'todas' || s['status'] == filtroStatus;
-          final matchPesquisa =
-              termoPesquisa.isEmpty ||
-              (s['descricao']?.toLowerCase().contains(
-                    termoPesquisa.toLowerCase(),
-                  ) ??
-                  false) ||
-              (s['endereco']?.toLowerCase().contains(
-                    termoPesquisa.toLowerCase(),
-                  ) ??
-                  false) ||
-              (s['morador_id']?.toLowerCase().contains(
-                    termoPesquisa.toLowerCase(),
-                  ) ??
-                  false);
-          return matchStatus && matchPesquisa;
-        }).toList();
-        return Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            // Filtros e pesquisa
-            Row(
-              children: [
-                Expanded(
-                  child: TextField(
-                    controller: _searchController,
-                    decoration: InputDecoration(
-                      hintText:
-                          'Pesquisar por descrição, endereço ou morador...',
-                      prefixIcon: const Icon(Icons.search),
-                      border: OutlineInputBorder(
-                        borderRadius: BorderRadius.circular(12),
-                        borderSide: BorderSide.none,
+    final width = MediaQuery.of(context).size.width;
+    final isMobile = width < 700;
+    return Center(
+      child: SingleChildScrollView(
+        padding: EdgeInsets.symmetric(
+          vertical: 32,
+          horizontal: width < 600 ? 8 : 0,
+        ),
+        child: ConstrainedBox(
+          constraints: const BoxConstraints(maxWidth: 900),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              // Título destacado + ações mobile
+              Row(
+                children: [
+                  Icon(
+                    Icons.list_alt_rounded,
+                    color: theme.primaryColor,
+                    size: 32,
+                  ),
+                  const SizedBox(width: 12),
+                  Expanded(
+                    child: Text(
+                      'Solicitações',
+                      style: theme.textTheme.headlineSmall?.copyWith(
+                        fontWeight: FontWeight.bold,
+                        color: theme.primaryColor,
                       ),
-                      filled: true,
-                      fillColor: theme.brightness == Brightness.dark
-                          ? const Color(0xFF1A1A1A)
-                          : Colors.white,
-                      contentPadding: const EdgeInsets.all(16),
-                      suffixIcon: termoPesquisa.isNotEmpty
-                          ? IconButton(
-                              icon: const Icon(Icons.clear),
-                              onPressed: () {
-                                _searchController.clear();
-                                setState(() {
-                                  termoPesquisa = '';
-                                });
-                              },
-                            )
-                          : null,
                     ),
-                    onChanged: (value) {
-                      setState(() {
-                        termoPesquisa = value;
-                      });
-                    },
+                  ),
+                  if (isMobile) ...[
+                    IconButton(
+                      icon: const Icon(Icons.search),
+                      tooltip: 'Buscar',
+                      onPressed: () {
+                        showModalBottomSheet(
+                          context: context,
+                          isScrollControlled: true,
+                          shape: const RoundedRectangleBorder(
+                            borderRadius: BorderRadius.vertical(
+                              top: Radius.circular(24),
+                            ),
+                          ),
+                          builder: (context) {
+                            return Padding(
+                              padding: EdgeInsets.only(
+                                bottom:
+                                    MediaQuery.of(context).viewInsets.bottom +
+                                    24,
+                                left: 24,
+                                right: 24,
+                                top: 24,
+                              ),
+                              child: TextField(
+                                autofocus: true,
+                                controller: _searchController,
+                                decoration: InputDecoration(
+                                  hintText:
+                                      'Pesquisar por descrição, endereço ou morador...',
+                                  prefixIcon: const Icon(Icons.search),
+                                  border: OutlineInputBorder(
+                                    borderRadius: BorderRadius.circular(12),
+                                    borderSide: BorderSide.none,
+                                  ),
+                                  filled: true,
+                                  fillColor: theme.brightness == Brightness.dark
+                                      ? const Color(0xFF1A1A1A)
+                                      : Colors.white,
+                                  contentPadding: const EdgeInsets.all(16),
+                                  suffixIcon: termoPesquisa.isNotEmpty
+                                      ? IconButton(
+                                          icon: const Icon(Icons.clear),
+                                          onPressed: () {
+                                            _searchController.clear();
+                                            setState(() {
+                                              termoPesquisa = '';
+                                            });
+                                            Navigator.pop(context);
+                                          },
+                                        )
+                                      : null,
+                                ),
+                                onChanged: (value) {
+                                  setState(() {
+                                    termoPesquisa = value;
+                                  });
+                                },
+                              ),
+                            );
+                          },
+                        );
+                      },
+                    ),
+                    IconButton(
+                      icon: const Icon(Icons.filter_list),
+                      tooltip: 'Filtros',
+                      onPressed: () {
+                        showModalBottomSheet(
+                          context: context,
+                          shape: const RoundedRectangleBorder(
+                            borderRadius: BorderRadius.vertical(
+                              top: Radius.circular(24),
+                            ),
+                          ),
+                          builder: (context) {
+                            return Padding(
+                              padding: const EdgeInsets.symmetric(
+                                vertical: 24,
+                                horizontal: 24,
+                              ),
+                              child: Row(
+                                mainAxisAlignment: MainAxisAlignment.center,
+                                children: [
+                                  _buildFilterChip(
+                                    label: 'Todas',
+                                    value: 'todas',
+                                    isSelected: filtroStatus == 'todas',
+                                    onTap: () {
+                                      setState(() {
+                                        filtroStatus = 'todas';
+                                      });
+                                      Navigator.pop(context);
+                                    },
+                                  ),
+                                  const SizedBox(width: 8),
+                                  _buildFilterChip(
+                                    label: 'Pendentes',
+                                    value: 'pendente',
+                                    isSelected: filtroStatus == 'pendente',
+                                    onTap: () {
+                                      setState(() {
+                                        filtroStatus = 'pendente';
+                                      });
+                                      Navigator.pop(context);
+                                    },
+                                  ),
+                                  const SizedBox(width: 8),
+                                  _buildFilterChip(
+                                    label: 'Em Andamento',
+                                    value: 'em andamento',
+                                    isSelected: filtroStatus == 'em andamento',
+                                    onTap: () {
+                                      setState(() {
+                                        filtroStatus = 'em andamento';
+                                      });
+                                      Navigator.pop(context);
+                                    },
+                                  ),
+                                  const SizedBox(width: 8),
+                                  _buildFilterChip(
+                                    label: 'Concluídas',
+                                    value: 'concluida',
+                                    isSelected: filtroStatus == 'concluida',
+                                    onTap: () {
+                                      setState(() {
+                                        filtroStatus = 'concluida';
+                                      });
+                                      Navigator.pop(context);
+                                    },
+                                  ),
+                                ],
+                              ),
+                            );
+                          },
+                        );
+                      },
+                    ),
+                  ],
+                ],
+              ),
+              const SizedBox(height: 32),
+              if (!isMobile) ...[
+                // Filtros e busca em card (desktop/tablet)
+                Card(
+                  elevation: 2,
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(16),
+                  ),
+                  child: Padding(
+                    padding: const EdgeInsets.symmetric(
+                      vertical: 20,
+                      horizontal: 20,
+                    ),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.stretch,
+                      children: [
+                        SingleChildScrollView(
+                          scrollDirection: Axis.horizontal,
+                          child: Row(
+                            children: [
+                              ConstrainedBox(
+                                constraints: const BoxConstraints(
+                                  maxWidth: 320,
+                                ),
+                                child: TextField(
+                                  controller: _searchController,
+                                  decoration: InputDecoration(
+                                    hintText:
+                                        'Pesquisar por descrição, endereço ou morador...',
+                                    prefixIcon: const Icon(Icons.search),
+                                    border: OutlineInputBorder(
+                                      borderRadius: BorderRadius.circular(12),
+                                      borderSide: BorderSide.none,
+                                    ),
+                                    filled: true,
+                                    fillColor:
+                                        theme.brightness == Brightness.dark
+                                        ? const Color(0xFF1A1A1A)
+                                        : Colors.white,
+                                    contentPadding: const EdgeInsets.all(16),
+                                    suffixIcon: termoPesquisa.isNotEmpty
+                                        ? IconButton(
+                                            icon: const Icon(Icons.clear),
+                                            onPressed: () {
+                                              _searchController.clear();
+                                              setState(() {
+                                                termoPesquisa = '';
+                                              });
+                                            },
+                                          )
+                                        : null,
+                                  ),
+                                  onChanged: (value) {
+                                    setState(() {
+                                      termoPesquisa = value;
+                                    });
+                                  },
+                                ),
+                              ),
+                              const SizedBox(width: 16),
+                              _buildFilterChip(
+                                label: 'Todas',
+                                value: 'todas',
+                                isSelected: filtroStatus == 'todas',
+                                onTap: () {
+                                  setState(() {
+                                    filtroStatus = 'todas';
+                                  });
+                                },
+                              ),
+                              const SizedBox(width: 8),
+                              _buildFilterChip(
+                                label: 'Pendentes',
+                                value: 'pendente',
+                                isSelected: filtroStatus == 'pendente',
+                                onTap: () {
+                                  setState(() {
+                                    filtroStatus = 'pendente';
+                                  });
+                                },
+                              ),
+                              const SizedBox(width: 8),
+                              _buildFilterChip(
+                                label: 'Em Andamento',
+                                value: 'em andamento',
+                                isSelected: filtroStatus == 'em andamento',
+                                onTap: () {
+                                  setState(() {
+                                    filtroStatus = 'em andamento';
+                                  });
+                                },
+                              ),
+                              const SizedBox(width: 8),
+                              _buildFilterChip(
+                                label: 'Concluídas',
+                                value: 'concluida',
+                                isSelected: filtroStatus == 'concluida',
+                                onTap: () {
+                                  setState(() {
+                                    filtroStatus = 'concluida';
+                                  });
+                                },
+                              ),
+                            ],
+                          ),
+                        ),
+                      ],
+                    ),
                   ),
                 ),
-                const SizedBox(width: 16),
-                _buildFilterChip(
-                  label: 'Todas',
-                  value: 'todas',
-                  isSelected: filtroStatus == 'todas',
-                  onTap: () {
-                    setState(() {
-                      filtroStatus = 'todas';
-                    });
-                  },
-                ),
-                const SizedBox(width: 8),
-                _buildFilterChip(
-                  label: 'Pendentes',
-                  value: 'pendente',
-                  isSelected: filtroStatus == 'pendente',
-                  onTap: () {
-                    setState(() {
-                      filtroStatus = 'pendente';
-                    });
-                  },
-                ),
-                const SizedBox(width: 8),
-                _buildFilterChip(
-                  label: 'Em Andamento',
-                  value: 'em andamento',
-                  isSelected: filtroStatus == 'em andamento',
-                  onTap: () {
-                    setState(() {
-                      filtroStatus = 'em andamento';
-                    });
-                  },
-                ),
-                const SizedBox(width: 8),
-                _buildFilterChip(
-                  label: 'Concluídas',
-                  value: 'concluida',
-                  isSelected: filtroStatus == 'concluida',
-                  onTap: () {
-                    setState(() {
-                      filtroStatus = 'concluida';
-                    });
-                  },
-                ),
+                const SizedBox(height: 32),
               ],
-            ),
-            const SizedBox(height: 24),
-            Expanded(
-              child: solicitacoesFiltradas.isEmpty
-                  ? Center(
-                      child: Text(
-                        termoPesquisa.isNotEmpty || filtroStatus != 'todas'
-                            ? 'Nenhuma solicitação encontrada com os filtros aplicados.'
-                            : 'Nenhuma solicitação encontrada.',
-                        style: theme.textTheme.bodyLarge?.copyWith(
-                          color: theme.disabledColor,
+              // Lista de solicitações
+              SizedBox(
+                height: width < 900 ? 600 : 700,
+                child: StreamBuilder<List<Map<String, dynamic>>>(
+                  stream: Supabase.instance.client
+                      .from('solicitacoes')
+                      .stream(primaryKey: ['id'])
+                      .order('criado_em', ascending: false),
+                  builder: (context, snapshot) {
+                    if (snapshot.connectionState == ConnectionState.waiting) {
+                      return const Center(child: CircularProgressIndicator());
+                    }
+                    if (snapshot.hasError) {
+                      return Center(
+                        child: Text(
+                          'Erro ao buscar solicitações: ${snapshot.error}',
+                          style: theme.textTheme.bodyLarge?.copyWith(
+                            color: theme.colorScheme.error,
+                          ),
                         ),
-                      ),
-                    )
-                  : ListView.builder(
+                      );
+                    }
+                    final solicitacoes = snapshot.data ?? [];
+                    final solicitacoesFiltradas = solicitacoes.where((s) {
+                      final matchStatus =
+                          filtroStatus == 'todas' ||
+                          s['status'] == filtroStatus;
+                      final matchPesquisa =
+                          termoPesquisa.isEmpty ||
+                          (s['descricao']?.toLowerCase().contains(
+                                termoPesquisa.toLowerCase(),
+                              ) ??
+                              false) ||
+                          (s['endereco']?.toLowerCase().contains(
+                                termoPesquisa.toLowerCase(),
+                              ) ??
+                              false) ||
+                          (s['morador_id']?.toLowerCase().contains(
+                                termoPesquisa.toLowerCase(),
+                              ) ??
+                              false);
+                      return matchStatus && matchPesquisa;
+                    }).toList();
+                    if (solicitacoesFiltradas.isEmpty) {
+                      return Center(
+                        child: Text(
+                          termoPesquisa.isNotEmpty || filtroStatus != 'todas'
+                              ? 'Nenhuma solicitação encontrada com os filtros aplicados.'
+                              : 'Nenhuma solicitação encontrada.',
+                          style: theme.textTheme.bodyLarge?.copyWith(
+                            color: theme.disabledColor,
+                          ),
+                        ),
+                      );
+                    }
+                    return ListView.separated(
                       itemCount: solicitacoesFiltradas.length,
+                      separatorBuilder: (context, index) =>
+                          const SizedBox(height: 16),
                       itemBuilder: (context, index) {
                         return _buildSolicitacaoCard(
                           solicitacoesFiltradas[index],
                         );
                       },
-                    ),
-            ),
-          ],
-        );
-      },
+                    );
+                  },
+                ),
+              ),
+            ],
+          ),
+        ),
+      ),
     );
   }
 }

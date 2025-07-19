@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:http/http.dart' as http;
 import 'dart:convert';
+import '../theme/app_styles.dart';
 
 class UsuariosDashboard extends StatefulWidget {
   const UsuariosDashboard({Key? key}) : super(key: key);
@@ -59,53 +60,202 @@ class _UsuariosDashboardState extends State<UsuariosDashboard> {
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(
-        title: const Text('Gerenciar Usuários'),
-        actions: [
-          // Apenas administradores veem o botão de adicionar usuário
-          if (_isAdmin)
-            IconButton(
-              icon: const Icon(Icons.person_add),
-              tooltip: 'Novo Usuário',
-              onPressed: _showNovoUsuarioDialog,
-            ),
-        ],
+    final theme = Theme.of(context);
+    final width = MediaQuery.of(context).size.width;
+    return Dialog(
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(AppRadius.card),
       ),
-      body: FutureBuilder<List<dynamic>>(
-        future: _usuariosFuture,
-        builder: (context, snapshot) {
-          if (snapshot.connectionState == ConnectionState.waiting) {
-            return const Center(child: CircularProgressIndicator());
-          }
-          if (snapshot.hasError) {
-            return Center(child: Text('Erro ao carregar usuários.'));
-          }
-          final usuarios = snapshot.data ?? [];
-          if (usuarios.isEmpty) {
-            return const Center(child: Text('Nenhum usuário cadastrado.'));
-          }
-          return ListView.separated(
-            itemCount: usuarios.length,
-            separatorBuilder: (_, __) => const Divider(),
-            itemBuilder: (context, index) {
-              final usuario = usuarios[index];
-              return ListTile(
-                leading: const Icon(Icons.person),
-                title: Text(usuario['nome'] ?? ''),
-                subtitle: Text('Cargo: ${usuario['cargo'] ?? ''}'),
-                trailing: Text(
-                  usuario['criado_em'] != null
-                      ? usuario['criado_em'].toString().substring(0, 10)
-                      : '',
-                  style: const TextStyle(fontSize: 12, color: Colors.grey),
+      child: Container(
+        constraints: BoxConstraints(
+          maxWidth: width < 600 ? width * 0.95 : 800,
+          maxHeight: MediaQuery.of(context).size.height * 0.8,
+        ),
+        child: Column(
+          children: [
+            // Header
+            Container(
+              padding: const EdgeInsets.all(24),
+              decoration: BoxDecoration(
+                color: theme.primaryColor,
+                borderRadius: const BorderRadius.only(
+                  topLeft: Radius.circular(AppRadius.card),
+                  topRight: Radius.circular(AppRadius.card),
                 ),
-              );
-            },
-          );
-        },
+              ),
+              child: Row(
+                children: [
+                  Icon(Icons.people_rounded, color: Colors.white, size: 28),
+                  const SizedBox(width: 12),
+                  Expanded(
+                    child: Text(
+                      'Gerenciar Usuários',
+                      style: theme.textTheme.headlineSmall?.copyWith(
+                        fontWeight: FontWeight.bold,
+                        color: Colors.white,
+                      ),
+                    ),
+                  ),
+                  if (_isAdmin)
+                    IconButton(
+                      icon: const Icon(Icons.person_add, color: Colors.white),
+                      tooltip: 'Novo Usuário',
+                      onPressed: _showNovoUsuarioDialog,
+                    ),
+                  IconButton(
+                    icon: const Icon(Icons.close, color: Colors.white),
+                    onPressed: () => Navigator.of(context).pop(),
+                  ),
+                ],
+              ),
+            ),
+            // Content
+            Expanded(
+              child: FutureBuilder<List<dynamic>>(
+                future: _usuariosFuture,
+                builder: (context, snapshot) {
+                  if (snapshot.connectionState == ConnectionState.waiting) {
+                    return const Center(child: CircularProgressIndicator());
+                  }
+                  if (snapshot.hasError) {
+                    return Center(
+                      child: Column(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [
+                          Icon(
+                            Icons.error_outline,
+                            size: 48,
+                            color: theme.colorScheme.error,
+                          ),
+                          const SizedBox(height: 16),
+                          Text(
+                            'Erro ao carregar usuários',
+                            style: theme.textTheme.titleMedium?.copyWith(
+                              color: theme.colorScheme.error,
+                            ),
+                          ),
+                        ],
+                      ),
+                    );
+                  }
+                  final usuarios = snapshot.data ?? [];
+                  if (usuarios.isEmpty) {
+                    return Center(
+                      child: Column(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [
+                          Icon(
+                            Icons.people_outline,
+                            size: 48,
+                            color: theme.disabledColor,
+                          ),
+                          const SizedBox(height: 16),
+                          Text(
+                            'Nenhum usuário cadastrado',
+                            style: theme.textTheme.titleMedium?.copyWith(
+                              color: theme.disabledColor,
+                            ),
+                          ),
+                        ],
+                      ),
+                    );
+                  }
+                  return ListView.separated(
+                    padding: const EdgeInsets.all(24),
+                    itemCount: usuarios.length,
+                    separatorBuilder: (_, __) => const SizedBox(height: 12),
+                    itemBuilder: (context, index) {
+                      final usuario = usuarios[index];
+                      return Card(
+                        elevation: 2,
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(12),
+                        ),
+                        child: ListTile(
+                          leading: CircleAvatar(
+                            backgroundColor: theme.primaryColor.withOpacity(
+                              0.1,
+                            ),
+                            child: Icon(
+                              Icons.person,
+                              color: theme.primaryColor,
+                            ),
+                          ),
+                          title: Text(
+                            usuario['nome'] ?? 'Nome não informado',
+                            style: theme.textTheme.titleMedium?.copyWith(
+                              fontWeight: FontWeight.w600,
+                            ),
+                          ),
+                          subtitle: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              const SizedBox(height: 4),
+                              Container(
+                                padding: const EdgeInsets.symmetric(
+                                  horizontal: 8,
+                                  vertical: 4,
+                                ),
+                                decoration: BoxDecoration(
+                                  color: _getCargoColor(
+                                    usuario['cargo'],
+                                  ).withOpacity(0.1),
+                                  borderRadius: BorderRadius.circular(12),
+                                ),
+                                child: Text(
+                                  usuario['cargo'] ?? 'Cargo não informado',
+                                  style: TextStyle(
+                                    color: _getCargoColor(usuario['cargo']),
+                                    fontSize: 12,
+                                    fontWeight: FontWeight.w600,
+                                  ),
+                                ),
+                              ),
+                            ],
+                          ),
+                          trailing: Text(
+                            usuario['criado_em'] != null
+                                ? _formatDate(usuario['criado_em'])
+                                : '',
+                            style: theme.textTheme.bodySmall?.copyWith(
+                              color: theme.disabledColor,
+                            ),
+                          ),
+                        ),
+                      );
+                    },
+                  );
+                },
+              ),
+            ),
+          ],
+        ),
       ),
     );
+  }
+
+  Color _getCargoColor(String? cargo) {
+    switch (cargo) {
+      case 'administrador':
+        return const Color(0xFFD32F2F);
+      case 'operador':
+        return const Color(0xFF1976D2);
+      default:
+        return Colors.grey;
+    }
+  }
+
+  String _formatDate(dynamic date) {
+    if (date == null) return '';
+    try {
+      final dateTime = DateTime.tryParse(date.toString());
+      if (dateTime != null) {
+        return '${dateTime.day.toString().padLeft(2, '0')}/${dateTime.month.toString().padLeft(2, '0')}/${dateTime.year}';
+      }
+    } catch (e) {
+      // Ignore parsing errors
+    }
+    return date.toString().substring(0, 10);
   }
 }
 
@@ -179,8 +329,18 @@ class _NovoUsuarioDialogState extends State<NovoUsuarioDialog> {
 
   @override
   Widget build(BuildContext context) {
+    final theme = Theme.of(context);
     return AlertDialog(
-      title: const Text('Novo Usuário'),
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(AppRadius.card),
+      ),
+      title: Row(
+        children: [
+          Icon(Icons.person_add, color: theme.primaryColor),
+          const SizedBox(width: 8),
+          const Text('Novo Usuário'),
+        ],
+      ),
       content: Form(
         key: _formKey,
         child: Column(
@@ -188,26 +348,42 @@ class _NovoUsuarioDialogState extends State<NovoUsuarioDialog> {
           children: [
             TextFormField(
               controller: _nomeController,
-              decoration: const InputDecoration(labelText: 'Nome'),
+              decoration: const InputDecoration(
+                labelText: 'Nome',
+                border: OutlineInputBorder(),
+              ),
               validator: (v) =>
                   v == null || v.isEmpty ? 'Informe o nome' : null,
             ),
+            const SizedBox(height: 16),
             TextFormField(
               controller: _emailController,
-              decoration: const InputDecoration(labelText: 'E-mail'),
+              decoration: const InputDecoration(
+                labelText: 'E-mail',
+                border: OutlineInputBorder(),
+              ),
               validator: (v) =>
                   v == null || v.isEmpty ? 'Informe o e-mail' : null,
               keyboardType: TextInputType.emailAddress,
             ),
+            const SizedBox(height: 16),
             TextFormField(
               controller: _senhaController,
-              decoration: const InputDecoration(labelText: 'Senha'),
+              decoration: const InputDecoration(
+                labelText: 'Senha',
+                border: OutlineInputBorder(),
+              ),
               obscureText: true,
               validator: (v) =>
                   v == null || v.length < 6 ? 'Mínimo 6 caracteres' : null,
             ),
+            const SizedBox(height: 16),
             DropdownButtonFormField<String>(
               value: _cargo,
+              decoration: const InputDecoration(
+                labelText: 'Cargo',
+                border: OutlineInputBorder(),
+              ),
               items: const [
                 DropdownMenuItem(
                   value: 'administrador',
@@ -216,12 +392,33 @@ class _NovoUsuarioDialogState extends State<NovoUsuarioDialog> {
                 DropdownMenuItem(value: 'operador', child: Text('Operador')),
               ],
               onChanged: (v) => setState(() => _cargo = v ?? 'operador'),
-              decoration: const InputDecoration(labelText: 'Cargo'),
             ),
             if (_erro != null)
               Padding(
-                padding: const EdgeInsets.only(top: 8),
-                child: Text(_erro!, style: const TextStyle(color: Colors.red)),
+                padding: const EdgeInsets.only(top: 16),
+                child: Container(
+                  padding: const EdgeInsets.all(12),
+                  decoration: BoxDecoration(
+                    color: theme.colorScheme.error.withOpacity(0.1),
+                    borderRadius: BorderRadius.circular(8),
+                  ),
+                  child: Row(
+                    children: [
+                      Icon(
+                        Icons.error_outline,
+                        color: theme.colorScheme.error,
+                        size: 20,
+                      ),
+                      const SizedBox(width: 8),
+                      Expanded(
+                        child: Text(
+                          _erro!,
+                          style: TextStyle(color: theme.colorScheme.error),
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
               ),
           ],
         ),

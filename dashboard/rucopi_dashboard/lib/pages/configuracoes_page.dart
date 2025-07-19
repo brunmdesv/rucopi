@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../theme/theme_provider.dart';
-import '../widgets/app_padrao.dart';
+import '../theme/app_styles.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:go_router/go_router.dart';
 import 'package:rucopi_dashboard/pages/usuarios_dashboard.dart';
@@ -15,52 +15,11 @@ class ConfiguracoesPage extends StatefulWidget {
 
 class _ConfiguracoesPageState extends State<ConfiguracoesPage> {
   @override
-  void initState() {
-    super.initState();
-  }
-
-  PreferredSizeWidget _buildCustomAppBar(ThemeData theme) {
-    return PreferredSize(
-      preferredSize: const Size.fromHeight(72),
-      child: Container(
-        color: theme.brightness == Brightness.dark
-            ? const Color(0xFF1A1A1A)
-            : Colors.white,
-        padding: const EdgeInsets.symmetric(horizontal: 32),
-        alignment: Alignment.centerLeft,
-        child: SafeArea(
-          bottom: false,
-          child: SizedBox(
-            height: 72,
-            child: Row(
-              crossAxisAlignment: CrossAxisAlignment.center,
-              children: [
-                Padding(
-                  padding: const EdgeInsets.only(right: 24),
-                  child: Text(
-                    'Configurações',
-                    style: theme.textTheme.titleLarge?.copyWith(
-                      fontWeight: FontWeight.bold,
-                      color: theme.brightness == Brightness.dark
-                          ? Colors.white
-                          : const Color(0xFF606A45),
-                    ),
-                  ),
-                ),
-                const Spacer(),
-              ],
-            ),
-          ),
-        ),
-      ),
-    );
-  }
-
-  @override
   Widget build(BuildContext context) {
     final themeProvider = Provider.of<ThemeProvider>(context);
     final theme = Theme.of(context);
     final user = Supabase.instance.client.auth.currentUser;
+    final width = MediaQuery.of(context).size.width;
     return FutureBuilder(
       future: user == null
           ? Future.value(null)
@@ -75,97 +34,170 @@ class _ConfiguracoesPageState extends State<ConfiguracoesPage> {
             : null;
         final isAdmin = cargo == 'administrador';
         final isOperador = cargo == 'operador';
-        return Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Row(
-              crossAxisAlignment: CrossAxisAlignment.center,
-              children: [
-                Icon(
-                  Icons.brightness_6,
-                  size: 28,
-                  color: theme.colorScheme.primary,
-                ),
-                const SizedBox(width: 16),
-                Expanded(
-                  child: Text(
-                    'Tema do sistema',
-                    style: theme.textTheme.titleMedium?.copyWith(
-                      fontWeight: FontWeight.bold,
-                    ),
-                  ),
-                ),
-                _ThemeIconButton(
-                  icon: Icons.light_mode,
-                  tooltip: 'Claro',
-                  selected: themeProvider.themeMode == ThemeMode.light,
-                  onTap: () => themeProvider.setTheme(ThemeMode.light),
-                ),
-                const SizedBox(width: 8),
-                _ThemeIconButton(
-                  icon: Icons.dark_mode,
-                  tooltip: 'Escuro',
-                  selected: themeProvider.themeMode == ThemeMode.dark,
-                  onTap: () => themeProvider.setTheme(ThemeMode.dark),
-                ),
-                const SizedBox(width: 8),
-                _ThemeIconButton(
-                  icon: Icons.brightness_auto,
-                  tooltip: 'Automático',
-                  selected: themeProvider.themeMode == ThemeMode.system,
-                  onTap: () => themeProvider.setTheme(ThemeMode.system),
-                ),
-              ],
+        return Center(
+          child: SingleChildScrollView(
+            padding: EdgeInsets.symmetric(
+              vertical: 32,
+              horizontal: width < 600 ? 8 : 0,
             ),
-            const SizedBox(height: 32),
-            if (isAdmin || isOperador)
-              Padding(
-                padding: const EdgeInsets.only(bottom: 16),
-                child: ElevatedButton.icon(
-                  icon: const Icon(Icons.manage_accounts),
-                  label: const Text('Gerenciar usuários'),
-                  style: ElevatedButton.styleFrom(
-                    padding: const EdgeInsets.symmetric(
-                      vertical: 16,
-                      horizontal: 24,
-                    ),
-                    backgroundColor: theme.colorScheme.primary,
-                    foregroundColor: Colors.white,
-                    textStyle: theme.textTheme.titleMedium?.copyWith(
-                      fontWeight: FontWeight.bold,
-                    ),
-                  ),
-                  onPressed: () {
-                    Navigator.of(context).push(
-                      MaterialPageRoute(
-                        builder: (_) => const UsuariosDashboard(),
+            child: ConstrainedBox(
+              constraints: const BoxConstraints(maxWidth: 480),
+              child: Card(
+                elevation: 4,
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(AppRadius.card),
+                ),
+                child: Padding(
+                  padding: const EdgeInsets.all(32),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.stretch,
+                    children: [
+                      Row(
+                        children: [
+                          Icon(
+                            Icons.settings_rounded,
+                            color: theme.primaryColor,
+                            size: 32,
+                          ),
+                          const SizedBox(width: 12),
+                          Text(
+                            'Configurações',
+                            style: theme.textTheme.headlineSmall?.copyWith(
+                              fontWeight: FontWeight.bold,
+                              color: theme.primaryColor,
+                            ),
+                          ),
+                        ],
                       ),
-                    );
-                  },
+                      const SizedBox(height: 32),
+                      Text(
+                        'Tema do sistema',
+                        style: theme.textTheme.titleMedium?.copyWith(
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
+                      const SizedBox(height: 12),
+                      Card(
+                        color: theme.cardColor,
+                        elevation: 0,
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(AppRadius.card),
+                          side: BorderSide(color: theme.dividerColor),
+                        ),
+                        child: Padding(
+                          padding: const EdgeInsets.symmetric(
+                            vertical: 16,
+                            horizontal: 12,
+                          ),
+                          child: Row(
+                            mainAxisAlignment: MainAxisAlignment.center,
+                            children: [
+                              _ThemeIconButton(
+                                icon: Icons.light_mode,
+                                tooltip: 'Claro',
+                                selected:
+                                    themeProvider.themeMode == ThemeMode.light,
+                                onTap: () =>
+                                    themeProvider.setTheme(ThemeMode.light),
+                              ),
+                              const SizedBox(width: 16),
+                              _ThemeIconButton(
+                                icon: Icons.dark_mode,
+                                tooltip: 'Escuro',
+                                selected:
+                                    themeProvider.themeMode == ThemeMode.dark,
+                                onTap: () =>
+                                    themeProvider.setTheme(ThemeMode.dark),
+                              ),
+                              const SizedBox(width: 16),
+                              _ThemeIconButton(
+                                icon: Icons.brightness_auto,
+                                tooltip: 'Automático',
+                                selected:
+                                    themeProvider.themeMode == ThemeMode.system,
+                                onTap: () =>
+                                    themeProvider.setTheme(ThemeMode.system),
+                              ),
+                            ],
+                          ),
+                        ),
+                      ),
+                      const SizedBox(height: 32),
+                      if (isAdmin || isOperador)
+                        Column(
+                          crossAxisAlignment: CrossAxisAlignment.stretch,
+                          children: [
+                            Text(
+                              'Gerenciamento',
+                              style: theme.textTheme.titleMedium?.copyWith(
+                                fontWeight: FontWeight.bold,
+                              ),
+                            ),
+                            const SizedBox(height: 12),
+                            ElevatedButton.icon(
+                              icon: const Icon(Icons.manage_accounts),
+                              label: const Text('Gerenciar usuários'),
+                              style: ElevatedButton.styleFrom(
+                                padding: const EdgeInsets.symmetric(
+                                  vertical: 16,
+                                ),
+                                backgroundColor: theme.colorScheme.primary,
+                                foregroundColor: Colors.white,
+                                textStyle: theme.textTheme.titleMedium
+                                    ?.copyWith(fontWeight: FontWeight.bold),
+                                shape: RoundedRectangleBorder(
+                                  borderRadius: BorderRadius.circular(
+                                    AppRadius.button,
+                                  ),
+                                ),
+                              ),
+                              onPressed: () {
+                                showDialog(
+                                  context: context,
+                                  builder: (context) =>
+                                      const UsuariosDashboard(),
+                                );
+                              },
+                            ),
+                            const SizedBox(height: 24),
+                          ],
+                        ),
+                      Text(
+                        'Sessão',
+                        style: theme.textTheme.titleMedium?.copyWith(
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
+                      const SizedBox(height: 12),
+                      ElevatedButton.icon(
+                        icon: const Icon(Icons.logout),
+                        label: const Text('Logout'),
+                        style: ElevatedButton.styleFrom(
+                          padding: const EdgeInsets.symmetric(vertical: 16),
+                          backgroundColor: theme.colorScheme.error,
+                          foregroundColor: Colors.white,
+                          textStyle: theme.textTheme.titleMedium?.copyWith(
+                            fontWeight: FontWeight.bold,
+                          ),
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(
+                              AppRadius.button,
+                            ),
+                          ),
+                        ),
+                        onPressed: () async {
+                          await Supabase.instance.client.auth.signOut();
+                          if (context.mounted) {
+                            context.go('/login');
+                          }
+                        },
+                      ),
+                    ],
+                  ),
                 ),
               ),
-            ElevatedButton.icon(
-              icon: const Icon(Icons.logout),
-              label: const Text('Logout'),
-              style: ElevatedButton.styleFrom(
-                padding: const EdgeInsets.symmetric(
-                  vertical: 16,
-                  horizontal: 24,
-                ),
-                backgroundColor: theme.colorScheme.error,
-                foregroundColor: Colors.white,
-                textStyle: theme.textTheme.titleMedium?.copyWith(
-                  fontWeight: FontWeight.bold,
-                ),
-              ),
-              onPressed: () async {
-                await Supabase.instance.client.auth.signOut();
-                if (context.mounted) {
-                  context.go('/login');
-                }
-              },
             ),
-          ],
+          ),
         );
       },
     );
@@ -195,20 +227,29 @@ class _ThemeIconButton extends StatelessWidget {
         onTap: onTap,
         child: AnimatedContainer(
           duration: const Duration(milliseconds: 150),
-          padding: const EdgeInsets.all(8),
+          padding: const EdgeInsets.all(12),
           decoration: BoxDecoration(
             color: selected
                 ? theme.colorScheme.primary.withOpacity(0.15)
-                : Colors.transparent,
-            borderRadius: BorderRadius.circular(12),
+                : theme.cardColor,
+            borderRadius: BorderRadius.circular(16),
             border: Border.all(
-              color: selected ? theme.colorScheme.primary : Colors.transparent,
+              color: selected ? theme.colorScheme.primary : theme.dividerColor,
               width: selected ? 2 : 1,
             ),
+            boxShadow: selected
+                ? [
+                    BoxShadow(
+                      color: theme.colorScheme.primary.withOpacity(0.08),
+                      blurRadius: 8,
+                      offset: const Offset(0, 2),
+                    ),
+                  ]
+                : [],
           ),
           child: Icon(
             icon,
-            size: 28,
+            size: 32,
             color: selected ? theme.colorScheme.primary : theme.iconTheme.color,
           ),
         ),
