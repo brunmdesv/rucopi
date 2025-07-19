@@ -61,6 +61,7 @@ class _AuthWrapperState extends State<AuthWrapper> {
 
   void _verificarAutenticacao() {
     final user = Supabase.instance.client.auth.currentUser;
+    if (!mounted) return;
     setState(() {
       _user = user;
       _loading = false;
@@ -69,6 +70,7 @@ class _AuthWrapperState extends State<AuthWrapper> {
 
   void _configurarListener() {
     Supabase.instance.client.auth.onAuthStateChange.listen((data) {
+      if (!mounted) return;
       setState(() {
         _user = data.session?.user;
         _loading = false;

@@ -58,8 +58,10 @@ class _HistoricoSolicitacoesPageState extends State<HistoricoSolicitacoesPage> {
     switch (status.toLowerCase()) {
       case 'pendente':
         return Colors.orange;
-      case 'em_andamento':
+      case 'agendada':
         return Colors.blue;
+      case 'coletando':
+        return Colors.purple;
       case 'concluido':
         return Colors.green;
       case 'cancelado':
@@ -73,8 +75,10 @@ class _HistoricoSolicitacoesPageState extends State<HistoricoSolicitacoesPage> {
     switch (status.toLowerCase()) {
       case 'pendente':
         return Icons.schedule_outlined;
-      case 'em_andamento':
-        return Icons.autorenew_outlined;
+      case 'agendada':
+        return Icons.event_available;
+      case 'coletando':
+        return Icons.local_shipping;
       case 'concluido':
         return Icons.check_circle_outline;
       case 'cancelado':
@@ -113,7 +117,7 @@ class _HistoricoSolicitacoesPageState extends State<HistoricoSolicitacoesPage> {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
-
+    final user = Supabase.instance.client.auth.currentUser;
     return AppPadrao(
       titulo: 'Histórico de Solicitações',
       leading: Navigator.of(context).canPop()
@@ -122,22 +126,36 @@ class _HistoricoSolicitacoesPageState extends State<HistoricoSolicitacoesPage> {
               onPressed: () => Navigator.of(context).pop(),
             )
           : null,
-      child: loading
-          ? const Center(child: CircularProgressIndicator())
-          : solicitacoes.isEmpty
-          ? _buildEmptyState(theme)
-          : SingleChildScrollView(
-              child: Padding(
-                padding: const EdgeInsets.only(top: 8),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.stretch,
-                  children: [
-                    for (final solicitacao in solicitacoes)
-                      _buildSolicitacaoCard(solicitacao, theme),
-                  ],
-                ),
+      child: StreamBuilder<List<Map<String, dynamic>>>(
+        stream: user == null
+            ? null
+            : Supabase.instance.client
+                  .from('solicitacoes')
+                  .stream(primaryKey: ['id'])
+                  .eq('morador_id', user.id)
+                  .order('criado_em', ascending: false),
+        builder: (context, snapshot) {
+          if (!snapshot.hasData) {
+            return const Center(child: CircularProgressIndicator());
+          }
+          final solicitacoes = snapshot.data!;
+          if (solicitacoes.isEmpty) {
+            return _buildEmptyState(theme);
+          }
+          return SingleChildScrollView(
+            child: Padding(
+              padding: const EdgeInsets.only(top: 8),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.stretch,
+                children: [
+                  for (final solicitacao in solicitacoes)
+                    _buildSolicitacaoCard(solicitacao, theme),
+                ],
               ),
             ),
+          );
+        },
+      ),
     );
   }
 

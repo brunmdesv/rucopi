@@ -28,7 +28,7 @@ class HomePageState extends State<HomePage> with WidgetsBindingObserver {
   void didChangeAppLifecycleState(AppLifecycleState state) {
     if (state == AppLifecycleState.resumed) {
       _carregarDados();
-      _carregarSolicitacoesRecentes();
+      // _carregarSolicitacoesRecentes() não é mais necessário
     }
   }
 
@@ -37,7 +37,7 @@ class HomePageState extends State<HomePage> with WidgetsBindingObserver {
     super.initState();
     WidgetsBinding.instance.addObserver(this);
     _carregarDados();
-    _carregarSolicitacoesRecentes();
+    // _carregarSolicitacoesRecentes() não é mais necessário
   }
 
   @override
@@ -82,51 +82,17 @@ class HomePageState extends State<HomePage> with WidgetsBindingObserver {
     });
   }
 
-  Future<void> _carregarSolicitacoesRecentes() async {
-    final user = Supabase.instance.client.auth.currentUser;
-    if (user == null) {
-      setState(() {
-        solicitacoesRecentes = [];
-      });
-      return;
-    }
-    try {
-      final resp = await Supabase.instance.client
-          .from('solicitacoes')
-          .select(
-            'id, descricao, status, criado_em, endereco, tipo_entulho, fotos',
-          )
-          .eq('morador_id', user.id)
-          .order(
-            'criado_em',
-            ascending: true,
-          ); // ordem crescente (mais antigas primeiro)
-      // Filtrar pendentes primeiro, depois as demais, e limitar a 2
-      final pendentes = resp
-          .where((s) => (s['status'] ?? '').toLowerCase() == 'pendente')
-          .toList();
-      final outros = resp
-          .where((s) => (s['status'] ?? '').toLowerCase() != 'pendente')
-          .toList();
-      final recentes = [...pendentes, ...outros];
-      setState(() {
-        solicitacoesRecentes = recentes.take(2).toList();
-      });
-    } catch (e) {
-      setState(() {
-        solicitacoesRecentes = [];
-      });
-    }
-  }
+  // _carregarSolicitacoesRecentes() não é mais necessário
 
   void atualizarDados() {
     _carregarDados();
-    _carregarSolicitacoesRecentes();
+    // _carregarSolicitacoesRecentes() não é mais necessário
   }
 
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
+    final user = Supabase.instance.client.auth.currentUser;
     return AppPadrao(
       titulo: 'Rucopi',
       leading: IconButton(
@@ -150,7 +116,10 @@ class HomePageState extends State<HomePage> with WidgetsBindingObserver {
               loading = true;
             });
             await _carregarDados();
-            await _carregarSolicitacoesRecentes();
+            // _carregarSolicitacoesRecentes() não é mais necessário
+            setState(() {
+              loading = false;
+            });
           },
           tooltip: 'Atualizar',
         ),
@@ -361,7 +330,7 @@ class HomePageState extends State<HomePage> with WidgetsBindingObserver {
                             );
                             if (result == true) {
                               await _carregarDados();
-                              await _carregarSolicitacoesRecentes();
+                              // _carregarSolicitacoesRecentes() não é mais necessário
                             }
                           },
                           child: Container(
@@ -449,50 +418,80 @@ class HomePageState extends State<HomePage> with WidgetsBindingObserver {
                           ],
                         ),
                         const SizedBox(height: 15),
-                        if (solicitacoesRecentes.isEmpty)
-                          Text(
-                            'Nenhuma solicitação recente.',
-                            style: theme.textTheme.bodyMedium,
-                          ),
-                        for (final solicitacao in solicitacoesRecentes)
-                          _buildSolicitacaoResumoCard(context, solicitacao),
-                        if (solicitacoesRecentes.isNotEmpty) ...[
-                          const SizedBox(height: 0),
-                          Center(
-                            child: SizedBox(
-                              width: double.infinity,
-                              child: ElevatedButton.icon(
-                                onPressed: () {
-                                  Navigator.push(
+                        StreamBuilder<List<Map<String, dynamic>>>(
+                          stream: user == null
+                              ? null
+                              : Supabase.instance.client
+                                    .from('solicitacoes')
+                                    .stream(primaryKey: ['id'])
+                                    .eq('morador_id', user.id)
+                                    .order('criado_em', ascending: true),
+                          builder: (context, snapshot) {
+                            if (!snapshot.hasData) {
+                              return const Center(
+                                child: CircularProgressIndicator(),
+                              );
+                            }
+                            final solicitacoesRecentes = snapshot.data!;
+                            if (solicitacoesRecentes.isEmpty) {
+                              return Text(
+                                'Nenhuma solicitação recente.',
+                                style: theme.textTheme.bodyMedium,
+                              );
+                            }
+                            return Column(
+                              children: [
+                                for (final solicitacao
+                                    in solicitacoesRecentes.take(2))
+                                  _buildSolicitacaoResumoCard(
                                     context,
-                                    MaterialPageRoute(
-                                      builder: (context) =>
-                                          const HistoricoSolicitacoesPage(),
-                                    ),
-                                  );
-                                },
-                                icon: const Icon(Icons.list_alt),
-                                label: const Text('Ver todas as solicitações'),
-                                style: ElevatedButton.styleFrom(
-                                  backgroundColor: theme.primaryColor,
-                                  foregroundColor: Colors.white,
-                                  shape: RoundedRectangleBorder(
-                                    borderRadius: BorderRadius.circular(16),
+                                    solicitacao,
                                   ),
-                                  padding: const EdgeInsets.symmetric(
-                                    vertical: 16,
-                                    horizontal: 20,
-                                  ),
-                                  textStyle: theme.textTheme.titleMedium
-                                      ?.copyWith(
-                                        color: Colors.white,
-                                        fontWeight: FontWeight.w600,
+                                if (solicitacoesRecentes.isNotEmpty) ...[
+                                  const SizedBox(height: 0),
+                                  Center(
+                                    child: SizedBox(
+                                      width: double.infinity,
+                                      child: ElevatedButton.icon(
+                                        onPressed: () {
+                                          Navigator.push(
+                                            context,
+                                            MaterialPageRoute(
+                                              builder: (context) =>
+                                                  const HistoricoSolicitacoesPage(),
+                                            ),
+                                          );
+                                        },
+                                        icon: const Icon(Icons.list_alt),
+                                        label: const Text(
+                                          'Ver todas as solicitações',
+                                        ),
+                                        style: ElevatedButton.styleFrom(
+                                          backgroundColor: theme.primaryColor,
+                                          foregroundColor: Colors.white,
+                                          shape: RoundedRectangleBorder(
+                                            borderRadius: BorderRadius.circular(
+                                              16,
+                                            ),
+                                          ),
+                                          padding: const EdgeInsets.symmetric(
+                                            vertical: 16,
+                                            horizontal: 20,
+                                          ),
+                                          textStyle: theme.textTheme.titleMedium
+                                              ?.copyWith(
+                                                color: Colors.white,
+                                                fontWeight: FontWeight.w600,
+                                              ),
+                                        ),
                                       ),
-                                ),
-                              ),
-                            ),
-                          ),
-                        ],
+                                    ),
+                                  ),
+                                ],
+                              ],
+                            );
+                          },
+                        ),
                       ],
                     ),
                   ),
@@ -607,12 +606,40 @@ class HomePageState extends State<HomePage> with WidgetsBindingObserver {
   ) {
     final theme = Theme.of(context);
     final status = (solicitacao['status'] ?? 'pendente').toLowerCase();
-    final isConcluida = status == 'concluido';
-    final statusIcon = isConcluida
-        ? Icons.check_circle_outline
-        : Icons.schedule_outlined;
-    final statusColor = isConcluida ? Colors.green : Colors.orange;
-    final statusText = isConcluida ? 'Concluída' : 'Pendente';
+    Color statusColor;
+    IconData statusIcon;
+    String statusText;
+    switch (status) {
+      case 'pendente':
+        statusColor = Colors.orange;
+        statusIcon = Icons.schedule_outlined;
+        statusText = 'Pendente';
+        break;
+      case 'agendada':
+        statusColor = Colors.blue;
+        statusIcon = Icons.event_available;
+        statusText = 'Agendada';
+        break;
+      case 'coletando':
+        statusColor = Colors.purple;
+        statusIcon = Icons.local_shipping;
+        statusText = 'Coletando';
+        break;
+      case 'concluido':
+        statusColor = Colors.green;
+        statusIcon = Icons.check_circle_outline;
+        statusText = 'Concluído';
+        break;
+      case 'cancelado':
+        statusColor = Colors.red;
+        statusIcon = Icons.cancel_outlined;
+        statusText = 'Cancelado';
+        break;
+      default:
+        statusColor = theme.primaryColor;
+        statusIcon = Icons.help_outline;
+        statusText = status;
+    }
     final endereco = solicitacao['endereco'] ?? 'Sem endereço';
     final tipoEntulho = solicitacao['tipo_entulho'] ?? 'Não informado';
     final data = solicitacao['criado_em'] != null
@@ -633,7 +660,7 @@ class HomePageState extends State<HomePage> with WidgetsBindingObserver {
         );
         if (result == true) {
           await _carregarDados();
-          await _carregarSolicitacoesRecentes();
+          // _carregarSolicitacoesRecentes() não é mais necessário
         }
       },
       child: Container(
