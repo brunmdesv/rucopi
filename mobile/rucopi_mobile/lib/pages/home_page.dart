@@ -93,6 +93,10 @@ class HomePageState extends State<HomePage> with WidgetsBindingObserver {
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     final user = Supabase.instance.client.auth.currentUser;
+    // Calcular quantidade de agendadas
+    final agendadasCount = solicitacoesRecentes
+        .where((s) => (s['status'] ?? '').toLowerCase() == 'agendada')
+        .length;
     return AppPadrao(
       titulo: 'Rucopi',
       leading: IconButton(
@@ -116,7 +120,6 @@ class HomePageState extends State<HomePage> with WidgetsBindingObserver {
               loading = true;
             });
             await _carregarDados();
-            // _carregarSolicitacoesRecentes() não é mais necessário
             setState(() {
               loading = false;
             });
@@ -184,135 +187,61 @@ class HomePageState extends State<HomePage> with WidgetsBindingObserver {
                     child: Column(
                       children: [
                         Row(
+                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
                           children: [
                             Expanded(
-                              child: Container(
-                                padding: const EdgeInsets.all(20),
-                                decoration: BoxDecoration(
-                                  color: theme.primaryColor.withOpacity(0.08),
-                                  borderRadius: BorderRadius.circular(16),
-                                ),
-                                child: Column(
-                                  crossAxisAlignment: CrossAxisAlignment.start,
-                                  children: [
-                                    Text(
-                                      'Pendentes',
-                                      style: theme.textTheme.bodyMedium
-                                          ?.copyWith(
-                                            color: theme.primaryColor,
-                                            fontWeight: FontWeight.w500,
-                                          ),
-                                    ),
-                                    const SizedBox(height: 8),
-                                    Row(
-                                      children: [
-                                        Container(
-                                          padding: const EdgeInsets.all(10),
-                                          decoration: BoxDecoration(
-                                            color: theme.primaryColor
-                                                .withOpacity(0.15),
-                                            borderRadius: BorderRadius.circular(
-                                              12,
-                                            ),
-                                          ),
-                                          child: Icon(
-                                            Icons.schedule_outlined,
-                                            color: theme.primaryColor,
-                                            size: 24,
-                                          ),
-                                        ),
-                                        const SizedBox(width: 16),
-                                        Text(
-                                          solicitacoesPendentes.toString(),
-                                          style: theme.textTheme.headlineMedium
-                                              ?.copyWith(
-                                                fontWeight: FontWeight.bold,
-                                                color: theme.primaryColor,
-                                              ),
-                                        ),
-                                      ],
-                                    ),
-                                  ],
-                                ),
+                              child: buildStatCard(
+                                context: context,
+                                icon: Icons.schedule_outlined,
+                                label: 'Pendentes',
+                                value: solicitacoesPendentes.toString(),
+                                color: theme.primaryColor,
                               ),
                             ),
                             const SizedBox(width: 8),
                             Expanded(
-                              child: Container(
-                                padding: const EdgeInsets.all(20),
-                                decoration: BoxDecoration(
-                                  color: theme.brightness == Brightness.dark
-                                      ? Colors.orange.withOpacity(
-                                          0.15,
-                                        ) // fundo laranja suave no escuro
-                                      : theme.colorScheme.secondary.withOpacity(
-                                          0.08,
-                                        ),
-                                  borderRadius: BorderRadius.circular(16),
-                                ),
-                                child: Column(
-                                  crossAxisAlignment: CrossAxisAlignment.start,
-                                  children: [
-                                    Text(
-                                      'Total',
-                                      style: theme.textTheme.bodyMedium?.copyWith(
-                                        color:
-                                            theme.brightness == Brightness.dark
-                                            ? Colors
-                                                  .orange // cor do status 'Pendente'
-                                            : theme.colorScheme.secondary,
-                                        fontWeight: FontWeight.w500,
-                                      ),
-                                    ),
-                                    const SizedBox(height: 8),
-                                    Row(
-                                      children: [
-                                        Container(
-                                          padding: const EdgeInsets.all(10),
-                                          decoration: BoxDecoration(
-                                            color:
-                                                theme.brightness ==
-                                                    Brightness.dark
-                                                ? Colors.orange.withOpacity(
-                                                    0.15,
-                                                  ) // fundo laranja suave
-                                                : theme.colorScheme.secondary
-                                                      .withOpacity(0.15),
-                                            borderRadius: BorderRadius.circular(
-                                              12,
-                                            ),
+                              child: StreamBuilder<List<Map<String, dynamic>>>(
+                                stream: user == null
+                                    ? null
+                                    : Supabase.instance.client
+                                          .from('solicitacoes')
+                                          .stream(primaryKey: ['id'])
+                                          .map(
+                                            (rows) => rows
+                                                .where(
+                                                  (row) =>
+                                                      row['morador_id'] ==
+                                                          user.id &&
+                                                      (row['status'] ?? '')
+                                                              .toLowerCase() ==
+                                                          'agendada',
+                                                )
+                                                .toList(),
                                           ),
-                                          child: Icon(
-                                            Icons.analytics_outlined,
-                                            color:
-                                                theme.brightness ==
-                                                    Brightness.dark
-                                                ? Colors
-                                                      .orange // ícone laranja
-                                                : theme.colorScheme.secondary,
-                                            size: 24,
-                                          ),
-                                        ),
-                                        const SizedBox(width: 16),
-                                        Text(
-                                          solicitacoesTotais.toString(),
-                                          style: theme.textTheme.headlineMedium
-                                              ?.copyWith(
-                                                fontWeight: FontWeight.bold,
-                                                color:
-                                                    theme.brightness ==
-                                                        Brightness.dark
-                                                    ? Colors
-                                                          .orange // valor laranja
-                                                    : theme
-                                                          .colorScheme
-                                                          .secondary,
-                                              ),
-                                        ),
-                                      ],
-                                    ),
-                                  ],
-                                ),
+                                builder: (context, snapshot) {
+                                  final agendadasCount = snapshot.hasData
+                                      ? snapshot.data!.length
+                                      : 0;
+                                  return buildStatCard(
+                                    context: context,
+                                    icon: Icons.event_available,
+                                    label: 'Agendadas',
+                                    value: agendadasCount.toString(),
+                                    color: Colors.blue,
+                                  );
+                                },
+                              ),
+                            ),
+                            const SizedBox(width: 8),
+                            Expanded(
+                              child: buildStatCard(
+                                context: context,
+                                icon: Icons.analytics_outlined,
+                                label: 'Total',
+                                value: solicitacoesTotais.toString(),
+                                color: theme.brightness == Brightness.dark
+                                    ? Colors.orange
+                                    : theme.colorScheme.secondary,
                               ),
                             ),
                           ],
@@ -330,13 +259,12 @@ class HomePageState extends State<HomePage> with WidgetsBindingObserver {
                             );
                             if (result == true) {
                               await _carregarDados();
-                              // _carregarSolicitacoesRecentes() não é mais necessário
                             }
                           },
                           child: Container(
                             width: double.infinity,
                             padding: const EdgeInsets.symmetric(
-                              vertical: 16,
+                              vertical: 10,
                               horizontal: 20,
                             ),
                             decoration: BoxDecoration(
@@ -475,7 +403,7 @@ class HomePageState extends State<HomePage> with WidgetsBindingObserver {
                                             ),
                                           ),
                                           padding: const EdgeInsets.symmetric(
-                                            vertical: 16,
+                                            vertical: 10,
                                             horizontal: 20,
                                           ),
                                           textStyle: theme.textTheme.titleMedium
@@ -747,4 +675,51 @@ class HomeSectionCard extends StatelessWidget {
       child: child,
     );
   }
+}
+
+Widget buildStatCard({
+  required BuildContext context,
+  required IconData icon,
+  required String label,
+  required String value,
+  required Color color,
+}) {
+  final theme = Theme.of(context);
+  return Container(
+    margin: const EdgeInsets.symmetric(horizontal: 0),
+    padding: const EdgeInsets.symmetric(vertical: 6, horizontal: 0),
+    decoration: BoxDecoration(
+      color: color.withOpacity(0.08),
+      borderRadius: BorderRadius.circular(12),
+    ),
+    child: Column(
+      mainAxisAlignment: MainAxisAlignment.center,
+      children: [
+        Row(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Icon(icon, color: color, size: 18),
+            const SizedBox(width: 6),
+            Text(
+              value,
+              style: theme.textTheme.titleMedium?.copyWith(
+                fontWeight: FontWeight.bold,
+                color: color,
+                fontSize: 18,
+              ),
+            ),
+          ],
+        ),
+        const SizedBox(height: 2),
+        Text(
+          label,
+          style: theme.textTheme.bodySmall?.copyWith(
+            color: color,
+            fontWeight: FontWeight.w600,
+            fontSize: 12,
+          ),
+        ),
+      ],
+    ),
+  );
 }
