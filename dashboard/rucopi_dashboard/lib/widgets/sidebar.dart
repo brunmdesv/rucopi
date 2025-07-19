@@ -144,6 +144,13 @@ class Sidebar extends StatelessWidget {
                   onTap: () {},
                 ),
                 _buildSidebarItem(
+                  icon: Icons.person_rounded,
+                  title: 'Perfil',
+                  selected: currentScreen == DashboardScreen.perfil,
+                  theme: theme,
+                  onTap: () => onSelect(DashboardScreen.perfil),
+                ),
+                _buildSidebarItem(
                   icon: Icons.settings_rounded,
                   title: 'Configurações',
                   selected: currentScreen == DashboardScreen.configuracoes,

@@ -4,6 +4,7 @@ import 'solicitacoes_page.dart';
 import 'configuracoes_page.dart';
 import 'detalhes_solicitacao.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
+import 'perfil_usuario_page.dart';
 
 // Enum para as telas
 enum DashboardScreen {
@@ -11,6 +12,7 @@ enum DashboardScreen {
   solicitacoes,
   mapa,
   relatorios,
+  perfil, // Adicionado
   configuracoes,
 }
 
@@ -154,6 +156,15 @@ class _DashboardHomePageState extends State<DashboardHomePage> {
                 ),
                 const SizedBox(width: 32),
                 _buildMenuIcon(
+                  icon: Icons.person_rounded,
+                  label: 'Perfil',
+                  selected: currentScreen == DashboardScreen.perfil,
+                  onTap: () => _onMenuTap(DashboardScreen.perfil),
+                  theme: theme,
+                  screenType: DashboardScreen.perfil,
+                ),
+                const SizedBox(width: 32),
+                _buildMenuIcon(
                   icon: Icons.settings_rounded,
                   label: 'Configurações',
                   selected: currentScreen == DashboardScreen.configuracoes,
@@ -221,6 +232,8 @@ class _DashboardHomePageState extends State<DashboardHomePage> {
           label: 'Relatórios',
           key: const ValueKey('relatorios'),
         );
+      case DashboardScreen.perfil:
+        return PerfilUsuarioPage();
       default:
         return const SizedBox.shrink();
     }
@@ -286,6 +299,16 @@ class _DashboardHomePageState extends State<DashboardHomePage> {
               onTap: () {
                 Navigator.of(context).pop();
                 _onMenuTap(DashboardScreen.relatorios);
+              },
+              theme: theme,
+            ),
+            _buildDrawerItem(
+              icon: Icons.person_rounded,
+              label: 'Perfil',
+              selected: currentScreen == DashboardScreen.perfil,
+              onTap: () {
+                Navigator.of(context).pop();
+                _onMenuTap(DashboardScreen.perfil);
               },
               theme: theme,
             ),
@@ -742,23 +765,21 @@ class _DashboardContentState extends State<_DashboardContent> {
               ),
               child: SizedBox(
                 width: double.infinity,
-                child: OutlinedButton.icon(
+                child: ElevatedButton.icon(
                   onPressed: _navegarParaSolicitacoes,
-                  icon: Icon(
-                    Icons.list_alt_rounded,
-                    size: width < 600 ? 10 : 12,
-                  ),
                   label: Text(
-                    'Ver mais $restantes solicitações pendentes',
-                    style: TextStyle(fontSize: width < 600 ? 9 : null),
+                    '+ $restantes solicitações pendentes',
+                    style: TextStyle(fontSize: width < 600 ? 12 : null),
                   ),
-                  style: OutlinedButton.styleFrom(
-                    padding: EdgeInsets.symmetric(
-                      vertical: width < 600 ? 6 : 8,
+                  style: ElevatedButton.styleFrom(
+                    padding: const EdgeInsets.symmetric(vertical: 16),
+                    backgroundColor: theme.colorScheme.primary,
+                    foregroundColor: Colors.white,
+                    textStyle: theme.textTheme.titleMedium?.copyWith(
+                      fontWeight: FontWeight.bold,
                     ),
-                    side: BorderSide(
-                      color: theme.primaryColor.withOpacity(0.5),
-                      width: 1,
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(AppRadius.button),
                     ),
                   ),
                 ),
@@ -1099,32 +1120,42 @@ class _DashboardContentState extends State<_DashboardContent> {
             ),
           ),
           const SizedBox(height: 12),
-          SizedBox(
-            width: double.infinity,
-            child: ElevatedButton.icon(
-              onPressed: () {},
-              icon: Icon(Icons.list_alt_rounded, size: width < 600 ? 14 : 18),
-              label: Text(
-                'Ver Solicitações',
-                style: TextStyle(fontSize: width < 600 ? 12 : null),
+          ElevatedButton.icon(
+            onPressed: () {},
+            icon: Icon(Icons.list_alt_rounded, size: width < 600 ? 14 : 18),
+            label: Text(
+              'Ver Solicitações',
+              style: TextStyle(fontSize: width < 600 ? 12 : null),
+            ),
+            style: ElevatedButton.styleFrom(
+              padding: const EdgeInsets.symmetric(vertical: 16),
+              backgroundColor: theme.colorScheme.primary,
+              foregroundColor: Colors.white,
+              textStyle: theme.textTheme.titleMedium?.copyWith(
+                fontWeight: FontWeight.bold,
               ),
-              style: ElevatedButton.styleFrom(
-                padding: EdgeInsets.symmetric(vertical: width < 600 ? 8 : 12),
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(AppRadius.button),
               ),
             ),
           ),
           const SizedBox(height: 8),
-          SizedBox(
-            width: double.infinity,
-            child: OutlinedButton.icon(
-              onPressed: () {},
-              icon: Icon(Icons.refresh_rounded, size: width < 600 ? 14 : 18),
-              label: Text(
-                'Atualizar Dados',
-                style: TextStyle(fontSize: width < 600 ? 12 : null),
+          ElevatedButton.icon(
+            onPressed: () {},
+            icon: Icon(Icons.refresh_rounded, size: width < 600 ? 14 : 18),
+            label: Text(
+              'Atualizar Dados',
+              style: TextStyle(fontSize: width < 600 ? 12 : null),
+            ),
+            style: ElevatedButton.styleFrom(
+              padding: const EdgeInsets.symmetric(vertical: 16),
+              backgroundColor: theme.colorScheme.primary,
+              foregroundColor: Colors.white,
+              textStyle: theme.textTheme.titleMedium?.copyWith(
+                fontWeight: FontWeight.bold,
               ),
-              style: OutlinedButton.styleFrom(
-                padding: EdgeInsets.symmetric(vertical: width < 600 ? 8 : 12),
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(AppRadius.button),
               ),
             ),
           ),

@@ -48,6 +48,7 @@
 - [ ] Garantir responsividade e boa experiência de uso
 - [ ] Adicionar feedbacks visuais (loadings, mensagens de sucesso/erro)
 - [x] Implementação da tela inicial do rucopi_mobile com AppBar, saudação, card de solicitações e botão de solicitar coleta.
+- [x] Adicionar opção "Perfil" no menubar/sidebar e criar tela em branco (perfil_usuario_page.dart)
 
 ### 7. Correções no Aplicativo Mobile
 - [x] Corrigir problema de autenticação no rucopi_mobile - aplicativo estava iniciando em tela protegida sem verificar autenticação
