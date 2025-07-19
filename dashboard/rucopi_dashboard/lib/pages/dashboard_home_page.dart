@@ -506,18 +506,6 @@ class _DashboardContentState extends State<_DashboardContent> {
             SizedBox(
               width: cardWidth,
               child: _buildStatCard(
-                title: 'Total de Solicitações',
-                value: total,
-                icon: Icons.assignment_rounded,
-                color: theme.primaryColor,
-                theme: theme,
-                isDark: isDark,
-                width: width,
-              ),
-            ),
-            SizedBox(
-              width: cardWidth,
-              child: _buildStatCard(
                 title: 'Pendentes',
                 value: pendentes,
                 icon: Icons.access_time_rounded,
