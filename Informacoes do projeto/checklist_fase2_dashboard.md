@@ -29,7 +29,7 @@
 - [x] Permitir que administradores/operadores vejam todas as solicitações (ajuste de RLS)
 - [x] Adicionar coluna `nome_morador` na tabela `solicitacoes` e atualizar código para exibir nome do morador
 - [ ] Implementar filtros por status, data, bairro, etc
-- [ ] Permitir visualização dos detalhes de cada solicitação (incluindo fotos)
+- [x] Permitir visualização dos detalhes de cada solicitação (incluindo fotos)
 
 ### 4. Gestão de Solicitações
 - [ ] Permitir atualização do status da solicitação (pendente, em andamento, concluída)

@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import '../theme/app_styles.dart';
 import 'solicitacoes_page.dart';
 import 'configuracoes_page.dart';
+import 'detalhes_solicitacao.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
 // Enum para as telas
@@ -595,12 +596,16 @@ class _DashboardContentState extends State<_DashboardContent> {
           ..sort((a, b) {
             final dataA = DateTime.tryParse(a['criado_em'] ?? '');
             final dataB = DateTime.tryParse(b['criado_em'] ?? '');
+
+            // Se ambas as datas são nulas, mantém a ordem original
             if (dataA == null && dataB == null) return 0;
+
+            // Se apenas uma data é nula, coloca a nula por último
             if (dataA == null) return 1;
             if (dataB == null) return -1;
-            return dataA.compareTo(
-              dataB,
-            ); // Ordem crescente (mais antigas primeiro)
+
+            // Ordem crescente: mais antigas primeiro (dataA.compareTo(dataB))
+            return dataA.compareTo(dataB);
           });
 
     // Pegar apenas as 3 primeiras
@@ -786,125 +791,135 @@ class _DashboardContentState extends State<_DashboardContent> {
         ? '${data.hour.toString().padLeft(2, '0')}:${data.minute.toString().padLeft(2, '0')}'
         : '';
 
-    return Container(
-      padding: EdgeInsets.all(width < 600 ? 8 : 10),
-      decoration: BoxDecoration(
-        color: isDark ? const Color(0xFF0F0F0F) : const Color(0xFFF8FAFC),
-        borderRadius: BorderRadius.circular(8),
-        border: Border.all(
-          color: theme.primaryColor.withOpacity(0.1),
-          width: 1,
+    return InkWell(
+      onTap: () {
+        showDialog(
+          context: context,
+          builder: (context) =>
+              DetalhesSolicitacaoDialog(solicitacao: solicitacao),
+        );
+      },
+      borderRadius: BorderRadius.circular(8),
+      child: Container(
+        padding: EdgeInsets.all(width < 600 ? 8 : 10),
+        decoration: BoxDecoration(
+          color: isDark ? const Color(0xFF0F0F0F) : const Color(0xFFF8FAFC),
+          borderRadius: BorderRadius.circular(8),
+          border: Border.all(
+            color: theme.primaryColor.withOpacity(0.1),
+            width: 1,
+          ),
         ),
-      ),
-      child: Row(
-        children: [
-          // Número compacto
-          Container(
-            width: width < 600 ? 20 : 24,
-            height: width < 600 ? 20 : 24,
-            decoration: BoxDecoration(
-              color: theme.primaryColor.withOpacity(0.1),
-              borderRadius: BorderRadius.circular(4),
-            ),
-            child: Center(
-              child: Text(
-                '$numero',
-                style: TextStyle(
-                  color: theme.primaryColor,
-                  fontWeight: FontWeight.bold,
-                  fontSize: width < 600 ? 8 : 10,
+        child: Row(
+          children: [
+            // Número compacto
+            Container(
+              width: width < 600 ? 20 : 24,
+              height: width < 600 ? 20 : 24,
+              decoration: BoxDecoration(
+                color: theme.primaryColor.withOpacity(0.1),
+                borderRadius: BorderRadius.circular(4),
+              ),
+              child: Center(
+                child: Text(
+                  '$numero',
+                  style: TextStyle(
+                    color: theme.primaryColor,
+                    fontWeight: FontWeight.bold,
+                    fontSize: width < 600 ? 8 : 10,
+                  ),
                 ),
               ),
             ),
-          ),
-          const SizedBox(width: 8),
-          // Informações compactas
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Row(
-                  children: [
-                    Expanded(
-                      child: Text(
-                        nomeMorador,
-                        style: theme.textTheme.bodySmall?.copyWith(
-                          fontWeight: FontWeight.w600,
-                          fontSize: width < 600 ? 10 : null,
-                        ),
-                        maxLines: 1,
-                        overflow: TextOverflow.ellipsis,
-                      ),
-                    ),
-                    Container(
-                      padding: const EdgeInsets.symmetric(
-                        horizontal: 4,
-                        vertical: 1,
-                      ),
-                      decoration: BoxDecoration(
-                        color: const Color(0xFFFF9800).withOpacity(0.1),
-                        borderRadius: BorderRadius.circular(4),
-                        border: Border.all(
-                          color: const Color(0xFFFF9800).withOpacity(0.3),
-                          width: 1,
-                        ),
-                      ),
-                      child: Row(
-                        mainAxisSize: MainAxisSize.min,
-                        children: [
-                          Icon(
-                            Icons.schedule_rounded,
-                            color: const Color(0xFFFF9800),
-                            size: 10,
+            const SizedBox(width: 8),
+            // Informações compactas
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Row(
+                    children: [
+                      Expanded(
+                        child: Text(
+                          nomeMorador,
+                          style: theme.textTheme.bodySmall?.copyWith(
+                            fontWeight: FontWeight.w600,
+                            fontSize: width < 600 ? 10 : null,
                           ),
-                          const SizedBox(width: 2),
-                          Text(
-                            'Pendente',
-                            style: TextStyle(
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                        ),
+                      ),
+                      Container(
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 4,
+                          vertical: 1,
+                        ),
+                        decoration: BoxDecoration(
+                          color: const Color(0xFFFF9800).withOpacity(0.1),
+                          borderRadius: BorderRadius.circular(4),
+                          border: Border.all(
+                            color: const Color(0xFFFF9800).withOpacity(0.3),
+                            width: 1,
+                          ),
+                        ),
+                        child: Row(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            Icon(
+                              Icons.schedule_rounded,
                               color: const Color(0xFFFF9800),
-                              fontWeight: FontWeight.w600,
-                              fontSize: 10,
+                              size: 10,
                             ),
-                          ),
-                        ],
+                            const SizedBox(width: 2),
+                            Text(
+                              'Pendente',
+                              style: TextStyle(
+                                color: const Color(0xFFFF9800),
+                                fontWeight: FontWeight.w600,
+                                fontSize: 10,
+                              ),
+                            ),
+                          ],
+                        ),
                       ),
-                    ),
-                  ],
-                ),
-                const SizedBox(height: 2),
-                Row(
-                  children: [
-                    Icon(
-                      Icons.location_on_rounded,
-                      size: 11,
-                      color: theme.disabledColor,
-                    ),
-                    const SizedBox(width: 2),
-                    Expanded(
-                      child: Text(
-                        endereco,
+                    ],
+                  ),
+                  const SizedBox(height: 2),
+                  Row(
+                    children: [
+                      Icon(
+                        Icons.location_on_rounded,
+                        size: 11,
+                        color: theme.disabledColor,
+                      ),
+                      const SizedBox(width: 2),
+                      Expanded(
+                        child: Text(
+                          endereco,
+                          style: theme.textTheme.bodySmall?.copyWith(
+                            color: theme.disabledColor,
+                            fontSize: 11,
+                          ),
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                        ),
+                      ),
+                      const SizedBox(width: 8),
+                      Text(
+                        '$dataStr $horaStr',
                         style: theme.textTheme.bodySmall?.copyWith(
                           color: theme.disabledColor,
-                          fontSize: 11,
+                          fontSize: 10,
                         ),
-                        maxLines: 1,
-                        overflow: TextOverflow.ellipsis,
                       ),
-                    ),
-                    const SizedBox(width: 8),
-                    Text(
-                      '$dataStr $horaStr',
-                      style: theme.textTheme.bodySmall?.copyWith(
-                        color: theme.disabledColor,
-                        fontSize: 10,
-                      ),
-                    ),
-                  ],
-                ),
-              ],
+                    ],
+                  ),
+                ],
+              ),
             ),
-          ),
-        ],
+          ],
+        ),
       ),
     );
   }
