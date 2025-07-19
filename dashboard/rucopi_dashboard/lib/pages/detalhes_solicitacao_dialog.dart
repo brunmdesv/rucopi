@@ -58,14 +58,35 @@ class _DetalhesSolicitacaoDialogState extends State<DetalhesSolicitacaoDialog> {
       atualizandoStatus = true;
     });
     try {
-      await Supabase.instance.client
-          .from('solicitacoes')
-          .update({'status': novoStatus})
-          .eq('id', widget.solicitacao['id']);
-      setState(() {
-        statusSelecionado = novoStatus;
-        widget.solicitacao['status'] = novoStatus;
-      });
+      if (novoStatus == 'agendada') {
+        await Supabase.instance.client
+            .from('solicitacoes')
+            .update({
+              'status': novoStatus,
+              'agendada_em': DateTime.now().toIso8601String(),
+            })
+            .eq('id', widget.solicitacao['id']);
+        // Buscar o valor real salvo no banco
+        final updated = await Supabase.instance.client
+            .from('solicitacoes')
+            .select('agendada_em')
+            .eq('id', widget.solicitacao['id'])
+            .single();
+        setState(() {
+          statusSelecionado = novoStatus;
+          widget.solicitacao['status'] = novoStatus;
+          widget.solicitacao['agendada_em'] = updated['agendada_em'];
+        });
+      } else {
+        await Supabase.instance.client
+            .from('solicitacoes')
+            .update({'status': novoStatus})
+            .eq('id', widget.solicitacao['id']);
+        setState(() {
+          statusSelecionado = novoStatus;
+          widget.solicitacao['status'] = novoStatus;
+        });
+      }
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(content: Text('Status atualizado para "$novoStatus"!')),

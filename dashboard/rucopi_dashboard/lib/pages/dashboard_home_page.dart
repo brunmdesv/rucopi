@@ -817,22 +817,63 @@ class _DashboardContentState extends State<_DashboardContent> {
     ThemeData theme,
     bool isDark,
     double width,
-    int numero,
-  ) {
+    int numero, {
+    bool usarDataAgendada = false,
+  }) {
     final nomeMorador =
         solicitacao['nome_morador'] ??
         solicitacao['morador_id'] ??
         'Morador não identificado';
     final endereco = solicitacao['endereco'] ?? 'Sem endereço';
-    final data = solicitacao['criado_em'] != null
-        ? DateTime.tryParse(solicitacao['criado_em'])
-        : null;
+    // Corrigir: usar 'agendada_em' se usarDataAgendada for true
+    final data = usarDataAgendada && (solicitacao['agendada_em'] != null)
+        ? DateTime.tryParse(solicitacao['agendada_em'])
+        : (solicitacao['criado_em'] != null
+              ? DateTime.tryParse(solicitacao['criado_em'])
+              : null);
     final dataStr = data != null
         ? '${data.day.toString().padLeft(2, '0')}/${data.month.toString().padLeft(2, '0')}/${data.year}'
         : 'Sem data';
     final horaStr = data != null
         ? '${data.hour.toString().padLeft(2, '0')}:${data.minute.toString().padLeft(2, '0')}'
         : '';
+
+    // TAG DE STATUS ATUALIZADA
+    final status = solicitacao['status'] ?? 'pendente';
+    Color statusColor;
+    IconData statusIcon;
+    String statusText;
+    switch (status) {
+      case 'pendente':
+        statusColor = const Color(0xFFFF9800);
+        statusIcon = Icons.schedule_rounded;
+        statusText = 'Pendente';
+        break;
+      case 'agendada':
+        statusColor = const Color(0xFF2196F3);
+        statusIcon = Icons.event_available;
+        statusText = 'Agendada';
+        break;
+      case 'coletando':
+        statusColor = const Color(0xFF673AB7);
+        statusIcon = Icons.local_shipping;
+        statusText = 'Coletando';
+        break;
+      case 'concluido':
+        statusColor = const Color(0xFF4CAF50);
+        statusIcon = Icons.check_circle;
+        statusText = 'Concluído';
+        break;
+      case 'cancelado':
+        statusColor = const Color(0xFFF44336);
+        statusIcon = Icons.cancel;
+        statusText = 'Cancelado';
+        break;
+      default:
+        statusColor = Colors.grey;
+        statusIcon = Icons.help_outline;
+        statusText = status;
+    }
 
     return InkWell(
       onTap: () {
@@ -899,26 +940,22 @@ class _DashboardContentState extends State<_DashboardContent> {
                           vertical: 1,
                         ),
                         decoration: BoxDecoration(
-                          color: const Color(0xFFFF9800).withOpacity(0.1),
+                          color: statusColor.withOpacity(0.1),
                           borderRadius: BorderRadius.circular(4),
                           border: Border.all(
-                            color: const Color(0xFFFF9800).withOpacity(0.3),
+                            color: statusColor.withOpacity(0.3),
                             width: 1,
                           ),
                         ),
                         child: Row(
                           mainAxisSize: MainAxisSize.min,
                           children: [
-                            Icon(
-                              Icons.schedule_rounded,
-                              color: const Color(0xFFFF9800),
-                              size: 10,
-                            ),
+                            Icon(statusIcon, color: statusColor, size: 10),
                             const SizedBox(width: 2),
                             Text(
-                              'Pendente',
+                              statusText,
                               style: TextStyle(
-                                color: const Color(0xFFFF9800),
+                                color: statusColor,
                                 fontWeight: FontWeight.w600,
                                 fontSize: 10,
                               ),
@@ -1167,6 +1204,202 @@ class _DashboardContentState extends State<_DashboardContent> {
   }
 
   // Adicionar método responsivo dentro de _DashboardContentState
+  Widget _buildRecentAgendadasSection(
+    ThemeData theme,
+    bool isDark,
+    double width,
+    List<dynamic> solicitacoesRecentes,
+  ) {
+    final solicitacoesAgendadas =
+        solicitacoesRecentes.where((s) => s['status'] == 'agendada').toList()
+          ..sort((a, b) {
+            final dataA =
+                DateTime.tryParse(a['agendada_em'] ?? '') ?? DateTime(2100);
+            final dataB =
+                DateTime.tryParse(b['agendada_em'] ?? '') ?? DateTime(2100);
+            return dataA.compareTo(dataB);
+          });
+    final solicitacoesExibidas = solicitacoesAgendadas.take(3).toList();
+    final totalAgendadas = solicitacoesAgendadas.length;
+    final restantes = totalAgendadas - solicitacoesExibidas.length;
+    return Container(
+      decoration: BoxDecoration(
+        color: isDark ? const Color(0xFF1A1A1A) : Colors.white,
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(
+          color: isDark ? const Color(0xFF2A2A2A) : const Color(0xFFE2E8F0),
+          width: 1,
+        ),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withOpacity(0.05),
+            blurRadius: 8,
+            offset: const Offset(0, 2),
+          ),
+        ],
+      ),
+      child: Column(
+        children: [
+          // Header compacto
+          Container(
+            padding: EdgeInsets.symmetric(
+              horizontal: width < 600 ? 12 : 16,
+              vertical: width < 600 ? 8 : 12,
+            ),
+            decoration: BoxDecoration(
+              color: const Color(0xFF2196F3).withOpacity(0.05),
+              borderRadius: const BorderRadius.only(
+                topLeft: Radius.circular(12),
+                topRight: Radius.circular(12),
+              ),
+            ),
+            child: Row(
+              children: [
+                Icon(
+                  Icons.event_available,
+                  color: const Color(0xFF2196F3),
+                  size: width < 600 ? 14 : 16,
+                ),
+                const SizedBox(width: 8),
+                Expanded(
+                  child: Text(
+                    'Solicitações Agendadas',
+                    style: theme.textTheme.titleMedium?.copyWith(
+                      fontWeight: FontWeight.bold,
+                      fontSize: width < 600 ? 13 : null,
+                    ),
+                  ),
+                ),
+                if (restantes > 0)
+                  Container(
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 6,
+                      vertical: 2,
+                    ),
+                    decoration: BoxDecoration(
+                      color: const Color(0xFF2196F3).withOpacity(0.1),
+                      borderRadius: BorderRadius.circular(8),
+                      border: Border.all(
+                        color: const Color(0xFF2196F3).withOpacity(0.3),
+                        width: 1,
+                      ),
+                    ),
+                    child: Text(
+                      '+$restantes',
+                      style: TextStyle(
+                        color: const Color(0xFF2196F3),
+                        fontWeight: FontWeight.bold,
+                        fontSize: 9,
+                      ),
+                    ),
+                  ),
+              ],
+            ),
+          ),
+          if (solicitacoesExibidas.isNotEmpty)
+            Padding(
+              padding: EdgeInsets.all(width < 600 ? 8 : 12),
+              child: Column(
+                children: solicitacoesExibidas.asMap().entries.map((entry) {
+                  final index = entry.key;
+                  final solicitacao = entry.value;
+                  return Column(
+                    children: [
+                      _buildSolicitacaoCardCompact(
+                        solicitacao,
+                        theme,
+                        isDark,
+                        width,
+                        index + 1,
+                        usarDataAgendada: true,
+                      ),
+                      if (index < solicitacoesExibidas.length - 1)
+                        Padding(
+                          padding: EdgeInsets.symmetric(
+                            vertical: width < 600 ? 4 : 6,
+                          ),
+                          child: Container(
+                            height: 1,
+                            color: theme.brightness == Brightness.dark
+                                ? const Color(0xFF2A2A2A)
+                                : Colors.grey.shade200,
+                          ),
+                        ),
+                    ],
+                  );
+                }).toList(),
+              ),
+            ),
+          if (solicitacoesExibidas.isEmpty)
+            Padding(
+              padding: EdgeInsets.all(width < 600 ? 16 : 20),
+              child: Center(
+                child: Column(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    Icon(
+                      Icons.event_available,
+                      size: 32,
+                      color: theme.disabledColor,
+                    ),
+                    const SizedBox(height: 8),
+                    Text(
+                      'Nenhuma solicitação agendada',
+                      style: theme.textTheme.bodyMedium?.copyWith(
+                        color: theme.disabledColor,
+                        fontSize: 12,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ),
+          if (restantes > 0)
+            Container(
+              padding: EdgeInsets.all(width < 600 ? 8 : 12),
+              decoration: BoxDecoration(
+                color: theme.brightness == Brightness.dark
+                    ? const Color(0xFF0F0F0F)
+                    : Colors.grey.shade50,
+                borderRadius: const BorderRadius.only(
+                  bottomLeft: Radius.circular(12),
+                  bottomRight: Radius.circular(12),
+                ),
+              ),
+              child: SizedBox(
+                width: double.infinity,
+                child: ElevatedButton.icon(
+                  onPressed: () {
+                    final dashboardState = context
+                        .findAncestorStateOfType<_DashboardHomePageState>();
+                    if (dashboardState != null) {
+                      dashboardState._onMenuTap(DashboardScreen.solicitacoes);
+                    }
+                  },
+                  label: Text(
+                    '+ $restantes solicitações agendadas',
+                    style: TextStyle(fontSize: width < 600 ? 12 : null),
+                  ),
+                  icon: const Icon(Icons.event_available, size: 16),
+                  style: ElevatedButton.styleFrom(
+                    padding: const EdgeInsets.symmetric(vertical: 16),
+                    backgroundColor: const Color(0xFF2196F3),
+                    foregroundColor: Colors.white,
+                    textStyle: theme.textTheme.titleMedium?.copyWith(
+                      fontWeight: FontWeight.bold,
+                    ),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(AppRadius.button),
+                    ),
+                  ),
+                ),
+              ),
+            ),
+        ],
+      ),
+    );
+  }
+
   Widget _buildMainContentResponsive(
     ThemeData theme,
     bool isDark,
@@ -1186,6 +1419,13 @@ class _DashboardContentState extends State<_DashboardContent> {
             solicitacoesRecentes,
           ),
           const SizedBox(height: 16),
+          _buildRecentAgendadasSection(
+            theme,
+            isDark,
+            width,
+            solicitacoesRecentes,
+          ),
+          const SizedBox(height: 16),
           _buildQuickStats(
             theme,
             isDark,
@@ -1193,17 +1433,15 @@ class _DashboardContentState extends State<_DashboardContent> {
             total: total,
             concluidas: concluidas,
           ),
-          // const SizedBox(height: 16),
-          // _buildQuickActions(theme, isDark, width), // Removido
         ],
       );
     } else {
-      // Desktop: mantém lado a lado
+      // Desktop: exibe as seções lado a lado
       return Row(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Expanded(
-            flex: 2,
+            flex: 1,
             child: _buildRecentRequestsSection(
               theme,
               isDark,
@@ -1214,18 +1452,22 @@ class _DashboardContentState extends State<_DashboardContent> {
           const SizedBox(width: 24),
           Expanded(
             flex: 1,
-            child: Column(
-              children: [
-                _buildQuickStats(
-                  theme,
-                  isDark,
-                  width,
-                  total: total,
-                  concluidas: concluidas,
-                ),
-                // const SizedBox(height: 24),
-                // _buildQuickActions(theme, isDark, width), // Removido
-              ],
+            child: _buildRecentAgendadasSection(
+              theme,
+              isDark,
+              width,
+              solicitacoesRecentes,
+            ),
+          ),
+          const SizedBox(width: 24),
+          Expanded(
+            flex: 1,
+            child: _buildQuickStats(
+              theme,
+              isDark,
+              width,
+              total: total,
+              concluidas: concluidas,
             ),
           ),
         ],
