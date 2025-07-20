@@ -92,6 +92,19 @@ class _DetalhesSolicitacaoDialogState extends State<DetalhesSolicitacaoDialog> {
           SnackBar(content: Text('Status atualizado para "$novoStatus"!')),
         );
       }
+      // Enviar notificação para o morador
+      final moradorId = widget.solicitacao['morador_id'];
+      if (moradorId != null) {
+        await Supabase.instance.client.from('notificacoes').insert({
+          'morador_id': moradorId,
+          'solicitacao_id': widget.solicitacao['id'],
+          'mensagem':
+              'O status da sua solicitação foi alterado para: $novoStatus',
+          'status': novoStatus,
+          'lida': false,
+          'criada_em': DateTime.now().toIso8601String(),
+        });
+      }
     } catch (e) {
       if (mounted) {
         ScaffoldMessenger.of(

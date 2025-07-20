@@ -109,9 +109,63 @@ class HomePageState extends State<HomePage> with WidgetsBindingObserver {
         },
       ),
       actions: [
-        IconButton(
-          icon: const Icon(Icons.notifications_none),
-          onPressed: () {},
+        StreamBuilder<List<Map<String, dynamic>>>(
+          stream: user == null
+              ? null
+              : Supabase.instance.client
+                    .from('notificacoes')
+                    .stream(primaryKey: ['id'])
+                    .eq('morador_id', user.id)
+                    .order('criada_em', ascending: false)
+                    .limit(30),
+          builder: (context, snapshot) {
+            final notificacoes = snapshot.data ?? [];
+            final notificacoesNaoLidas = notificacoes
+                .where((n) => n['lida'] == false)
+                .toList();
+            return Stack(
+              children: [
+                IconButton(
+                  icon: const Icon(Icons.notifications_none),
+                  onPressed: notificacoes.isEmpty
+                      ? null
+                      : () async {
+                          await showDialog(
+                            context: context,
+                            builder: (context) => _DialogNotificacoes(
+                              notificacoes: notificacoes,
+                              onMarcarComoLidas: () async {
+                                final idsNaoLidas = notificacoesNaoLidas
+                                    .map((n) => n['id'])
+                                    .toList();
+                                if (idsNaoLidas.isNotEmpty) {
+                                  await Supabase.instance.client
+                                      .from('notificacoes')
+                                      .update({'lida': true})
+                                      .inFilter('id', idsNaoLidas);
+                                }
+                              },
+                            ),
+                          );
+                        },
+                ),
+                if (notificacoesNaoLidas.isNotEmpty)
+                  Positioned(
+                    right: 10,
+                    top: 10,
+                    child: Container(
+                      width: 10,
+                      height: 10,
+                      decoration: BoxDecoration(
+                        color: Colors.red,
+                        shape: BoxShape.circle,
+                        border: Border.all(color: Colors.white, width: 1.5),
+                      ),
+                    ),
+                  ),
+              ],
+            );
+          },
         ),
         IconButton(
           icon: const Icon(Icons.refresh),
@@ -722,4 +776,74 @@ Widget buildStatCard({
       ],
     ),
   );
+}
+
+class _DialogNotificacoes extends StatelessWidget {
+  final List<Map<String, dynamic>> notificacoes;
+  final Future<void> Function() onMarcarComoLidas;
+  const _DialogNotificacoes({
+    required this.notificacoes,
+    required this.onMarcarComoLidas,
+    Key? key,
+  }) : super(key: key);
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    WidgetsBinding.instance.addPostFrameCallback((_) => onMarcarComoLidas());
+    return AlertDialog(
+      title: Row(
+        children: [
+          const Icon(Icons.notifications, color: Colors.orange),
+          const SizedBox(width: 8),
+          const Text('Notificações'),
+        ],
+      ),
+      content: SizedBox(
+        width: 320,
+        child: notificacoes.isEmpty
+            ? const Text('Nenhuma notificação.')
+            : ListView.separated(
+                shrinkWrap: true,
+                itemCount: notificacoes.length,
+                separatorBuilder: (_, __) => Divider(),
+                itemBuilder: (context, index) {
+                  final n = notificacoes[index];
+                  final data = n['criada_em'] != null
+                      ? DateTime.tryParse(n['criada_em'])
+                      : null;
+                  final dataStr = data != null
+                      ? '${data.day.toString().padLeft(2, '0')}/${data.month.toString().padLeft(2, '0')} ${data.hour.toString().padLeft(2, '0')}:${data.minute.toString().padLeft(2, '0')}'
+                      : '';
+                  return ListTile(
+                    leading: Icon(
+                      Icons.notifications,
+                      color: n['lida'] == true
+                          ? theme.disabledColor
+                          : theme.primaryColor,
+                    ),
+                    title: Text(n['mensagem'] ?? ''),
+                    subtitle: Text(dataStr),
+                    trailing: n['lida'] == true
+                        ? null
+                        : Container(
+                            width: 8,
+                            height: 8,
+                            decoration: BoxDecoration(
+                              color: Colors.red,
+                              shape: BoxShape.circle,
+                            ),
+                          ),
+                  );
+                },
+              ),
+      ),
+      actions: [
+        TextButton(
+          onPressed: () => Navigator.of(context).pop(),
+          child: const Text('Fechar'),
+        ),
+      ],
+    );
+  }
 }
