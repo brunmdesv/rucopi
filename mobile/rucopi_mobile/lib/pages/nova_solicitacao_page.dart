@@ -3,9 +3,12 @@ import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:image_picker/image_picker.dart';
 import 'dart:io';
 import '../widgets/app_padrao.dart';
+import 'package:geolocator/geolocator.dart';
+import 'package:google_maps_flutter/google_maps_flutter.dart';
+import 'package:geocoding/geocoding.dart';
 
 class NovaSolicitacaoPage extends StatefulWidget {
-  const NovaSolicitacaoPage({Key? key}) : super(key: key);
+  const NovaSolicitacaoPage({super.key});
 
   @override
   State<NovaSolicitacaoPage> createState() => _NovaSolicitacaoPageState();
@@ -18,11 +21,15 @@ class _NovaSolicitacaoPageState extends State<NovaSolicitacaoPage> {
   final tiposEntulho = ['Entulho de obra', 'Móveis', 'Galhos', 'Outros'];
   final List<XFile> imagensSelecionadas = [];
   bool carregando = false;
+  String enderecoModo = 'manual'; // 'manual', 'mapa', 'atual'
+  LatLng enderecoMapa = const LatLng(-23.5505, -46.6333); // SP centro
+  bool buscandoEndereco = false;
+  String? enderecoRua;
 
   Future<void> selecionarImagens() async {
     final ImagePicker picker = ImagePicker();
     final List<XFile>? novasImagens = await picker.pickMultiImage();
-    if (novasImagens != null) {
+    if (novasImagens != null && novasImagens.isNotEmpty) {
       setState(() {
         imagensSelecionadas.clear();
         imagensSelecionadas.addAll(novasImagens.take(3));
@@ -46,10 +53,88 @@ class _NovaSolicitacaoPageState extends State<NovaSolicitacaoPage> {
     return urls;
   }
 
+  Future<void> obterLocalizacaoAtual() async {
+    setState(() => buscandoEndereco = true);
+    try {
+      LocationPermission permission = await Geolocator.checkPermission();
+      if (permission == LocationPermission.denied) {
+        permission = await Geolocator.requestPermission();
+      }
+      if (permission == LocationPermission.deniedForever ||
+          permission == LocationPermission.denied) {
+        if (!mounted) return;
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Permissão de localização negada')),
+        );
+        return;
+      }
+      final pos = await Geolocator.getCurrentPosition();
+      if (!mounted) return;
+      setState(() {
+        enderecoMapa = LatLng(pos.latitude, pos.longitude);
+        enderecoController.text = '${pos.latitude}, ${pos.longitude}';
+      });
+    } catch (e) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(SnackBar(content: Text('Erro ao obter localização: $e')));
+    } finally {
+      if (mounted) {
+        setState(() => buscandoEndereco = false);
+      }
+    }
+  }
+
+  Future<void> selecionarNoMapa() async {
+    // Buscar localização atual antes de abrir o mapa
+    if (enderecoModo == 'mapa') {
+      try {
+        LocationPermission permission = await Geolocator.checkPermission();
+        if (permission == LocationPermission.denied) {
+          permission = await Geolocator.requestPermission();
+        }
+        if (permission != LocationPermission.denied &&
+            permission != LocationPermission.deniedForever) {
+          final pos = await Geolocator.getCurrentPosition();
+          enderecoMapa = LatLng(pos.latitude, pos.longitude);
+        }
+      } catch (_) {}
+    }
+    final LatLng? resultado = await Navigator.push(
+      context,
+      MaterialPageRoute(
+        builder: (context) =>
+            SelecionarNoMapaPage(posicaoInicial: enderecoMapa),
+      ),
+    );
+    if (resultado != null) {
+      setState(() {
+        enderecoMapa = resultado;
+        enderecoController.text =
+            '${resultado.latitude}, ${resultado.longitude}';
+      });
+      // Buscar nome da rua
+      try {
+        List<Placemark> placemarks = await placemarkFromCoordinates(
+          resultado.latitude,
+          resultado.longitude,
+        );
+        if (placemarks.isNotEmpty) {
+          final p = placemarks.first;
+          setState(() {
+            enderecoRua = '${p.street}, ${p.subLocality}, ${p.locality}';
+          });
+        }
+      } catch (_) {}
+    }
+  }
+
   Future<void> enviarSolicitacao() async {
     setState(() => carregando = true);
     final user = Supabase.instance.client.auth.currentUser;
     if (user == null) {
+      if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(
           content: Text('Faça login para enviar uma solicitação!'),
@@ -82,16 +167,20 @@ class _NovaSolicitacaoPageState extends State<NovaSolicitacaoPage> {
         'status': 'pendente',
         'criado_em': DateTime.now().toIso8601String(),
       });
+      if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(content: Text('Solicitação enviada com sucesso!')),
       );
       Navigator.pop(context, true);
     } catch (e) {
+      if (!mounted) return;
       ScaffoldMessenger.of(
         context,
       ).showSnackBar(SnackBar(content: Text('Erro ao enviar solicitação: $e')));
     } finally {
-      setState(() => carregando = false);
+      if (mounted) {
+        setState(() => carregando = false);
+      }
     }
   }
 
@@ -117,7 +206,9 @@ class _NovaSolicitacaoPageState extends State<NovaSolicitacaoPage> {
                 labelText: 'Descrição do entulho',
                 prefixIcon: const Icon(Icons.description_outlined),
                 filled: true,
-                fillColor: Theme.of(context).primaryColor.withOpacity(0.08),
+                fillColor: Theme.of(
+                  context,
+                ).primaryColor.withValues(alpha: 0.08),
                 border: OutlineInputBorder(
                   borderRadius: BorderRadius.circular(16),
                   borderSide: BorderSide.none,
@@ -139,7 +230,9 @@ class _NovaSolicitacaoPageState extends State<NovaSolicitacaoPage> {
                 labelText: 'Tipo de entulho',
                 prefixIcon: const Icon(Icons.category_outlined),
                 filled: true,
-                fillColor: Theme.of(context).primaryColor.withOpacity(0.08),
+                fillColor: Theme.of(
+                  context,
+                ).primaryColor.withValues(alpha: 0.08),
                 border: OutlineInputBorder(
                   borderRadius: BorderRadius.circular(16),
                   borderSide: BorderSide.none,
@@ -147,20 +240,94 @@ class _NovaSolicitacaoPageState extends State<NovaSolicitacaoPage> {
               ),
             ),
             const SizedBox(height: 16),
-            // Campo de endereço
-            TextField(
-              controller: enderecoController,
-              decoration: InputDecoration(
-                labelText: 'Endereço',
-                prefixIcon: const Icon(Icons.location_on_outlined),
-                filled: true,
-                fillColor: Theme.of(context).primaryColor.withOpacity(0.08),
-                border: OutlineInputBorder(
-                  borderRadius: BorderRadius.circular(16),
-                  borderSide: BorderSide.none,
+            // Seletor de modo de endereço
+            Row(
+              mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+              children: [
+                ChoiceChip(
+                  label: Row(
+                    children: const [
+                      Icon(Icons.home),
+                      SizedBox(width: 4),
+                      Text('Manual'),
+                    ],
+                  ),
+                  selected: enderecoModo == 'manual',
+                  onSelected: (_) => setState(() => enderecoModo = 'manual'),
+                ),
+                ChoiceChip(
+                  label: Row(
+                    children: const [
+                      Icon(Icons.map),
+                      SizedBox(width: 4),
+                      Text('Mapa'),
+                    ],
+                  ),
+                  selected: enderecoModo == 'mapa',
+                  onSelected: (_) => setState(() => enderecoModo = 'mapa'),
+                ),
+                ChoiceChip(
+                  label: Row(
+                    children: const [
+                      Icon(Icons.my_location),
+                      SizedBox(width: 4),
+                      Text('Atual'),
+                    ],
+                  ),
+                  selected: enderecoModo == 'atual',
+                  onSelected: (_) {
+                    setState(() => enderecoModo = 'atual');
+                    obterLocalizacaoAtual();
+                  },
+                ),
+              ],
+            ),
+            const SizedBox(height: 12),
+            if (enderecoModo == 'manual')
+              TextField(
+                controller: enderecoController,
+                decoration: InputDecoration(
+                  labelText: 'Endereço',
+                  prefixIcon: const Icon(Icons.location_on_outlined),
+                  filled: true,
+                  fillColor: Theme.of(
+                    context,
+                  ).primaryColor.withValues(alpha: 0.08),
+                  border: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(16),
+                    borderSide: BorderSide.none,
+                  ),
                 ),
               ),
-            ),
+            if (enderecoModo == 'mapa')
+              ElevatedButton.icon(
+                icon: const Icon(Icons.map),
+                label: const Text('Escolher no mapa'),
+                onPressed: selecionarNoMapa,
+              ),
+            if (enderecoModo == 'atual' && buscandoEndereco)
+              const Padding(
+                padding: EdgeInsets.symmetric(vertical: 8),
+                child: Center(child: CircularProgressIndicator()),
+              ),
+            if (enderecoModo != 'manual' && enderecoController.text.isNotEmpty)
+              Padding(
+                padding: const EdgeInsets.only(top: 8),
+                child: Column(
+                  children: [
+                    Text(
+                      'Endereço selecionado: ${enderecoController.text}',
+                      textAlign: TextAlign.center,
+                    ),
+                    if (enderecoRua != null)
+                      Text(
+                        'Rua: $enderecoRua',
+                        textAlign: TextAlign.center,
+                        style: const TextStyle(fontSize: 13),
+                      ),
+                  ],
+                ),
+              ),
             const SizedBox(height: 16),
             // Card de fotos centralizado
             Container(
@@ -168,7 +335,7 @@ class _NovaSolicitacaoPageState extends State<NovaSolicitacaoPage> {
               margin: const EdgeInsets.only(bottom: 16),
               padding: const EdgeInsets.all(20),
               decoration: BoxDecoration(
-                color: Theme.of(context).primaryColor.withOpacity(0.08),
+                color: Theme.of(context).primaryColor.withValues(alpha: 0.08),
                 borderRadius: BorderRadius.circular(16),
               ),
               child: Column(
@@ -236,6 +403,47 @@ class _NovaSolicitacaoPageState extends State<NovaSolicitacaoPage> {
               ),
           ],
         ),
+      ),
+    );
+  }
+}
+
+// Widget de seleção no mapa
+class SelecionarNoMapaPage extends StatefulWidget {
+  final LatLng? posicaoInicial;
+  const SelecionarNoMapaPage({super.key, this.posicaoInicial});
+
+  @override
+  State<SelecionarNoMapaPage> createState() => _SelecionarNoMapaPageState();
+}
+
+class _SelecionarNoMapaPageState extends State<SelecionarNoMapaPage> {
+  LatLng? _pino;
+  late CameraPosition _cameraPosition;
+
+  @override
+  void initState() {
+    super.initState();
+    _pino =
+        widget.posicaoInicial ?? const LatLng(-23.5505, -46.6333); // SP centro
+    _cameraPosition = CameraPosition(target: _pino!, zoom: 16);
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      appBar: AppBar(title: const Text('Escolher no mapa')),
+      body: GoogleMap(
+        initialCameraPosition: _cameraPosition,
+        onTap: (pos) => setState(() => _pino = pos),
+        markers: _pino != null
+            ? {Marker(markerId: const MarkerId('pino'), position: _pino!)}
+            : {},
+      ),
+      floatingActionButton: FloatingActionButton.extended(
+        onPressed: _pino != null ? () => Navigator.pop(context, _pino) : null,
+        label: const Text('Confirmar'),
+        icon: const Icon(Icons.check),
       ),
     );
   }

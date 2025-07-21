@@ -10,7 +10,7 @@ class AppColors {
   static const Color lightSubtitle = Color(0xFF606A45);
   static const Color lightButton = Color(0xFF606A45);
   static const Color lightButtonText = Colors.white;
-  static const Color lightAppBar = Color(0xFFD0B081);
+  static const Color lightAppBar = Color(0xFFF8F6F2);
   static const Color lightError = Color(0xFFD32F2F);
   static const Color lightSuccess = Color(0xFF388E3C);
   static const Color lightWarning = Color(0xFFFBC02D);
