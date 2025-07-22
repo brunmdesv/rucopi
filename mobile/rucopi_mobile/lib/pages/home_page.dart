@@ -157,9 +157,9 @@ class HomePageState extends State<HomePage> with WidgetsBindingObserver {
                       width: 10,
                       height: 10,
                       decoration: BoxDecoration(
-                        color: Colors.red,
+                        color: theme.colorScheme.error,
                         shape: BoxShape.circle,
-                        border: Border.all(color: Colors.white, width: 1.5),
+                        border: Border.all(color: theme.cardColor, width: 1.5),
                       ),
                     ),
                   ),
@@ -281,7 +281,7 @@ class HomePageState extends State<HomePage> with WidgetsBindingObserver {
                                     icon: Icons.event_available,
                                     label: 'Agendadas',
                                     value: agendadasCount.toString(),
-                                    color: Colors.blue,
+                                    color: theme.primaryColor,
                                   );
                                 },
                               ),
@@ -294,7 +294,7 @@ class HomePageState extends State<HomePage> with WidgetsBindingObserver {
                                 label: 'Total',
                                 value: solicitacoesTotais.toString(),
                                 color: theme.brightness == Brightness.dark
-                                    ? Colors.orange
+                                    ? theme.colorScheme.error
                                     : theme.colorScheme.secondary,
                               ),
                             ),
@@ -344,14 +344,14 @@ class HomePageState extends State<HomePage> with WidgetsBindingObserver {
                               children: [
                                 Icon(
                                   Icons.add_circle_outline,
-                                  color: Colors.white,
+                                  color: theme.colorScheme.onPrimary,
                                   size: 22,
                                 ),
                                 const SizedBox(width: 12),
                                 Text(
                                   'Solicitar Nova Coleta',
                                   style: theme.textTheme.titleMedium?.copyWith(
-                                    color: Colors.white,
+                                    color: theme.colorScheme.onPrimary,
                                     fontWeight: FontWeight.w600,
                                   ),
                                 ),
@@ -450,7 +450,8 @@ class HomePageState extends State<HomePage> with WidgetsBindingObserver {
                                         ),
                                         style: ElevatedButton.styleFrom(
                                           backgroundColor: theme.primaryColor,
-                                          foregroundColor: Colors.white,
+                                          foregroundColor:
+                                              theme.colorScheme.onPrimary,
                                           shape: RoundedRectangleBorder(
                                             borderRadius: BorderRadius.circular(
                                               16,
@@ -462,7 +463,8 @@ class HomePageState extends State<HomePage> with WidgetsBindingObserver {
                                           ),
                                           textStyle: theme.textTheme.titleMedium
                                               ?.copyWith(
-                                                color: Colors.white,
+                                                color:
+                                                    theme.colorScheme.onPrimary,
                                                 fontWeight: FontWeight.w600,
                                               ),
                                         ),
@@ -593,27 +595,27 @@ class HomePageState extends State<HomePage> with WidgetsBindingObserver {
     String statusText;
     switch (status) {
       case 'pendente':
-        statusColor = Colors.orange;
+        statusColor = theme.colorScheme.error;
         statusIcon = Icons.schedule_outlined;
         statusText = 'Pendente';
         break;
       case 'agendada':
-        statusColor = Colors.blue;
+        statusColor = theme.primaryColor;
         statusIcon = Icons.event_available;
         statusText = 'Agendada';
         break;
       case 'coletando':
-        statusColor = Colors.purple;
+        statusColor = theme.colorScheme.primary;
         statusIcon = Icons.local_shipping;
         statusText = 'Coletando';
         break;
       case 'concluido':
-        statusColor = Colors.green;
+        statusColor = theme.primaryColor;
         statusIcon = Icons.check_circle_outline;
         statusText = 'Concluído';
         break;
       case 'cancelado':
-        statusColor = Colors.red;
+        statusColor = theme.colorScheme.error;
         statusIcon = Icons.cancel_outlined;
         statusText = 'Cancelado';
         break;
@@ -921,7 +923,9 @@ class _DialogNotificacoes extends StatelessWidget {
                                           vertical: 2,
                                         ),
                                         decoration: BoxDecoration(
-                                          color: Colors.grey.shade300,
+                                          color: theme.dividerColor.withOpacity(
+                                            0.2,
+                                          ),
                                           borderRadius: BorderRadius.circular(
                                             7,
                                           ),
@@ -931,7 +935,10 @@ class _DialogNotificacoes extends StatelessWidget {
                                           style: theme.textTheme.bodySmall
                                               ?.copyWith(
                                                 fontSize: 11,
-                                                color: Colors.black87,
+                                                color: theme
+                                                    .textTheme
+                                                    .bodySmall
+                                                    ?.color,
                                                 fontWeight: FontWeight.bold,
                                               ),
                                         ),
@@ -946,7 +953,8 @@ class _DialogNotificacoes extends StatelessWidget {
                                             vertical: 2,
                                           ),
                                           decoration: BoxDecoration(
-                                            color: Colors.red.withOpacity(0.15),
+                                            color: theme.colorScheme.error
+                                                .withOpacity(0.15),
                                             borderRadius: BorderRadius.circular(
                                               8,
                                             ),
@@ -955,7 +963,7 @@ class _DialogNotificacoes extends StatelessWidget {
                                             'Nova',
                                             style: TextStyle(
                                               fontSize: 10,
-                                              color: Colors.red,
+                                              color: Colors.white,
                                             ),
                                           ),
                                         ),

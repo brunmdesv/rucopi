@@ -113,9 +113,9 @@ class _LoginPageState extends State<LoginPage> {
                     const Spacer(),
                     TextButton(
                       onPressed: () {},
-                      child: const Text(
+                      child: Text(
                         'Esqueceu a senha?',
-                        style: TextStyle(color: AppColors.lightSecondary),
+                        style: TextStyle(color: theme.primaryColor),
                       ),
                       style: TextButton.styleFrom(padding: EdgeInsets.zero),
                     ),
@@ -127,9 +127,9 @@ class _LoginPageState extends State<LoginPage> {
                   child: ElevatedButton(
                     onPressed: carregando ? null : login,
                     child: carregando
-                        ? const CircularProgressIndicator(
+                        ? CircularProgressIndicator(
                             valueColor: AlwaysStoppedAnimation<Color>(
-                              Colors.white,
+                              theme.colorScheme.onPrimary,
                             ),
                           )
                         : const Text('Continuar'),
@@ -157,7 +157,7 @@ class _LoginPageState extends State<LoginPage> {
                       child: Text(
                         'Criar conta',
                         style: theme.textTheme.bodyMedium?.copyWith(
-                          color: theme.colorScheme.secondary,
+                          color: theme.primaryColor,
                           fontWeight: FontWeight.bold,
                         ),
                       ),
