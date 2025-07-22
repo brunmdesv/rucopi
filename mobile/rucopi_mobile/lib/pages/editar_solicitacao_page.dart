@@ -23,6 +23,7 @@ class _EditarSolicitacaoPageState extends State<EditarSolicitacaoPage> {
   late TextEditingController enderecoController;
   late TextEditingController bairroController;
   late TextEditingController numeroCasaController;
+  late TextEditingController pontoReferenciaController;
   String? tipoEntulho;
   final tiposEntulho = ['Entulho de obra', 'Móveis', 'Galhos', 'Outros'];
   final List<XFile> imagensSelecionadas = [];
@@ -51,6 +52,9 @@ class _EditarSolicitacaoPageState extends State<EditarSolicitacaoPage> {
     numeroCasaController = TextEditingController(
       text: widget.solicitacao['numero_casa'] ?? '',
     );
+    pontoReferenciaController = TextEditingController(
+      text: widget.solicitacao['ponto_referencia'] ?? '',
+    );
     tipoEntulho = widget.solicitacao['tipo_entulho'];
     if (widget.solicitacao['fotos'] is List) {
       imagensAntigas = List<String>.from(widget.solicitacao['fotos']);
@@ -66,6 +70,7 @@ class _EditarSolicitacaoPageState extends State<EditarSolicitacaoPage> {
     enderecoController.dispose();
     bairroController.dispose();
     numeroCasaController.dispose();
+    pontoReferenciaController.dispose();
     super.dispose();
   }
 
@@ -231,6 +236,7 @@ class _EditarSolicitacaoPageState extends State<EditarSolicitacaoPage> {
             'endereco': enderecoController.text,
             'bairro': bairroController.text,
             'numero_casa': numeroCasaController.text,
+            'ponto_referencia': pontoReferenciaController.text,
             'fotos': fotosUrls,
           })
           .eq('id', solicitacaoId);
@@ -415,6 +421,20 @@ class _EditarSolicitacaoPageState extends State<EditarSolicitacaoPage> {
                   ),
                 ),
               ],
+            ),
+            const SizedBox(height: 12),
+            TextField(
+              controller: pontoReferenciaController,
+              decoration: InputDecoration(
+                labelText: 'Ponto de referência',
+                prefixIcon: const Icon(Icons.place_outlined),
+                filled: true,
+                fillColor: Theme.of(context).primaryColor.withOpacity(0.08),
+                border: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(16),
+                  borderSide: BorderSide.none,
+                ),
+              ),
             ),
             const SizedBox(height: 16),
             // Card de fotos centralizado

@@ -20,6 +20,7 @@ class _NovaSolicitacaoPageState extends State<NovaSolicitacaoPage> {
   final enderecoController = TextEditingController();
   final bairroController = TextEditingController(); // Novo campo
   final numeroCasaController = TextEditingController(); // Novo campo
+  final pontoReferenciaController = TextEditingController(); // Novo campo
   String? tipoEntulho;
   final tiposEntulho = ['Entulho de obra', 'Móveis', 'Galhos', 'Outros'];
   final List<XFile> imagensSelecionadas = [];
@@ -210,6 +211,7 @@ class _NovaSolicitacaoPageState extends State<NovaSolicitacaoPage> {
         'endereco': enderecoController.text,
         'bairro': bairroController.text, // Novo campo
         'numero_casa': numeroCasaController.text, // Novo campo
+        'ponto_referencia': pontoReferenciaController.text, // Novo campo
         'fotos': fotosUrls,
         'status': 'pendente',
         'criado_em': DateTime.now().toIso8601String(),
@@ -237,6 +239,7 @@ class _NovaSolicitacaoPageState extends State<NovaSolicitacaoPage> {
     enderecoController.dispose();
     bairroController.dispose(); // Dispose novo campo
     numeroCasaController.dispose(); // Dispose novo campo
+    pontoReferenciaController.dispose(); // Dispose novo campo
     super.dispose();
   }
 
@@ -365,6 +368,22 @@ class _NovaSolicitacaoPageState extends State<NovaSolicitacaoPage> {
                         ),
                       ),
                     ],
+                  ),
+                  const SizedBox(height: 12),
+                  TextField(
+                    controller: pontoReferenciaController,
+                    decoration: InputDecoration(
+                      labelText: 'Ponto de referência',
+                      prefixIcon: const Icon(Icons.place_outlined),
+                      filled: true,
+                      fillColor: Theme.of(
+                        context,
+                      ).primaryColor.withValues(alpha: 0.08),
+                      border: OutlineInputBorder(
+                        borderRadius: BorderRadius.circular(16),
+                        borderSide: BorderSide.none,
+                      ),
+                    ),
                   ),
                 ],
               ),

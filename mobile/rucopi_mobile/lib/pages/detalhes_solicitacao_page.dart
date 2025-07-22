@@ -75,6 +75,7 @@ class DetalhesSolicitacaoPage extends StatelessWidget {
     final endereco = solicitacao['endereco'] ?? 'Sem endereço';
     final bairro = solicitacao['bairro'] ?? '';
     final numeroCasa = solicitacao['numero_casa'] ?? '';
+    final pontoReferencia = solicitacao['ponto_referencia'] ?? '';
     final data = solicitacao['criado_em'] != null
         ? DateTime.tryParse(solicitacao['criado_em'])
         : null;
@@ -201,6 +202,20 @@ class DetalhesSolicitacaoPage extends StatelessWidget {
                                           ),
                                           child: Row(
                                             children: [
+                                              if (numeroCasa.isNotEmpty) ...[
+                                                Icon(
+                                                  Icons.home_outlined,
+                                                  size: 16,
+                                                  color: theme.primaryColor,
+                                                ),
+                                                const SizedBox(width: 4),
+                                                Text(
+                                                  numeroCasa,
+                                                  style:
+                                                      theme.textTheme.bodySmall,
+                                                ),
+                                                const SizedBox(width: 12),
+                                              ],
                                               if (bairro.isNotEmpty) ...[
                                                 Icon(
                                                   Icons.location_city_outlined,
@@ -214,22 +229,31 @@ class DetalhesSolicitacaoPage extends StatelessWidget {
                                                       theme.textTheme.bodySmall,
                                                 ),
                                               ],
-                                              if (bairro.isNotEmpty &&
-                                                  numeroCasa.isNotEmpty)
-                                                const SizedBox(width: 12),
-                                              if (numeroCasa.isNotEmpty) ...[
-                                                Icon(
-                                                  Icons.home_outlined,
-                                                  size: 16,
-                                                  color: theme.primaryColor,
-                                                ),
-                                                const SizedBox(width: 4),
-                                                Text(
-                                                  numeroCasa,
+                                            ],
+                                          ),
+                                        ),
+                                      if (pontoReferencia.isNotEmpty)
+                                        Padding(
+                                          padding: const EdgeInsets.only(
+                                            top: 4,
+                                          ),
+                                          child: Row(
+                                            children: [
+                                              Icon(
+                                                Icons.place_outlined,
+                                                size: 16,
+                                                color: theme.primaryColor,
+                                              ),
+                                              const SizedBox(width: 4),
+                                              Expanded(
+                                                child: Text(
+                                                  pontoReferencia,
                                                   style:
                                                       theme.textTheme.bodySmall,
+                                                  overflow:
+                                                      TextOverflow.ellipsis,
                                                 ),
-                                              ],
+                                              ),
                                             ],
                                           ),
                                         ),

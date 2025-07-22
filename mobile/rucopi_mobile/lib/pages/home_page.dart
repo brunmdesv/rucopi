@@ -787,63 +787,218 @@ class _DialogNotificacoes extends StatelessWidget {
     Key? key,
   }) : super(key: key);
 
+  String _mensagemNotificacao(Map<String, dynamic> n) {
+    final tipo = n['tipo_entulho'] ?? '';
+    final status = n['status'] ?? '';
+    if (tipo.isNotEmpty && status.isNotEmpty) {
+      return 'O status da solicitação de entulho do tipo "$tipo" mudou para "$status".';
+    }
+    return n['mensagem'] ?? '';
+  }
+
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     WidgetsBinding.instance.addPostFrameCallback((_) => onMarcarComoLidas());
-    return AlertDialog(
-      title: Row(
-        children: [
-          const Icon(Icons.notifications, color: Colors.orange),
-          const SizedBox(width: 8),
-          const Text('Notificações'),
-        ],
-      ),
-      content: SizedBox(
-        width: 320,
-        child: notificacoes.isEmpty
-            ? const Text('Nenhuma notificação.')
-            : ListView.separated(
-                shrinkWrap: true,
-                itemCount: notificacoes.length,
-                separatorBuilder: (_, __) => Divider(),
-                itemBuilder: (context, index) {
-                  final n = notificacoes[index];
-                  final data = n['criada_em'] != null
-                      ? DateTime.tryParse(n['criada_em'])
-                      : null;
-                  final dataStr = data != null
-                      ? '${data.day.toString().padLeft(2, '0')}/${data.month.toString().padLeft(2, '0')} ${data.hour.toString().padLeft(2, '0')}:${data.minute.toString().padLeft(2, '0')}'
-                      : '';
-                  return ListTile(
-                    leading: Icon(
-                      Icons.notifications,
-                      color: n['lida'] == true
-                          ? theme.disabledColor
-                          : theme.primaryColor,
-                    ),
-                    title: Text(n['mensagem'] ?? ''),
-                    subtitle: Text(dataStr),
-                    trailing: n['lida'] == true
-                        ? null
-                        : Container(
-                            width: 8,
-                            height: 8,
-                            decoration: BoxDecoration(
-                              color: Colors.red,
-                              shape: BoxShape.circle,
+    return Dialog(
+      backgroundColor: theme.dialogBackgroundColor,
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(18)),
+      child: Container(
+        width: 340,
+        constraints: const BoxConstraints(maxHeight: 480),
+        padding: const EdgeInsets.symmetric(vertical: 18, horizontal: 12),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Row(
+              children: [
+                const Icon(Icons.notifications, color: Colors.orange, size: 22),
+                const SizedBox(width: 8),
+                Text(
+                  'Notificações',
+                  style: theme.textTheme.titleMedium?.copyWith(
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
+                const Spacer(),
+                IconButton(
+                  icon: const Icon(Icons.close),
+                  onPressed: () => Navigator.of(context).pop(),
+                  tooltip: 'Fechar',
+                ),
+              ],
+            ),
+            const Divider(height: 18),
+            if (notificacoes.isEmpty)
+              Padding(
+                padding: const EdgeInsets.only(top: 32, bottom: 32),
+                child: Center(
+                  child: Text(
+                    'Nenhuma notificação.',
+                    style: theme.textTheme.bodyMedium,
+                  ),
+                ),
+              )
+            else
+              Expanded(
+                child: ListView.separated(
+                  itemCount: notificacoes.length,
+                  separatorBuilder: (_, __) => const Divider(height: 16),
+                  itemBuilder: (context, index) {
+                    final n = notificacoes[index];
+                    final data = n['criada_em'] != null
+                        ? DateTime.tryParse(n['criada_em'])
+                        : null;
+                    final dataStr = data != null
+                        ? '${data.day.toString().padLeft(2, '0')}/${data.month.toString().padLeft(2, '0')} ${data.hour.toString().padLeft(2, '0')}:${data.minute.toString().padLeft(2, '0')}'
+                        : '';
+                    final idSolic = (n['solicitacao_id'] ?? '').toString();
+                    final idTag = idSolic.length >= 5
+                        ? idSolic.substring(0, 5)
+                        : idSolic;
+                    return Container(
+                      padding: const EdgeInsets.symmetric(
+                        vertical: 8,
+                        horizontal: 6,
+                      ),
+                      decoration: BoxDecoration(
+                        color: n['lida'] == true
+                            ? theme.disabledColor.withOpacity(0.07)
+                            : theme.primaryColor.withOpacity(0.06),
+                        borderRadius: BorderRadius.circular(10),
+                        border: Border.all(
+                          color: n['lida'] == true
+                              ? theme.disabledColor.withOpacity(0.12)
+                              : theme.primaryColor.withOpacity(0.13),
+                          width: 1,
+                        ),
+                      ),
+                      child: Row(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Icon(
+                            n['lida'] == true
+                                ? Icons.notifications_none
+                                : Icons.notifications_active,
+                            color: n['lida'] == true
+                                ? theme.disabledColor
+                                : theme.primaryColor,
+                            size: 22,
+                          ),
+                          const SizedBox(width: 10),
+                          Expanded(
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                Row(
+                                  children: [
+                                    Container(
+                                      padding: const EdgeInsets.symmetric(
+                                        horizontal: 7,
+                                        vertical: 2,
+                                      ),
+                                      decoration: BoxDecoration(
+                                        color: theme.primaryColor.withOpacity(
+                                          0.16,
+                                        ),
+                                        borderRadius: BorderRadius.circular(7),
+                                      ),
+                                      child: Text(
+                                        dataStr,
+                                        style: theme.textTheme.bodySmall
+                                            ?.copyWith(
+                                              fontSize: 11,
+                                              color: theme.primaryColor,
+                                            ),
+                                      ),
+                                    ),
+                                    if (idTag.isNotEmpty) ...[
+                                      const SizedBox(width: 7),
+                                      Container(
+                                        padding: const EdgeInsets.symmetric(
+                                          horizontal: 7,
+                                          vertical: 2,
+                                        ),
+                                        decoration: BoxDecoration(
+                                          color: Colors.grey.shade300,
+                                          borderRadius: BorderRadius.circular(
+                                            7,
+                                          ),
+                                        ),
+                                        child: Text(
+                                          idTag,
+                                          style: theme.textTheme.bodySmall
+                                              ?.copyWith(
+                                                fontSize: 11,
+                                                color: Colors.black87,
+                                                fontWeight: FontWeight.bold,
+                                              ),
+                                        ),
+                                      ),
+                                    ],
+                                    if (n['lida'] != true)
+                                      Padding(
+                                        padding: const EdgeInsets.only(left: 8),
+                                        child: Container(
+                                          padding: const EdgeInsets.symmetric(
+                                            horizontal: 6,
+                                            vertical: 2,
+                                          ),
+                                          decoration: BoxDecoration(
+                                            color: Colors.red.withOpacity(0.15),
+                                            borderRadius: BorderRadius.circular(
+                                              8,
+                                            ),
+                                          ),
+                                          child: const Text(
+                                            'Nova',
+                                            style: TextStyle(
+                                              fontSize: 10,
+                                              color: Colors.red,
+                                            ),
+                                          ),
+                                        ),
+                                      ),
+                                  ],
+                                ),
+                                const SizedBox(height: 4),
+                                Text(
+                                  _mensagemNotificacao(n),
+                                  style: theme.textTheme.bodySmall?.copyWith(
+                                    fontSize: 13,
+                                  ),
+                                  maxLines: 4,
+                                  overflow: TextOverflow.ellipsis,
+                                ),
+                              ],
                             ),
                           ),
-                  );
-                },
+                          if (n['lida'] != true)
+                            IconButton(
+                              icon: const Icon(
+                                Icons.check_circle_outline,
+                                color: Colors.green,
+                                size: 20,
+                              ),
+                              tooltip: 'Marcar como lida',
+                              onPressed: () async {
+                                await Supabase.instance.client
+                                    .from('notificacoes')
+                                    .update({'lida': true})
+                                    .eq('id', n['id']);
+                                Navigator.of(context).pop();
+                              },
+                            ),
+                        ],
+                      ),
+                    );
+                  },
+                ),
               ),
-      ),
-      actions: [
-        TextButton(
-          onPressed: () => Navigator.of(context).pop(),
-          child: const Text('Fechar'),
+          ],
         ),
-      ],
+      ),
     );
   }
 }
