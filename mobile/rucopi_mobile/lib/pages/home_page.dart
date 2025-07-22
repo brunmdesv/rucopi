@@ -167,19 +167,6 @@ class HomePageState extends State<HomePage> with WidgetsBindingObserver {
             );
           },
         ),
-        IconButton(
-          icon: const Icon(Icons.refresh),
-          onPressed: () async {
-            setState(() {
-              loading = true;
-            });
-            await _carregarDados();
-            setState(() {
-              loading = false;
-            });
-          },
-          tooltip: 'Atualizar',
-        ),
       ],
       child: loading
           ? const Center(child: CircularProgressIndicator())
@@ -188,51 +175,65 @@ class HomePageState extends State<HomePage> with WidgetsBindingObserver {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   // Header com informações do usuário
-                  HomeSectionCard(
-                    margin: const EdgeInsets.only(top: 2, bottom: 8),
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Row(
-                          children: [
-                            Container(
-                              padding: const EdgeInsets.all(12),
-                              decoration: BoxDecoration(
-                                color: theme.primaryColor.withOpacity(0.15),
-                                borderRadius: BorderRadius.circular(16),
-                              ),
-                              child: Icon(
-                                Icons.person,
-                                color: theme.primaryColor,
-                                size: 24,
-                              ),
-                            ),
-                            const SizedBox(width: 16),
-                            Expanded(
-                              child: Column(
-                                crossAxisAlignment: CrossAxisAlignment.start,
-                                children: [
-                                  Text(
-                                    _primeiroNomeESobrenome(nomeUsuario),
-                                    style: theme.textTheme.headlineSmall
-                                        ?.copyWith(
-                                          fontWeight: FontWeight.bold,
-                                          color: theme.primaryColor,
-                                        ),
-                                  ),
-                                  const SizedBox(height: 4),
-                                  Text(
-                                    'Bem-vindo ao sistema de coletas',
-                                    style: theme.textTheme.bodyMedium?.copyWith(
-                                      color: theme.textTheme.bodySmall?.color,
-                                    ),
-                                  ),
-                                ],
-                              ),
-                            ),
-                          ],
+                  GestureDetector(
+                    onTap: () {
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                          builder: (context) => const MeuPerfilPage(),
                         ),
-                      ],
+                      );
+                    },
+                    child: HomeSectionCard(
+                      margin: const EdgeInsets.only(top: 2, bottom: 8),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Row(
+                            children: [
+                              Container(
+                                padding: const EdgeInsets.all(12),
+                                decoration: BoxDecoration(
+                                  color: theme.primaryColor.withOpacity(0.15),
+                                  borderRadius: BorderRadius.circular(16),
+                                ),
+                                child: Icon(
+                                  Icons.person,
+                                  color: theme.primaryColor,
+                                  size: 24,
+                                ),
+                              ),
+                              const SizedBox(width: 16),
+                              Expanded(
+                                child: Column(
+                                  crossAxisAlignment: CrossAxisAlignment.start,
+                                  children: [
+                                    Text(
+                                      _primeiroNomeESobrenome(nomeUsuario),
+                                      style: theme.textTheme.headlineSmall
+                                          ?.copyWith(
+                                            fontWeight: FontWeight.bold,
+                                            color: theme.primaryColor,
+                                          ),
+                                    ),
+                                    const SizedBox(height: 4),
+                                    Text(
+                                      'Bem-vindo ao sistema de coletas',
+                                      style: theme.textTheme.bodyMedium
+                                          ?.copyWith(
+                                            color: theme
+                                                .textTheme
+                                                .bodySmall
+                                                ?.color,
+                                          ),
+                                    ),
+                                  ],
+                                ),
+                              ),
+                            ],
+                          ),
+                        ],
+                      ),
                     ),
                   ),
                   const SizedBox(height: 0),

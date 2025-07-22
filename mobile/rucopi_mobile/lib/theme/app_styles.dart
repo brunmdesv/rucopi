@@ -13,7 +13,7 @@ class AppColors {
   static const Color lightDisabled = Color(0xFFBDBDBD);
   static const Color lightBorder = Color(0xFF002E34);
   static const Color lightOverlay = Color(0x0F002E34);
-  
+
   // Tema Escuro
   static const Color darkPrimary = Color(0xFFf8f8f8); // detalhes
   static const Color darkBackground = Color(0xFF181619); // fundo

@@ -13,17 +13,18 @@ class BottomNavBar extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
+    final isDark = theme.brightness == Brightness.dark;
     return Padding(
       padding: const EdgeInsets.only(bottom: 24, left: 24, right: 24),
       child: Container(
         decoration: BoxDecoration(
-          color: theme.cardColor,
+          color: isDark ? AppColors.darkButton : AppColors.lightButton,
           borderRadius: BorderRadius.circular(16),
-          boxShadow: theme.brightness == Brightness.dark
+          boxShadow: isDark
               ? []
               : [
                   BoxShadow(
-                    color: Colors.black12,
+                    color: theme.shadowColor,
                     blurRadius: 12,
                     offset: const Offset(0, 4),
                   ),
@@ -37,16 +38,19 @@ class BottomNavBar extends StatelessWidget {
               icon: Icons.home_outlined,
               selected: currentIndex == 0,
               onTap: () => onTap(0),
+              isDark: isDark,
             ),
             _NavBarIcon(
               icon: Icons.add_box_outlined,
               selected: currentIndex == 1,
               onTap: () => onTap(1),
+              isDark: isDark,
             ),
             _NavBarIcon(
               icon: Icons.settings_outlined,
               selected: currentIndex == 2,
               onTap: () => onTap(2),
+              isDark: isDark,
             ),
           ],
         ),
@@ -59,22 +63,25 @@ class _NavBarIcon extends StatelessWidget {
   final IconData icon;
   final bool selected;
   final VoidCallback onTap;
+  final bool isDark;
   const _NavBarIcon({
     required this.icon,
     required this.selected,
     required this.onTap,
+    required this.isDark,
     Key? key,
   }) : super(key: key);
 
   @override
   Widget build(BuildContext context) {
-    final theme = Theme.of(context);
     return IconButton(
       icon: Icon(
         icon,
         color: selected
-            ? theme.colorScheme.primary
-            : theme.iconTheme.color?.withOpacity(0.6) ?? Colors.grey,
+            ? (isDark ? AppColors.darkButtonText : AppColors.lightButtonText)
+            : (isDark
+                  ? AppColors.darkButtonText.withOpacity(0.5)
+                  : AppColors.lightButtonText.withOpacity(0.5)),
         size: 28,
       ),
       onPressed: onTap,
