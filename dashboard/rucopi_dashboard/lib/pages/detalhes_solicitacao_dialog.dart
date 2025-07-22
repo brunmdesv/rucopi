@@ -3,6 +3,8 @@ import 'package:supabase_flutter/supabase_flutter.dart';
 import '../theme/app_styles.dart';
 import 'package:photo_view/photo_view.dart';
 import 'package:photo_view/photo_view_gallery.dart';
+import 'package:google_maps_flutter/google_maps_flutter.dart';
+import 'package:geocoding/geocoding.dart';
 
 class DetalhesSolicitacaoDialog extends StatefulWidget {
   final Map<String, dynamic> solicitacao;
@@ -19,12 +21,15 @@ class _DetalhesSolicitacaoDialogState extends State<DetalhesSolicitacaoDialog> {
   bool loading = true;
   late String statusSelecionado;
   bool atualizandoStatus = false;
+  LatLng? localizacao;
+  bool carregandoMapa = false;
 
   @override
   void initState() {
     super.initState();
     statusSelecionado = widget.solicitacao['status'] ?? 'pendente';
     _carregarMorador();
+    _carregarLocalizacao();
   }
 
   Future<void> _carregarMorador() async {
@@ -116,6 +121,41 @@ class _DetalhesSolicitacaoDialogState extends State<DetalhesSolicitacaoDialog> {
         atualizandoStatus = false;
       });
     }
+  }
+
+  Future<void> _carregarLocalizacao() async {
+    setState(() {
+      carregandoMapa = true;
+    });
+    try {
+      final solicitacao = widget.solicitacao;
+      double? lat = solicitacao['latitude'] as double?;
+      double? lng = solicitacao['longitude'] as double?;
+      if (lat != null && lng != null) {
+        setState(() {
+          localizacao = LatLng(lat, lng);
+          carregandoMapa = false;
+        });
+        return;
+      }
+      final endereco = solicitacao['endereco']?.toString();
+      if (endereco != null && endereco.isNotEmpty) {
+        List<Location> locations = await locationFromAddress(endereco);
+        if (locations.isNotEmpty) {
+          setState(() {
+            localizacao = LatLng(locations[0].latitude, locations[0].longitude);
+            carregandoMapa = false;
+          });
+          return;
+        }
+      }
+    } catch (e) {
+      // ignore: avoid_print
+      print('Erro ao buscar localização: $e');
+    }
+    setState(() {
+      carregandoMapa = false;
+    });
   }
 
   Widget _buildStatusDropdown() {
@@ -258,6 +298,8 @@ class _DetalhesSolicitacaoDialogState extends State<DetalhesSolicitacaoDialog> {
                             ),
                           ),
                           const SizedBox(height: 16),
+                          // MAPA
+                          _buildMapaEndereco(theme),
                         ],
                       ),
                     ),
@@ -956,6 +998,68 @@ class _DetalhesSolicitacaoDialogState extends State<DetalhesSolicitacaoDialog> {
           ),
         ],
       ),
+    );
+  }
+
+  Widget _buildMapaEndereco(ThemeData theme) {
+    final endereco = widget.solicitacao['endereco']?.toString() ?? '-';
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        Padding(
+          padding: const EdgeInsets.only(left: 24, right: 24, bottom: 8),
+          child: Row(
+            children: [
+              Icon(Icons.map, color: theme.primaryColor, size: 20),
+              const SizedBox(width: 8),
+              Text(
+                'Localização no Mapa',
+                style: theme.textTheme.titleMedium?.copyWith(
+                  fontWeight: FontWeight.bold,
+                  color: theme.primaryColor,
+                ),
+              ),
+            ],
+          ),
+        ),
+        Container(
+          height: 220,
+          margin: const EdgeInsets.symmetric(horizontal: 24, vertical: 8),
+          decoration: BoxDecoration(
+            borderRadius: BorderRadius.circular(16),
+            border: Border.all(color: theme.primaryColor.withOpacity(0.18)),
+            color: theme.cardColor,
+          ),
+          child: carregandoMapa
+              ? const Center(child: CircularProgressIndicator())
+              : localizacao == null
+              ? Center(
+                  child: Text(
+                    'Não foi possível localizar o endereço no mapa.',
+                    style: theme.textTheme.bodyMedium,
+                    textAlign: TextAlign.center,
+                  ),
+                )
+              : ClipRRect(
+                  borderRadius: BorderRadius.circular(16),
+                  child: GoogleMap(
+                    initialCameraPosition: CameraPosition(
+                      target: localizacao!,
+                      zoom: 16,
+                    ),
+                    markers: {
+                      Marker(
+                        markerId: const MarkerId('endereco'),
+                        position: localizacao!,
+                      ),
+                    },
+                    zoomControlsEnabled: false,
+                    myLocationButtonEnabled: false,
+                    liteModeEnabled: true,
+                  ),
+                ),
+        ),
+      ],
     );
   }
 }
