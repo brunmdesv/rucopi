@@ -443,17 +443,49 @@ class _NovaSolicitacaoPageState extends State<NovaSolicitacaoPage> {
                   Row(
                     mainAxisAlignment: MainAxisAlignment.center,
                     children: [
-                      ...imagensSelecionadas.map(
-                        (img) => Padding(
+                      ...imagensSelecionadas.asMap().entries.map((entry) {
+                        final idx = entry.key;
+                        final img = entry.value;
+                        return Padding(
                           padding: const EdgeInsets.only(right: 8),
-                          child: Image.file(
-                            File(img.path),
-                            width: 64,
-                            height: 64,
-                            fit: BoxFit.cover,
+                          child: Stack(
+                            alignment: Alignment.topRight,
+                            children: [
+                              ClipRRect(
+                                borderRadius: BorderRadius.circular(8),
+                                child: Image.file(
+                                  File(img.path),
+                                  width: 64,
+                                  height: 64,
+                                  fit: BoxFit.cover,
+                                ),
+                              ),
+                              Positioned(
+                                top: 0,
+                                right: 0,
+                                child: GestureDetector(
+                                  onTap: () {
+                                    setState(() {
+                                      imagensSelecionadas.removeAt(idx);
+                                    });
+                                  },
+                                  child: Container(
+                                    decoration: BoxDecoration(
+                                      color: Colors.black54,
+                                      borderRadius: BorderRadius.circular(12),
+                                    ),
+                                    child: const Icon(
+                                      Icons.close,
+                                      color: Colors.white,
+                                      size: 18,
+                                    ),
+                                  ),
+                                ),
+                              ),
+                            ],
                           ),
-                        ),
-                      ),
+                        );
+                      }),
                       if (imagensSelecionadas.length < 3)
                         IconButton(
                           icon: const Icon(Icons.add_a_photo),

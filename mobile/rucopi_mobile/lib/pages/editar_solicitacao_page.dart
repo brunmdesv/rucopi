@@ -3,6 +3,11 @@ import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:image_picker/image_picker.dart';
 import 'dart:io';
 import '../widgets/app_padrao.dart';
+import 'package:geolocator/geolocator.dart';
+import 'package:google_maps_flutter/google_maps_flutter.dart';
+import 'package:geocoding/geocoding.dart';
+import 'package:flutter_image_compress/flutter_image_compress.dart';
+import 'nova_solicitacao_page.dart';
 
 class EditarSolicitacaoPage extends StatefulWidget {
   final Map<String, dynamic> solicitacao;
@@ -16,11 +21,20 @@ class EditarSolicitacaoPage extends StatefulWidget {
 class _EditarSolicitacaoPageState extends State<EditarSolicitacaoPage> {
   late TextEditingController descricaoController;
   late TextEditingController enderecoController;
+  late TextEditingController bairroController;
+  late TextEditingController numeroCasaController;
   String? tipoEntulho;
   final tiposEntulho = ['Entulho de obra', 'Móveis', 'Galhos', 'Outros'];
   final List<XFile> imagensSelecionadas = [];
   List<String> imagensAntigas = [];
   bool carregando = false;
+  String enderecoModo = 'manual'; // 'manual', 'mapa', 'atual'
+  LatLng enderecoMapa = const LatLng(-2.955939, -41.780729);
+  bool buscandoEndereco = false;
+  String? enderecoRua;
+  List<String> imagensOriginais = [];
+  bool get isPendente =>
+      (widget.solicitacao['status'] ?? 'pendente') == 'pendente';
 
   @override
   void initState() {
@@ -31,10 +45,28 @@ class _EditarSolicitacaoPageState extends State<EditarSolicitacaoPage> {
     enderecoController = TextEditingController(
       text: widget.solicitacao['endereco'] ?? '',
     );
+    bairroController = TextEditingController(
+      text: widget.solicitacao['bairro'] ?? '',
+    );
+    numeroCasaController = TextEditingController(
+      text: widget.solicitacao['numero_casa'] ?? '',
+    );
     tipoEntulho = widget.solicitacao['tipo_entulho'];
     if (widget.solicitacao['fotos'] is List) {
       imagensAntigas = List<String>.from(widget.solicitacao['fotos']);
     }
+    imagensOriginais = widget.solicitacao['fotos'] is List
+        ? List<String>.from(widget.solicitacao['fotos'])
+        : [];
+  }
+
+  @override
+  void dispose() {
+    descricaoController.dispose();
+    enderecoController.dispose();
+    bairroController.dispose();
+    numeroCasaController.dispose();
+    super.dispose();
   }
 
   Future<void> selecionarImagens() async {
@@ -65,6 +97,94 @@ class _EditarSolicitacaoPageState extends State<EditarSolicitacaoPage> {
     return urls;
   }
 
+  Future<void> obterLocalizacaoAtual() async {
+    setState(() => buscandoEndereco = true);
+    try {
+      LocationPermission permission = await Geolocator.checkPermission();
+      if (permission == LocationPermission.denied) {
+        permission = await Geolocator.requestPermission();
+      }
+      if (permission == LocationPermission.deniedForever ||
+          permission == LocationPermission.denied) {
+        if (!mounted) return;
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Permissão de localização negada')),
+        );
+        return;
+      }
+      final pos = await Geolocator.getCurrentPosition();
+      if (!mounted) return;
+      enderecoMapa = LatLng(pos.latitude, pos.longitude);
+      List<Placemark> placemarks = await placemarkFromCoordinates(
+        pos.latitude,
+        pos.longitude,
+      );
+      if (placemarks.isNotEmpty) {
+        final p = placemarks.first;
+        setState(() {
+          enderecoController.text = p.street ?? '';
+          bairroController.text =
+              (p.subLocality != null && p.subLocality!.isNotEmpty)
+              ? p.subLocality!
+              : (p.subAdministrativeArea ?? '');
+        });
+      }
+    } catch (e) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(SnackBar(content: Text('Erro ao obter localização: $e')));
+    } finally {
+      if (mounted) {
+        setState(() => buscandoEndereco = false);
+      }
+    }
+  }
+
+  Future<void> selecionarNoMapa() async {
+    final LatLng? resultado = await Navigator.push(
+      context,
+      MaterialPageRoute(
+        builder: (context) =>
+            SelecionarNoMapaPage(posicaoInicial: enderecoMapa),
+      ),
+    );
+    if (resultado != null) {
+      enderecoMapa = resultado;
+      try {
+        List<Placemark> placemarks = await placemarkFromCoordinates(
+          resultado.latitude,
+          resultado.longitude,
+        );
+        if (placemarks.isNotEmpty) {
+          final p = placemarks.first;
+          setState(() {
+            enderecoController.text = p.street ?? '';
+            bairroController.text =
+                (p.subLocality != null && p.subLocality!.isNotEmpty)
+                ? p.subLocality!
+                : (p.subAdministrativeArea ?? '');
+          });
+        }
+      } catch (_) {
+        setState(() {
+          enderecoController.text = '';
+          bairroController.text = '';
+        });
+      }
+    }
+  }
+
+  // Função utilitária para extrair o caminho completo do storage a partir da URL pública
+  String? getStoragePathFromUrl(String url) {
+    final uri = Uri.parse(url);
+    final idx = uri.path.indexOf('/fotosrucopi/');
+    if (idx != -1) {
+      return uri.path.substring(idx + '/fotosrucopi/'.length);
+    }
+    return null;
+  }
+
   Future<void> salvarAlteracoes() async {
     setState(() => carregando = true);
     final user = Supabase.instance.client.auth.currentUser;
@@ -86,16 +206,31 @@ class _EditarSolicitacaoPageState extends State<EditarSolicitacaoPage> {
       return;
     }
     try {
+      // Remover imagens antigas que foram removidas pelo usuário
+      final supabase = Supabase.instance.client;
+      final imagensRemovidas = imagensOriginais
+          .where((url) => !imagensAntigas.contains(url))
+          .toList();
+      for (final url in imagensRemovidas) {
+        try {
+          final storagePath = getStoragePathFromUrl(url);
+          if (storagePath != null) {
+            await supabase.storage.from('fotosrucopi').remove([storagePath]);
+          }
+        } catch (_) {}
+      }
       List<String> fotosUrls = imagensAntigas;
       if (imagensSelecionadas.isNotEmpty) {
         fotosUrls = await uploadImagens(user.id);
       }
-      await Supabase.instance.client
+      await supabase
           .from('solicitacoes')
           .update({
             'descricao': descricaoController.text,
             'tipo_entulho': tipoEntulho,
             'endereco': enderecoController.text,
+            'bairro': bairroController.text,
+            'numero_casa': numeroCasaController.text,
             'fotos': fotosUrls,
           })
           .eq('id', solicitacaoId);
@@ -164,9 +299,65 @@ class _EditarSolicitacaoPageState extends State<EditarSolicitacaoPage> {
               ),
             ),
             const SizedBox(height: 16),
-            // Campo de endereço
+            // Seletor de modo de endereço
+            Row(
+              mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+              children: [
+                ChoiceChip(
+                  label: Row(
+                    children: const [
+                      Icon(Icons.home),
+                      SizedBox(width: 4),
+                      Text('Manual'),
+                    ],
+                  ),
+                  selected: enderecoModo == 'manual',
+                  onSelected: isPendente
+                      ? (_) => setState(() => enderecoModo = 'manual')
+                      : null,
+                ),
+                ChoiceChip(
+                  label: Row(
+                    children: const [
+                      Icon(Icons.map),
+                      SizedBox(width: 4),
+                      Text('Mapa'),
+                    ],
+                  ),
+                  selected: enderecoModo == 'mapa',
+                  onSelected: isPendente
+                      ? (_) async {
+                          setState(() => enderecoModo = 'mapa');
+                          await Future.delayed(
+                            const Duration(milliseconds: 200),
+                          );
+                          selecionarNoMapa();
+                        }
+                      : null,
+                ),
+                ChoiceChip(
+                  label: Row(
+                    children: const [
+                      Icon(Icons.my_location),
+                      SizedBox(width: 4),
+                      Text('Atual'),
+                    ],
+                  ),
+                  selected: enderecoModo == 'atual',
+                  onSelected: isPendente
+                      ? (_) {
+                          setState(() => enderecoModo = 'atual');
+                          obterLocalizacaoAtual();
+                        }
+                      : null,
+                ),
+              ],
+            ),
+            const SizedBox(height: 12),
+            // Campo de endereço sempre visível, mas editável só no modo manual
             TextField(
               controller: enderecoController,
+              enabled: isPendente && enderecoModo == 'manual',
               decoration: InputDecoration(
                 labelText: 'Endereço',
                 prefixIcon: const Icon(Icons.location_on_outlined),
@@ -177,6 +368,53 @@ class _EditarSolicitacaoPageState extends State<EditarSolicitacaoPage> {
                   borderSide: BorderSide.none,
                 ),
               ),
+            ),
+            if (enderecoModo == 'atual' && buscandoEndereco)
+              const Padding(
+                padding: EdgeInsets.symmetric(vertical: 8),
+                child: Center(child: CircularProgressIndicator()),
+              ),
+            const SizedBox(height: 12),
+            Row(
+              children: [
+                Expanded(
+                  child: TextField(
+                    controller: bairroController,
+                    decoration: InputDecoration(
+                      labelText: 'Bairro',
+                      prefixIcon: const Icon(Icons.location_city_outlined),
+                      filled: true,
+                      fillColor: Theme.of(
+                        context,
+                      ).primaryColor.withOpacity(0.08),
+                      border: OutlineInputBorder(
+                        borderRadius: BorderRadius.circular(16),
+                        borderSide: BorderSide.none,
+                      ),
+                    ),
+                  ),
+                ),
+                const SizedBox(width: 12),
+                SizedBox(
+                  width: 110,
+                  child: TextField(
+                    controller: numeroCasaController,
+                    keyboardType: TextInputType.number,
+                    decoration: InputDecoration(
+                      labelText: 'Nº',
+                      prefixIcon: const Icon(Icons.home_outlined),
+                      filled: true,
+                      fillColor: Theme.of(
+                        context,
+                      ).primaryColor.withOpacity(0.08),
+                      border: OutlineInputBorder(
+                        borderRadius: BorderRadius.circular(16),
+                        borderSide: BorderSide.none,
+                      ),
+                    ),
+                  ),
+                ),
+              ],
             ),
             const SizedBox(height: 16),
             // Card de fotos centralizado
@@ -203,28 +441,92 @@ class _EditarSolicitacaoPageState extends State<EditarSolicitacaoPage> {
                   Row(
                     mainAxisAlignment: MainAxisAlignment.center,
                     children: [
-                      ...imagensAntigas.map(
-                        (url) => Padding(
+                      ...imagensAntigas.asMap().entries.map((entry) {
+                        final idx = entry.key;
+                        final url = entry.value;
+                        return Padding(
                           padding: const EdgeInsets.only(right: 8),
-                          child: Image.network(
-                            url,
-                            width: 64,
-                            height: 64,
-                            fit: BoxFit.cover,
+                          child: Stack(
+                            alignment: Alignment.topRight,
+                            children: [
+                              ClipRRect(
+                                borderRadius: BorderRadius.circular(8),
+                                child: Image.network(
+                                  url,
+                                  width: 64,
+                                  height: 64,
+                                  fit: BoxFit.cover,
+                                ),
+                              ),
+                              Positioned(
+                                top: 0,
+                                right: 0,
+                                child: GestureDetector(
+                                  onTap: () {
+                                    setState(() {
+                                      imagensAntigas.removeAt(idx);
+                                    });
+                                  },
+                                  child: Container(
+                                    decoration: BoxDecoration(
+                                      color: Colors.black54,
+                                      borderRadius: BorderRadius.circular(12),
+                                    ),
+                                    child: const Icon(
+                                      Icons.close,
+                                      color: Colors.white,
+                                      size: 18,
+                                    ),
+                                  ),
+                                ),
+                              ),
+                            ],
                           ),
-                        ),
-                      ),
-                      ...imagensSelecionadas.map(
-                        (img) => Padding(
+                        );
+                      }),
+                      ...imagensSelecionadas.asMap().entries.map((entry) {
+                        final idx = entry.key;
+                        final img = entry.value;
+                        return Padding(
                           padding: const EdgeInsets.only(right: 8),
-                          child: Image.file(
-                            File(img.path),
-                            width: 64,
-                            height: 64,
-                            fit: BoxFit.cover,
+                          child: Stack(
+                            alignment: Alignment.topRight,
+                            children: [
+                              ClipRRect(
+                                borderRadius: BorderRadius.circular(8),
+                                child: Image.file(
+                                  File(img.path),
+                                  width: 64,
+                                  height: 64,
+                                  fit: BoxFit.cover,
+                                ),
+                              ),
+                              Positioned(
+                                top: 0,
+                                right: 0,
+                                child: GestureDetector(
+                                  onTap: () {
+                                    setState(() {
+                                      imagensSelecionadas.removeAt(idx);
+                                    });
+                                  },
+                                  child: Container(
+                                    decoration: BoxDecoration(
+                                      color: Colors.black54,
+                                      borderRadius: BorderRadius.circular(12),
+                                    ),
+                                    child: const Icon(
+                                      Icons.close,
+                                      color: Colors.white,
+                                      size: 18,
+                                    ),
+                                  ),
+                                ),
+                              ),
+                            ],
                           ),
-                        ),
-                      ),
+                        );
+                      }),
                       if (imagensAntigas.length + imagensSelecionadas.length <
                           3)
                         IconButton(
@@ -241,7 +543,9 @@ class _EditarSolicitacaoPageState extends State<EditarSolicitacaoPage> {
               child: SizedBox(
                 width: 260,
                 child: ElevatedButton.icon(
-                  onPressed: carregando ? null : salvarAlteracoes,
+                  onPressed: isPendente && !carregando
+                      ? salvarAlteracoes
+                      : null,
                   icon: const Icon(Icons.save),
                   label: const Text('Salvar Alterações'),
                   style: ElevatedButton.styleFrom(

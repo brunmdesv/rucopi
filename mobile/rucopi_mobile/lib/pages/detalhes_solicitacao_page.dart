@@ -73,6 +73,8 @@ class DetalhesSolicitacaoPage extends StatelessWidget {
     final statusIcon = _getStatusIcon(status);
     final statusText = _getStatusText(status);
     final endereco = solicitacao['endereco'] ?? 'Sem endereço';
+    final bairro = solicitacao['bairro'] ?? '';
+    final numeroCasa = solicitacao['numero_casa'] ?? '';
     final data = solicitacao['criado_em'] != null
         ? DateTime.tryParse(solicitacao['criado_em'])
         : null;
@@ -191,6 +193,46 @@ class DetalhesSolicitacaoPage extends StatelessWidget {
                                         endereco,
                                         style: theme.textTheme.bodyMedium,
                                       ),
+                                      if (bairro.isNotEmpty ||
+                                          numeroCasa.isNotEmpty)
+                                        Padding(
+                                          padding: const EdgeInsets.only(
+                                            top: 4,
+                                          ),
+                                          child: Row(
+                                            children: [
+                                              if (bairro.isNotEmpty) ...[
+                                                Icon(
+                                                  Icons.location_city_outlined,
+                                                  size: 16,
+                                                  color: theme.primaryColor,
+                                                ),
+                                                const SizedBox(width: 4),
+                                                Text(
+                                                  bairro,
+                                                  style:
+                                                      theme.textTheme.bodySmall,
+                                                ),
+                                              ],
+                                              if (bairro.isNotEmpty &&
+                                                  numeroCasa.isNotEmpty)
+                                                const SizedBox(width: 12),
+                                              if (numeroCasa.isNotEmpty) ...[
+                                                Icon(
+                                                  Icons.home_outlined,
+                                                  size: 16,
+                                                  color: theme.primaryColor,
+                                                ),
+                                                const SizedBox(width: 4),
+                                                Text(
+                                                  numeroCasa,
+                                                  style:
+                                                      theme.textTheme.bodySmall,
+                                                ),
+                                              ],
+                                            ],
+                                          ),
+                                        ),
                                     ],
                                   ),
                                 ),
@@ -327,9 +369,9 @@ class DetalhesSolicitacaoPage extends StatelessWidget {
                             physics: const NeverScrollableScrollPhysics(),
                             gridDelegate:
                                 const SliverGridDelegateWithFixedCrossAxisCount(
-                                  crossAxisCount: 2,
-                                  crossAxisSpacing: 12,
-                                  mainAxisSpacing: 12,
+                                  crossAxisCount: 3,
+                                  crossAxisSpacing: 8,
+                                  mainAxisSpacing: 8,
                                   childAspectRatio: 1,
                                 ),
                             itemCount: fotos.length,
@@ -498,6 +540,20 @@ class DetalhesSolicitacaoPage extends StatelessWidget {
                         if (confirm == true) {
                           try {
                             final supabase = Supabase.instance.client;
+                            // Excluir imagens do storage se existirem
+                            final fotos = solicitacao['fotos'] is List
+                                ? List<String>.from(solicitacao['fotos'])
+                                : <String>[];
+                            for (final url in fotos) {
+                              try {
+                                final storagePath = getStoragePathFromUrl(url);
+                                if (storagePath != null) {
+                                  await supabase.storage
+                                      .from('fotosrucopi')
+                                      .remove([storagePath]);
+                                }
+                              } catch (_) {}
+                            }
                             await supabase
                                 .from('solicitacoes')
                                 .delete()
@@ -647,4 +703,14 @@ class DetalhesSolicitacaoPage extends StatelessWidget {
       ),
     );
   }
+}
+
+// Função utilitária para extrair o caminho completo do storage a partir da URL pública
+String? getStoragePathFromUrl(String url) {
+  final uri = Uri.parse(url);
+  final idx = uri.path.indexOf('/fotosrucopi/');
+  if (idx != -1) {
+    return uri.path.substring(idx + '/fotosrucopi/'.length);
+  }
+  return null;
 }
