@@ -982,15 +982,66 @@ class _DetalhesSolicitacaoDialogState extends State<DetalhesSolicitacaoDialog> {
                 ),
                 const SizedBox(width: 6),
                 Expanded(
-                  child: Text(
-                    (solicitacao['endereco'] ?? '-').toString(),
-                    style: theme.textTheme.bodyMedium?.copyWith(
-                      fontWeight: FontWeight.w500,
-                      fontSize: 14,
-                      color: theme.textTheme.bodyLarge?.color,
-                    ),
-                    maxLines: 2,
-                    overflow: TextOverflow.ellipsis,
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Row(
+                        children: [
+                          Flexible(
+                            child: Text(
+                              (solicitacao['endereco'] ?? '-').toString(),
+                              style: theme.textTheme.bodyMedium?.copyWith(
+                                fontWeight: FontWeight.w500,
+                                fontSize: 14,
+                                color: theme.textTheme.bodyLarge?.color,
+                              ),
+                              maxLines: 2,
+                              overflow: TextOverflow.ellipsis,
+                            ),
+                          ),
+                          if (solicitacao['numero_casa'] != null &&
+                              (solicitacao['numero_casa'] as String)
+                                  .isNotEmpty) ...[
+                            const SizedBox(width: 8),
+                            Text(
+                              'Nº ${(solicitacao['numero_casa'] ?? '').toString()}',
+                              style: theme.textTheme.bodyMedium?.copyWith(
+                                fontWeight: FontWeight.w500,
+                                fontSize: 14,
+                                color: theme.textTheme.bodyLarge?.color,
+                              ),
+                            ),
+                          ],
+                          if (solicitacao['bairro'] != null &&
+                              (solicitacao['bairro'] as String).isNotEmpty) ...[
+                            const SizedBox(width: 8),
+                            Text(
+                              (solicitacao['bairro'] ?? '').toString(),
+                              style: theme.textTheme.bodyMedium?.copyWith(
+                                fontWeight: FontWeight.w500,
+                                fontSize: 14,
+                                color: theme.textTheme.bodyLarge?.color,
+                              ),
+                            ),
+                          ],
+                        ],
+                      ),
+                      if (solicitacao['ponto_referencia'] != null &&
+                          (solicitacao['ponto_referencia'] as String)
+                              .isNotEmpty) ...[
+                        const SizedBox(height: 2),
+                        Text(
+                          (solicitacao['ponto_referencia'] ?? '').toString(),
+                          style: theme.textTheme.bodySmall?.copyWith(
+                            fontSize: 13,
+                            color: theme.textTheme.bodyLarge?.color
+                                ?.withOpacity(0.8),
+                          ),
+                          maxLines: 2,
+                          overflow: TextOverflow.ellipsis,
+                        ),
+                      ],
+                    ],
                   ),
                 ),
               ],
