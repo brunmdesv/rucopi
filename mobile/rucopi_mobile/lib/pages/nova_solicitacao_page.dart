@@ -203,6 +203,26 @@ class _NovaSolicitacaoPageState extends State<NovaSolicitacaoPage> {
       if (imagensSelecionadas.isNotEmpty) {
         fotosUrls = await uploadImagens(user.id);
       }
+
+      // Obter coordenadas do endereço informado
+      String? enderecoCoordenadas;
+      try {
+        final enderecoCompleto = [
+          enderecoController.text,
+          numeroCasaController.text,
+          bairroController.text,
+        ].where((e) => e != null && e.toString().isNotEmpty).join(', ');
+        if (enderecoCompleto.isNotEmpty) {
+          final locations = await locationFromAddress(enderecoCompleto);
+          if (locations.isNotEmpty) {
+            final loc = locations.first;
+            enderecoCoordenadas = '${loc.latitude},${loc.longitude}';
+          }
+        }
+      } catch (_) {
+        enderecoCoordenadas = null;
+      }
+
       await Supabase.instance.client.from('solicitacoes').insert({
         'morador_id': user.id,
         'nome_morador': nomeMorador,
@@ -215,6 +235,7 @@ class _NovaSolicitacaoPageState extends State<NovaSolicitacaoPage> {
         'fotos': fotosUrls,
         'status': 'pendente',
         'criado_em': DateTime.now().toIso8601String(),
+        'endereco_coordenadas': enderecoCoordenadas,
       });
       if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(

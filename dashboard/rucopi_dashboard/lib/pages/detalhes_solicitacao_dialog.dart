@@ -3,8 +3,11 @@ import 'package:supabase_flutter/supabase_flutter.dart';
 import '../theme/app_styles.dart';
 import 'package:photo_view/photo_view.dart';
 import 'package:photo_view/photo_view_gallery.dart';
-import 'package:google_maps_flutter/google_maps_flutter.dart';
+// import 'package:google_maps_flutter/google_maps_flutter.dart';
 import 'package:geocoding/geocoding.dart';
+import 'package:flutter_map/flutter_map.dart' as flutter_map;
+import 'package:latlong2/latlong.dart' as latlong2;
+import 'package:flutter_map_cancellable_tile_provider/flutter_map_cancellable_tile_provider.dart';
 
 class DetalhesSolicitacaoDialog extends StatefulWidget {
   final Map<String, dynamic> solicitacao;
@@ -21,8 +24,9 @@ class _DetalhesSolicitacaoDialogState extends State<DetalhesSolicitacaoDialog> {
   bool loading = true;
   late String statusSelecionado;
   bool atualizandoStatus = false;
-  LatLng? localizacao;
+  latlong2.LatLng? localizacao;
   bool carregandoMapa = false;
+  bool _satellite = false;
 
   @override
   void initState() {
@@ -129,21 +133,33 @@ class _DetalhesSolicitacaoDialogState extends State<DetalhesSolicitacaoDialog> {
     });
     try {
       final solicitacao = widget.solicitacao;
-      double? lat = solicitacao['latitude'] as double?;
-      double? lng = solicitacao['longitude'] as double?;
-      if (lat != null && lng != null) {
-        setState(() {
-          localizacao = LatLng(lat, lng);
-          carregandoMapa = false;
-        });
-        return;
+      // 1. Tentar pegar coordenadas salvas
+      final enderecoCoordenadas = solicitacao['endereco_coordenadas']
+          ?.toString();
+      if (enderecoCoordenadas != null && enderecoCoordenadas.contains(',')) {
+        final partes = enderecoCoordenadas.split(',');
+        if (partes.length == 2) {
+          final lat = double.tryParse(partes[0]);
+          final lng = double.tryParse(partes[1]);
+          if (lat != null && lng != null) {
+            setState(() {
+              localizacao = latlong2.LatLng(lat, lng);
+              carregandoMapa = false;
+            });
+            return;
+          }
+        }
       }
+      // 2. Fallback: geocoding do endereço
       final endereco = solicitacao['endereco']?.toString();
       if (endereco != null && endereco.isNotEmpty) {
         List<Location> locations = await locationFromAddress(endereco);
         if (locations.isNotEmpty) {
           setState(() {
-            localizacao = LatLng(locations[0].latitude, locations[0].longitude);
+            localizacao = latlong2.LatLng(
+              locations[0].latitude,
+              locations[0].longitude,
+            );
             carregandoMapa = false;
           });
           return;
@@ -1070,6 +1086,26 @@ class _DetalhesSolicitacaoDialogState extends State<DetalhesSolicitacaoDialog> {
                   color: theme.primaryColor,
                 ),
               ),
+              const Spacer(),
+              Material(
+                color: Colors.transparent,
+                child: InkWell(
+                  borderRadius: BorderRadius.circular(24),
+                  onTap: () => setState(() => _satellite = !_satellite),
+                  child: Container(
+                    padding: const EdgeInsets.all(6),
+                    decoration: BoxDecoration(
+                      color: theme.primaryColor.withOpacity(0.10),
+                      borderRadius: BorderRadius.circular(24),
+                    ),
+                    child: Icon(
+                      _satellite ? Icons.map : Icons.satellite_alt,
+                      color: theme.primaryColor,
+                      size: 22,
+                    ),
+                  ),
+                ),
+              ),
             ],
           ),
         ),
@@ -1093,24 +1129,213 @@ class _DetalhesSolicitacaoDialogState extends State<DetalhesSolicitacaoDialog> {
                 )
               : ClipRRect(
                   borderRadius: BorderRadius.circular(16),
-                  child: GoogleMap(
-                    initialCameraPosition: CameraPosition(
-                      target: localizacao!,
-                      zoom: 16,
-                    ),
-                    markers: {
-                      Marker(
-                        markerId: const MarkerId('endereco'),
-                        position: localizacao!,
+                  child: Stack(
+                    children: [
+                      flutter_map.FlutterMap(
+                        options: flutter_map.MapOptions(
+                          initialCenter: localizacao!,
+                          initialZoom: 16,
+                          minZoom: 3,
+                          maxZoom: 19,
+                          interactionOptions: flutter_map.InteractionOptions(
+                            flags: flutter_map.InteractiveFlag.all,
+                          ),
+                        ),
+                        children: [
+                          flutter_map.TileLayer(
+                            urlTemplate: _satellite
+                                ? "https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}"
+                                : "https://tile.openstreetmap.org/{z}/{x}/{y}.png",
+                            tileProvider: CancellableNetworkTileProvider(),
+                            userAgentPackageName: 'com.rucopi.dashboard',
+                          ),
+                          flutter_map.MarkerLayer(
+                            markers: [
+                              flutter_map.Marker(
+                                point: localizacao!,
+                                width: 48,
+                                height: 48,
+                                child: Container(
+                                  decoration: BoxDecoration(
+                                    shape: BoxShape.circle,
+                                    boxShadow: [
+                                      BoxShadow(
+                                        color: theme.primaryColor.withOpacity(
+                                          0.25,
+                                        ),
+                                        blurRadius: 8,
+                                        offset: const Offset(0, 4),
+                                      ),
+                                    ],
+                                  ),
+                                  child: Icon(
+                                    Icons.location_on,
+                                    color: _satellite
+                                        ? Colors.redAccent
+                                        : theme.primaryColor,
+                                    size: 40,
+                                  ),
+                                ),
+                              ),
+                            ],
+                          ),
+                        ],
                       ),
-                    },
-                    zoomControlsEnabled: false,
-                    myLocationButtonEnabled: false,
-                    liteModeEnabled: true,
+                      Positioned(
+                        top: 10,
+                        right: 10,
+                        child: Material(
+                          color: Colors.transparent,
+                          child: InkWell(
+                            borderRadius: BorderRadius.circular(24),
+                            onTap: () {
+                              if (localizacao != null) {
+                                showMapaDialog(
+                                  context,
+                                  localizacao!,
+                                  _satellite,
+                                  theme,
+                                );
+                              }
+                            },
+                            child: Container(
+                              padding: const EdgeInsets.all(6),
+                              decoration: BoxDecoration(
+                                color: theme.primaryColor.withOpacity(0.13),
+                                borderRadius: BorderRadius.circular(24),
+                              ),
+                              child: const Icon(Icons.fullscreen, size: 22),
+                            ),
+                          ),
+                        ),
+                      ),
+                    ],
                   ),
                 ),
         ),
       ],
     );
   }
+}
+
+void showMapaDialog(
+  BuildContext context,
+  latlong2.LatLng localizacao,
+  bool satellite,
+  ThemeData theme,
+) {
+  showDialog(
+    context: context,
+    builder: (context) {
+      double zoom = 16;
+      return StatefulBuilder(
+        builder: (context, setState) => Dialog(
+          backgroundColor: Colors.transparent,
+          insetPadding: const EdgeInsets.all(12),
+          child: Container(
+            width: MediaQuery.of(context).size.width * 0.9,
+            height: MediaQuery.of(context).size.height * 0.7,
+            decoration: BoxDecoration(
+              color: theme.cardColor,
+              borderRadius: BorderRadius.circular(20),
+            ),
+            child: Stack(
+              children: [
+                ClipRRect(
+                  borderRadius: BorderRadius.circular(20),
+                  child: flutter_map.FlutterMap(
+                    options: flutter_map.MapOptions(
+                      initialCenter: localizacao,
+                      initialZoom: zoom,
+                      minZoom: 3,
+                      maxZoom: 19,
+                      interactionOptions: flutter_map.InteractionOptions(
+                        flags: flutter_map.InteractiveFlag.all,
+                      ),
+                      onPositionChanged: (pos, hasGesture) {
+                        setState(() => zoom = pos.zoom ?? zoom);
+                      },
+                    ),
+                    children: [
+                      flutter_map.TileLayer(
+                        urlTemplate: satellite
+                            ? "https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}"
+                            : "https://tile.openstreetmap.org/{z}/{x}/{y}.png",
+                        tileProvider: CancellableNetworkTileProvider(),
+                        userAgentPackageName: 'com.rucopi.dashboard',
+                      ),
+                      flutter_map.MarkerLayer(
+                        markers: [
+                          flutter_map.Marker(
+                            point: localizacao,
+                            width: 56,
+                            height: 56,
+                            child: Container(
+                              decoration: BoxDecoration(
+                                shape: BoxShape.circle,
+                                boxShadow: [
+                                  BoxShadow(
+                                    color: theme.primaryColor.withOpacity(0.25),
+                                    blurRadius: 10,
+                                    offset: const Offset(0, 4),
+                                  ),
+                                ],
+                              ),
+                              child: Icon(
+                                Icons.location_on,
+                                color: satellite
+                                    ? Colors.redAccent
+                                    : theme.primaryColor,
+                                size: 48,
+                              ),
+                            ),
+                          ),
+                        ],
+                      ),
+                    ],
+                  ),
+                ),
+                Positioned(
+                  top: 12,
+                  right: 12,
+                  child: Row(
+                    children: [
+                      FloatingActionButton(
+                        mini: true,
+                        heroTag: 'zoom_in',
+                        backgroundColor: theme.primaryColor,
+                        foregroundColor: theme.colorScheme.onPrimary,
+                        onPressed: () =>
+                            setState(() => zoom = (zoom + 1).clamp(3, 19)),
+                        child: const Icon(Icons.add),
+                      ),
+                      const SizedBox(width: 8),
+                      FloatingActionButton(
+                        mini: true,
+                        heroTag: 'zoom_out',
+                        backgroundColor: theme.primaryColor,
+                        foregroundColor: theme.colorScheme.onPrimary,
+                        onPressed: () =>
+                            setState(() => zoom = (zoom - 1).clamp(3, 19)),
+                        child: const Icon(Icons.remove),
+                      ),
+                      const SizedBox(width: 8),
+                      FloatingActionButton(
+                        mini: true,
+                        heroTag: 'close_map',
+                        backgroundColor: theme.colorScheme.error,
+                        foregroundColor: Colors.white,
+                        onPressed: () => Navigator.of(context).pop(),
+                        child: const Icon(Icons.close),
+                      ),
+                    ],
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ),
+      );
+    },
+  );
 }
