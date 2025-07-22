@@ -25,10 +25,15 @@ class DashboardHomePage extends StatefulWidget {
 class _DashboardHomePageState extends State<DashboardHomePage> {
   DashboardScreen currentScreen = DashboardScreen.dashboard;
   DashboardScreen? hoveredScreen;
+  String? _solicitacoesFiltroInicial;
 
   void _onMenuTap(DashboardScreen screen) {
     setState(() {
       currentScreen = screen;
+      // Resetar filtro ao navegar para solicitações pelo menu
+      if (screen == DashboardScreen.solicitacoes) {
+        _solicitacoesFiltroInicial = null;
+      }
     });
   }
 
@@ -216,7 +221,10 @@ class _DashboardHomePageState extends State<DashboardHomePage> {
       case DashboardScreen.dashboard:
         return _DashboardContent(key: const ValueKey('dashboard'));
       case DashboardScreen.solicitacoes:
-        return const SolicitacoesPage(key: ValueKey('solicitacoes'));
+        return SolicitacoesPage(
+          key: const ValueKey('solicitacoes'),
+          filtroInicial: _solicitacoesFiltroInicial,
+        );
       case DashboardScreen.configuracoes:
         return const ConfiguracoesPage(key: ValueKey('configuracoes'));
       case DashboardScreen.mapa:
@@ -497,68 +505,100 @@ class _DashboardContentState extends State<_DashboardContent> {
         } else {
           cardWidth = constraints.maxWidth / crossAxisCount - 16;
         }
+        // Função para navegar para solicitações com filtro
+        void navegarParaSolicitacoesComFiltro(String filtro) {
+          final dashboardState = context
+              .findAncestorStateOfType<_DashboardHomePageState>();
+          if (dashboardState != null) {
+            dashboardState.setState(() {
+              dashboardState.currentScreen = DashboardScreen.solicitacoes;
+              dashboardState._solicitacoesFiltroInicial = filtro;
+            });
+          }
+        }
+
         return Wrap(
           spacing: 20,
           runSpacing: 20,
           children: [
             SizedBox(
               width: cardWidth,
-              child: _buildStatCard(
-                title: 'Pendentes',
-                value: pendentes,
-                icon: Icons.access_time_rounded,
-                color: const Color(0xFFFF9800),
-                theme: theme,
-                isDark: isDark,
-                width: width,
+              child: _StatCardHoverable(
+                onTap: () => navegarParaSolicitacoesComFiltro('pendente'),
+                builder: (isHovered) => _buildStatCard(
+                  title: 'Pendentes',
+                  value: pendentes,
+                  icon: Icons.access_time_rounded,
+                  color: const Color(0xFFFF9800),
+                  theme: theme,
+                  isDark: isDark,
+                  width: width,
+                  isHovered: isHovered,
+                ),
               ),
             ),
             SizedBox(
               width: cardWidth,
-              child: _buildStatCard(
-                title: 'Agendadas',
-                value: agendadas,
-                icon: Icons.event_available,
-                color: const Color(0xFF2196F3),
-                theme: theme,
-                isDark: isDark,
-                width: width,
+              child: _StatCardHoverable(
+                onTap: () => navegarParaSolicitacoesComFiltro('agendada'),
+                builder: (isHovered) => _buildStatCard(
+                  title: 'Agendadas',
+                  value: agendadas,
+                  icon: Icons.event_available,
+                  color: const Color(0xFF2196F3),
+                  theme: theme,
+                  isDark: isDark,
+                  width: width,
+                  isHovered: isHovered,
+                ),
               ),
             ),
             SizedBox(
               width: cardWidth,
-              child: _buildStatCard(
-                title: 'Coletando',
-                value: coletando,
-                icon: Icons.local_shipping,
-                color: const Color(0xFF673AB7),
-                theme: theme,
-                isDark: isDark,
-                width: width,
+              child: _StatCardHoverable(
+                onTap: () => navegarParaSolicitacoesComFiltro('coletando'),
+                builder: (isHovered) => _buildStatCard(
+                  title: 'Coletando',
+                  value: coletando,
+                  icon: Icons.local_shipping,
+                  color: const Color(0xFF673AB7),
+                  theme: theme,
+                  isDark: isDark,
+                  width: width,
+                  isHovered: isHovered,
+                ),
               ),
             ),
             SizedBox(
               width: cardWidth,
-              child: _buildStatCard(
-                title: 'Concluídas',
-                value: concluidas,
-                icon: Icons.check_circle,
-                color: const Color(0xFF4CAF50),
-                theme: theme,
-                isDark: isDark,
-                width: width,
+              child: _StatCardHoverable(
+                onTap: () => navegarParaSolicitacoesComFiltro('concluido'),
+                builder: (isHovered) => _buildStatCard(
+                  title: 'Concluídas',
+                  value: concluidas,
+                  icon: Icons.check_circle,
+                  color: const Color(0xFF4CAF50),
+                  theme: theme,
+                  isDark: isDark,
+                  width: width,
+                  isHovered: isHovered,
+                ),
               ),
             ),
             SizedBox(
               width: cardWidth,
-              child: _buildStatCard(
-                title: 'Canceladas',
-                value: canceladas,
-                icon: Icons.cancel,
-                color: const Color(0xFFF44336),
-                theme: theme,
-                isDark: isDark,
-                width: width,
+              child: _StatCardHoverable(
+                onTap: () => navegarParaSolicitacoesComFiltro('cancelado'),
+                builder: (isHovered) => _buildStatCard(
+                  title: 'Canceladas',
+                  value: canceladas,
+                  icon: Icons.cancel,
+                  color: const Color(0xFFF44336),
+                  theme: theme,
+                  isDark: isDark,
+                  width: width,
+                  isHovered: isHovered,
+                ),
               ),
             ),
           ],
@@ -575,17 +615,24 @@ class _DashboardContentState extends State<_DashboardContent> {
     required ThemeData theme,
     required bool isDark,
     required double width,
+    bool isHovered = false,
   }) {
-    return Container(
+    return AnimatedContainer(
+      duration: const Duration(milliseconds: 150),
       constraints: BoxConstraints(
         minWidth: width < 400 ? 100 : 150,
         maxWidth: 280,
       ),
       padding: EdgeInsets.all(width < 600 ? 10 : 16),
       decoration: BoxDecoration(
-        color: isDark ? theme.cardColor : theme.primaryColor.withOpacity(0.08),
+        color: isHovered
+            ? (isDark
+                  ? theme.primaryColor.withOpacity(0.18)
+                  : theme.primaryColor.withOpacity(0.18))
+            : (isDark ? theme.cardColor : theme.primaryColor.withOpacity(0.08)),
         borderRadius: BorderRadius.circular(width < 600 ? 8 : 12),
         border: Border.all(color: theme.dividerColor, width: 1),
+        // boxShadow removido
       ),
       child: Row(
         crossAxisAlignment: CrossAxisAlignment.center,
@@ -1569,4 +1616,33 @@ Widget _buildSectionContainer({
     ),
     child: child,
   );
+}
+
+// Adicionar widget dedicado para hover dos cards de estatística
+class _StatCardHoverable extends StatefulWidget {
+  final VoidCallback onTap;
+  final Widget Function(bool isHovered) builder;
+  const _StatCardHoverable({
+    required this.onTap,
+    required this.builder,
+    Key? key,
+  }) : super(key: key);
+  @override
+  State<_StatCardHoverable> createState() => _StatCardHoverableState();
+}
+
+class _StatCardHoverableState extends State<_StatCardHoverable> {
+  bool isHovered = false;
+  @override
+  Widget build(BuildContext context) {
+    return MouseRegion(
+      onEnter: (_) => setState(() => isHovered = true),
+      onExit: (_) => setState(() => isHovered = false),
+      child: InkWell(
+        onTap: widget.onTap,
+        borderRadius: BorderRadius.circular(12),
+        child: widget.builder(isHovered),
+      ),
+    );
+  }
 }

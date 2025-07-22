@@ -6,7 +6,8 @@ import '../widgets/app_padrao.dart';
 import 'detalhes_solicitacao_dialog.dart';
 
 class SolicitacoesPage extends StatefulWidget {
-  const SolicitacoesPage({super.key});
+  final String? filtroInicial;
+  const SolicitacoesPage({super.key, this.filtroInicial});
 
   @override
   State<SolicitacoesPage> createState() => _SolicitacoesPageState();
@@ -24,6 +25,9 @@ class _SolicitacoesPageState extends State<SolicitacoesPage> {
   @override
   void initState() {
     super.initState();
+    if (widget.filtroInicial != null && widget.filtroInicial != 'todas') {
+      filtroStatus = widget.filtroInicial!;
+    }
     buscarSolicitacoes();
   }
 
@@ -267,6 +271,27 @@ class _SolicitacoesPageState extends State<SolicitacoesPage> {
 
   Widget _buildFiltersMenu() {
     final theme = Theme.of(context);
+    // Definir ícone conforme filtro
+    IconData filtroIcon;
+    switch (filtroStatus) {
+      case 'pendente':
+        filtroIcon = Icons.schedule_rounded;
+        break;
+      case 'agendada':
+        filtroIcon = Icons.event_available;
+        break;
+      case 'coletando':
+        filtroIcon = Icons.local_shipping;
+        break;
+      case 'concluido':
+        filtroIcon = Icons.check_circle;
+        break;
+      case 'cancelado':
+        filtroIcon = Icons.cancel;
+        break;
+      default:
+        filtroIcon = Icons.tune_rounded;
+    }
     return PopupMenuButton<String>(
       icon: Container(
         padding: const EdgeInsets.all(8),
@@ -274,7 +299,7 @@ class _SolicitacoesPageState extends State<SolicitacoesPage> {
           color: theme.primaryColor.withOpacity(0.1),
           borderRadius: BorderRadius.circular(8),
         ),
-        child: Icon(Icons.tune_rounded, color: theme.primaryColor, size: 20),
+        child: Icon(filtroIcon, color: theme.primaryColor, size: 20),
       ),
       tooltip: 'Filtros',
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
