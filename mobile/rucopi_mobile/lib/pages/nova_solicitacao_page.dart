@@ -6,6 +6,7 @@ import '../widgets/app_padrao.dart';
 import 'package:geolocator/geolocator.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
 import 'package:geocoding/geocoding.dart';
+import 'package:flutter_image_compress/flutter_image_compress.dart';
 
 class NovaSolicitacaoPage extends StatefulWidget {
   const NovaSolicitacaoPage({super.key});
@@ -17,14 +18,30 @@ class NovaSolicitacaoPage extends StatefulWidget {
 class _NovaSolicitacaoPageState extends State<NovaSolicitacaoPage> {
   final descricaoController = TextEditingController();
   final enderecoController = TextEditingController();
+  final bairroController = TextEditingController(); // Novo campo
+  final numeroCasaController = TextEditingController(); // Novo campo
   String? tipoEntulho;
   final tiposEntulho = ['Entulho de obra', 'Móveis', 'Galhos', 'Outros'];
   final List<XFile> imagensSelecionadas = [];
   bool carregando = false;
   String enderecoModo = 'manual'; // 'manual', 'mapa', 'atual'
-  LatLng enderecoMapa = const LatLng(-23.5505, -46.6333); // SP centro
+  LatLng enderecoMapa = const LatLng(-2.955939, -41.780729); // Minha casa
   bool buscandoEndereco = false;
   String? enderecoRua;
+
+  void _setEnderecoModo(String novoModo) async {
+    setState(() {
+      enderecoModo = novoModo;
+      enderecoController.clear();
+      bairroController.clear();
+      enderecoRua = null;
+    });
+    if (novoModo == 'mapa') {
+      // Abrir o mapa automaticamente ao selecionar o modo mapa
+      await Future.delayed(const Duration(milliseconds: 200));
+      selecionarNoMapa();
+    }
+  }
 
   Future<void> selecionarImagens() async {
     final ImagePicker picker = ImagePicker();
@@ -41,7 +58,18 @@ class _NovaSolicitacaoPageState extends State<NovaSolicitacaoPage> {
     final storage = Supabase.instance.client.storage.from('fotosrucopi');
     List<String> urls = [];
     for (var i = 0; i < imagensSelecionadas.length; i++) {
-      final file = File(imagensSelecionadas[i].path);
+      File file = File(imagensSelecionadas[i].path);
+      // Comprimir imagem antes do upload
+      final compressed = await FlutterImageCompress.compressAndGetFile(
+        file.absolute.path,
+        file.absolute.path + '_compressed.jpg',
+        quality: 70,
+        minWidth: 1024,
+        minHeight: 1024,
+      );
+      if (compressed != null) {
+        file = File(compressed.path);
+      }
       final fileName =
           '${userId}_${DateTime.now().millisecondsSinceEpoch}_$i.jpg';
       final res = await storage.upload('solicitacoes/$fileName', file);
@@ -70,10 +98,22 @@ class _NovaSolicitacaoPageState extends State<NovaSolicitacaoPage> {
       }
       final pos = await Geolocator.getCurrentPosition();
       if (!mounted) return;
-      setState(() {
-        enderecoMapa = LatLng(pos.latitude, pos.longitude);
-        enderecoController.text = '${pos.latitude}, ${pos.longitude}';
-      });
+      enderecoMapa = LatLng(pos.latitude, pos.longitude);
+      // Buscar endereço convertido
+      List<Placemark> placemarks = await placemarkFromCoordinates(
+        pos.latitude,
+        pos.longitude,
+      );
+      if (placemarks.isNotEmpty) {
+        final p = placemarks.first;
+        setState(() {
+          enderecoController.text = p.street ?? '';
+          bairroController.text =
+              (p.subLocality != null && p.subLocality!.isNotEmpty)
+              ? p.subLocality!
+              : (p.subAdministrativeArea ?? '');
+        });
+      }
     } catch (e) {
       if (!mounted) return;
       ScaffoldMessenger.of(
@@ -87,20 +127,7 @@ class _NovaSolicitacaoPageState extends State<NovaSolicitacaoPage> {
   }
 
   Future<void> selecionarNoMapa() async {
-    // Buscar localização atual antes de abrir o mapa
-    if (enderecoModo == 'mapa') {
-      try {
-        LocationPermission permission = await Geolocator.checkPermission();
-        if (permission == LocationPermission.denied) {
-          permission = await Geolocator.requestPermission();
-        }
-        if (permission != LocationPermission.denied &&
-            permission != LocationPermission.deniedForever) {
-          final pos = await Geolocator.getCurrentPosition();
-          enderecoMapa = LatLng(pos.latitude, pos.longitude);
-        }
-      } catch (_) {}
-    }
+    // NÃO buscar localização atual antes de abrir o mapa (abrir imediatamente)
     final LatLng? resultado = await Navigator.push(
       context,
       MaterialPageRoute(
@@ -109,12 +136,8 @@ class _NovaSolicitacaoPageState extends State<NovaSolicitacaoPage> {
       ),
     );
     if (resultado != null) {
-      setState(() {
-        enderecoMapa = resultado;
-        enderecoController.text =
-            '${resultado.latitude}, ${resultado.longitude}';
-      });
-      // Buscar nome da rua
+      enderecoMapa = resultado;
+      // Buscar endereço convertido
       try {
         List<Placemark> placemarks = await placemarkFromCoordinates(
           resultado.latitude,
@@ -123,11 +146,33 @@ class _NovaSolicitacaoPageState extends State<NovaSolicitacaoPage> {
         if (placemarks.isNotEmpty) {
           final p = placemarks.first;
           setState(() {
-            enderecoRua = '${p.street}, ${p.subLocality}, ${p.locality}';
+            enderecoController.text = p.street ?? '';
+            bairroController.text =
+                (p.subLocality != null && p.subLocality!.isNotEmpty)
+                ? p.subLocality!
+                : (p.subAdministrativeArea ?? '');
           });
         }
-      } catch (_) {}
+      } catch (_) {
+        setState(() {
+          enderecoController.text = '';
+          bairroController.text = '';
+        });
+      }
     }
+  }
+
+  String _formatEnderecoPlacemark(Placemark p) {
+    // Monta um endereço legível
+    final partes = [
+      if (p.street != null && p.street!.isNotEmpty) p.street,
+      if (p.subLocality != null && p.subLocality!.isNotEmpty) p.subLocality,
+      if (p.locality != null && p.locality!.isNotEmpty) p.locality,
+      if (p.administrativeArea != null && p.administrativeArea!.isNotEmpty)
+        p.administrativeArea,
+      if (p.postalCode != null && p.postalCode!.isNotEmpty) p.postalCode,
+    ];
+    return partes.whereType<String>().join(', ');
   }
 
   Future<void> enviarSolicitacao() async {
@@ -163,6 +208,8 @@ class _NovaSolicitacaoPageState extends State<NovaSolicitacaoPage> {
         'descricao': descricaoController.text,
         'tipo_entulho': tipoEntulho,
         'endereco': enderecoController.text,
+        'bairro': bairroController.text, // Novo campo
+        'numero_casa': numeroCasaController.text, // Novo campo
         'fotos': fotosUrls,
         'status': 'pendente',
         'criado_em': DateTime.now().toIso8601String(),
@@ -182,6 +229,15 @@ class _NovaSolicitacaoPageState extends State<NovaSolicitacaoPage> {
         setState(() => carregando = false);
       }
     }
+  }
+
+  @override
+  void dispose() {
+    descricaoController.dispose();
+    enderecoController.dispose();
+    bairroController.dispose(); // Dispose novo campo
+    numeroCasaController.dispose(); // Dispose novo campo
+    super.dispose();
   }
 
   @override
@@ -240,6 +296,80 @@ class _NovaSolicitacaoPageState extends State<NovaSolicitacaoPage> {
               ),
             ),
             const SizedBox(height: 16),
+            // Agrupamento dos campos de endereço, bairro e número
+            Container(
+              padding: const EdgeInsets.all(12),
+              decoration: BoxDecoration(
+                color: Theme.of(context).primaryColor.withOpacity(0.04),
+                borderRadius: BorderRadius.circular(16),
+              ),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.stretch,
+                children: [
+                  TextField(
+                    controller: enderecoController,
+                    enabled: enderecoModo == 'manual',
+                    decoration: InputDecoration(
+                      labelText: 'Endereço',
+                      prefixIcon: const Icon(Icons.location_on_outlined),
+                      filled: true,
+                      fillColor: Theme.of(
+                        context,
+                      ).primaryColor.withValues(alpha: 0.08),
+                      border: OutlineInputBorder(
+                        borderRadius: BorderRadius.circular(16),
+                        borderSide: BorderSide.none,
+                      ),
+                    ),
+                  ),
+                  const SizedBox(height: 12),
+                  Row(
+                    children: [
+                      Expanded(
+                        child: TextField(
+                          controller: bairroController,
+                          decoration: InputDecoration(
+                            labelText: 'Bairro',
+                            prefixIcon: const Icon(
+                              Icons.location_city_outlined,
+                            ),
+                            filled: true,
+                            fillColor: Theme.of(
+                              context,
+                            ).primaryColor.withValues(alpha: 0.08),
+                            border: OutlineInputBorder(
+                              borderRadius: BorderRadius.circular(16),
+                              borderSide: BorderSide.none,
+                            ),
+                          ),
+                        ),
+                      ),
+                      const SizedBox(width: 12),
+                      SizedBox(
+                        width: 110,
+                        child: TextField(
+                          controller: numeroCasaController,
+                          keyboardType: TextInputType.number,
+                          decoration: InputDecoration(
+                            labelText: 'Nº',
+                            prefixIcon: const Icon(Icons.home_outlined),
+                            filled: true,
+                            fillColor: Theme.of(
+                              context,
+                            ).primaryColor.withValues(alpha: 0.08),
+                            border: OutlineInputBorder(
+                              borderRadius: BorderRadius.circular(16),
+                              borderSide: BorderSide.none,
+                            ),
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+                ],
+              ),
+            ),
+            const SizedBox(height: 18),
             // Seletor de modo de endereço
             Row(
               mainAxisAlignment: MainAxisAlignment.spaceEvenly,
@@ -253,7 +383,7 @@ class _NovaSolicitacaoPageState extends State<NovaSolicitacaoPage> {
                     ],
                   ),
                   selected: enderecoModo == 'manual',
-                  onSelected: (_) => setState(() => enderecoModo = 'manual'),
+                  onSelected: (_) => _setEnderecoModo('manual'),
                 ),
                 ChoiceChip(
                   label: Row(
@@ -264,7 +394,7 @@ class _NovaSolicitacaoPageState extends State<NovaSolicitacaoPage> {
                     ],
                   ),
                   selected: enderecoModo == 'mapa',
-                  onSelected: (_) => setState(() => enderecoModo = 'mapa'),
+                  onSelected: (_) => _setEnderecoModo('mapa'),
                 ),
                 ChoiceChip(
                   label: Row(
@@ -276,57 +406,17 @@ class _NovaSolicitacaoPageState extends State<NovaSolicitacaoPage> {
                   ),
                   selected: enderecoModo == 'atual',
                   onSelected: (_) {
-                    setState(() => enderecoModo = 'atual');
+                    _setEnderecoModo('atual');
                     obterLocalizacaoAtual();
                   },
                 ),
               ],
             ),
             const SizedBox(height: 12),
-            if (enderecoModo == 'manual')
-              TextField(
-                controller: enderecoController,
-                decoration: InputDecoration(
-                  labelText: 'Endereço',
-                  prefixIcon: const Icon(Icons.location_on_outlined),
-                  filled: true,
-                  fillColor: Theme.of(
-                    context,
-                  ).primaryColor.withValues(alpha: 0.08),
-                  border: OutlineInputBorder(
-                    borderRadius: BorderRadius.circular(16),
-                    borderSide: BorderSide.none,
-                  ),
-                ),
-              ),
-            if (enderecoModo == 'mapa')
-              ElevatedButton.icon(
-                icon: const Icon(Icons.map),
-                label: const Text('Escolher no mapa'),
-                onPressed: selecionarNoMapa,
-              ),
             if (enderecoModo == 'atual' && buscandoEndereco)
               const Padding(
                 padding: EdgeInsets.symmetric(vertical: 8),
                 child: Center(child: CircularProgressIndicator()),
-              ),
-            if (enderecoModo != 'manual' && enderecoController.text.isNotEmpty)
-              Padding(
-                padding: const EdgeInsets.only(top: 8),
-                child: Column(
-                  children: [
-                    Text(
-                      'Endereço selecionado: ${enderecoController.text}',
-                      textAlign: TextAlign.center,
-                    ),
-                    if (enderecoRua != null)
-                      Text(
-                        'Rua: $enderecoRua',
-                        textAlign: TextAlign.center,
-                        style: const TextStyle(fontSize: 13),
-                      ),
-                  ],
-                ),
               ),
             const SizedBox(height: 16),
             // Card de fotos centralizado
