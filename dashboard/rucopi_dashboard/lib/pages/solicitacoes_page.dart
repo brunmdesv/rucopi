@@ -21,6 +21,7 @@ class _SolicitacoesPageState extends State<SolicitacoesPage> {
   String filtroStatus = 'todas';
   String termoPesquisa = '';
   final TextEditingController _searchController = TextEditingController();
+  DateTime? filtroData;
 
   @override
   void initState() {
@@ -81,7 +82,14 @@ class _SolicitacoesPageState extends State<SolicitacoesPage> {
                   termoPesquisa.toLowerCase(),
                 ) ==
                 true;
-        return matchStatus && matchPesquisa;
+        final matchData =
+            filtroData == null ||
+            (s['criado_em'] != null &&
+                DateTime.tryParse(s['criado_em']) != null &&
+                DateTime.tryParse(s['criado_em'])!.year == filtroData!.year &&
+                DateTime.tryParse(s['criado_em'])!.month == filtroData!.month &&
+                DateTime.tryParse(s['criado_em'])!.day == filtroData!.day);
+        return matchStatus && matchPesquisa && matchData;
       }).toList();
     });
   }
@@ -352,6 +360,7 @@ class _SolicitacoesPageState extends State<SolicitacoesPage> {
                     setState(() {
                       filtroStatus = 'todas';
                     });
+                    filtrarSolicitacoes();
                     Navigator.pop(context);
                   },
                 ),
@@ -366,6 +375,7 @@ class _SolicitacoesPageState extends State<SolicitacoesPage> {
                     setState(() {
                       filtroStatus = 'pendente';
                     });
+                    filtrarSolicitacoes();
                     Navigator.pop(context);
                   },
                 ),
@@ -380,6 +390,7 @@ class _SolicitacoesPageState extends State<SolicitacoesPage> {
                     setState(() {
                       filtroStatus = 'agendada';
                     });
+                    filtrarSolicitacoes();
                     Navigator.pop(context);
                   },
                 ),
@@ -394,6 +405,7 @@ class _SolicitacoesPageState extends State<SolicitacoesPage> {
                     setState(() {
                       filtroStatus = 'coletando';
                     });
+                    filtrarSolicitacoes();
                     Navigator.pop(context);
                   },
                 ),
@@ -408,6 +420,7 @@ class _SolicitacoesPageState extends State<SolicitacoesPage> {
                     setState(() {
                       filtroStatus = 'concluido';
                     });
+                    filtrarSolicitacoes();
                     Navigator.pop(context);
                   },
                 ),
@@ -422,6 +435,7 @@ class _SolicitacoesPageState extends State<SolicitacoesPage> {
                     setState(() {
                       filtroStatus = 'cancelado';
                     });
+                    filtrarSolicitacoes();
                     Navigator.pop(context);
                   },
                 ),
@@ -513,8 +527,138 @@ class _SolicitacoesPageState extends State<SolicitacoesPage> {
           Expanded(child: _buildSearchField()),
           const SizedBox(width: 16),
           _buildFiltersMenu(),
+          const SizedBox(width: 8),
+          _buildDateFilterButton(),
         ],
       ),
+    );
+  }
+
+  Widget _buildDateFilterButton() {
+    final theme = Theme.of(context);
+    return Row(
+      children: [
+        filtroData != null
+            ? Container(
+                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 6),
+                decoration: BoxDecoration(
+                  color: theme.primaryColor.withOpacity(0.12),
+                  borderRadius: BorderRadius.circular(8),
+                  border: Border.all(
+                    color: theme.primaryColor.withOpacity(0.2),
+                  ),
+                ),
+                child: Row(
+                  children: [
+                    Icon(Icons.event, color: theme.primaryColor, size: 18),
+                    const SizedBox(width: 4),
+                    Text(
+                      '${filtroData!.day.toString().padLeft(2, '0')}/'
+                      '${filtroData!.month.toString().padLeft(2, '0')}/'
+                      '${filtroData!.year}',
+                      style: theme.textTheme.bodySmall?.copyWith(
+                        color: theme.primaryColor,
+                        fontWeight: FontWeight.w600,
+                        fontSize: 13,
+                      ),
+                    ),
+                    const SizedBox(width: 4),
+                    GestureDetector(
+                      onTap: () {
+                        setState(() {
+                          filtroData = null;
+                        });
+                        filtrarSolicitacoes();
+                      },
+                      child: Icon(
+                        Icons.clear_rounded,
+                        size: 16,
+                        color: theme.primaryColor,
+                      ),
+                    ),
+                  ],
+                ),
+              )
+            : IconButton(
+                tooltip: 'Filtrar por data',
+                icon: Icon(Icons.event, color: theme.primaryColor, size: 20),
+                onPressed: () async {
+                  final picked = await showDatePicker(
+                    context: context,
+                    initialDate: filtroData ?? DateTime.now(),
+                    firstDate: DateTime(2020),
+                    lastDate: DateTime(2100),
+                    locale: const Locale('pt', 'BR'),
+                    builder: (context, child) {
+                      final theme = Theme.of(context);
+                      return Theme(
+                        data: theme.copyWith(
+                          colorScheme: theme.colorScheme.copyWith(
+                            primary: theme.primaryColor,
+                            onPrimary: Colors.white,
+                            surface: theme.cardColor,
+                            onSurface:
+                                theme.textTheme.bodyLarge?.color ??
+                                Colors.black,
+                          ),
+                          dialogBackgroundColor: theme.cardColor,
+                          datePickerTheme: DatePickerThemeData(
+                            backgroundColor: theme.cardColor,
+                            headerBackgroundColor: theme.primaryColor,
+                            headerForegroundColor: Colors.white,
+                            todayBackgroundColor: MaterialStateProperty.all(
+                              theme.primaryColor.withOpacity(0.18),
+                            ),
+                            todayForegroundColor: MaterialStateProperty.all(
+                              theme.primaryColor,
+                            ),
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(20),
+                            ),
+                            dayOverlayColor: MaterialStateProperty.all(
+                              theme.primaryColor.withOpacity(0.08),
+                            ),
+                            dayForegroundColor:
+                                MaterialStateProperty.resolveWith((states) {
+                                  if (states.contains(MaterialState.selected)) {
+                                    return Colors.white;
+                                  }
+                                  if (states.contains(MaterialState.disabled)) {
+                                    return theme.disabledColor;
+                                  }
+                                  return theme.textTheme.bodyLarge?.color ??
+                                      Colors.black;
+                                }),
+                            dayBackgroundColor:
+                                MaterialStateProperty.resolveWith((states) {
+                                  if (states.contains(MaterialState.selected)) {
+                                    return theme.primaryColor;
+                                  }
+                                  return Colors.transparent;
+                                }),
+                          ),
+                          textButtonTheme: TextButtonThemeData(
+                            style: TextButton.styleFrom(
+                              foregroundColor: theme.primaryColor,
+                              textStyle: const TextStyle(
+                                fontWeight: FontWeight.bold,
+                              ),
+                            ),
+                          ),
+                        ),
+                        child: child!,
+                      );
+                    },
+                  );
+                  if (picked != null) {
+                    setState(() {
+                      filtroData = picked;
+                    });
+                    filtrarSolicitacoes();
+                  }
+                },
+              ),
+      ],
     );
   }
 
@@ -940,6 +1084,7 @@ class _SolicitacoesPageState extends State<SolicitacoesPage> {
                               setState(() {
                                 filtroStatus = 'todas';
                               });
+                              filtrarSolicitacoes();
                               Navigator.pop(context);
                             },
                           ),
@@ -954,6 +1099,7 @@ class _SolicitacoesPageState extends State<SolicitacoesPage> {
                               setState(() {
                                 filtroStatus = 'pendente';
                               });
+                              filtrarSolicitacoes();
                               Navigator.pop(context);
                             },
                           ),
@@ -968,6 +1114,7 @@ class _SolicitacoesPageState extends State<SolicitacoesPage> {
                               setState(() {
                                 filtroStatus = 'agendada';
                               });
+                              filtrarSolicitacoes();
                               Navigator.pop(context);
                             },
                           ),
@@ -982,6 +1129,7 @@ class _SolicitacoesPageState extends State<SolicitacoesPage> {
                               setState(() {
                                 filtroStatus = 'coletando';
                               });
+                              filtrarSolicitacoes();
                               Navigator.pop(context);
                             },
                           ),
@@ -996,6 +1144,7 @@ class _SolicitacoesPageState extends State<SolicitacoesPage> {
                               setState(() {
                                 filtroStatus = 'concluido';
                               });
+                              filtrarSolicitacoes();
                               Navigator.pop(context);
                             },
                           ),
@@ -1010,6 +1159,7 @@ class _SolicitacoesPageState extends State<SolicitacoesPage> {
                               setState(() {
                                 filtroStatus = 'cancelado';
                               });
+                              filtrarSolicitacoes();
                               Navigator.pop(context);
                             },
                           ),
@@ -1241,12 +1391,24 @@ class _SolicitacoesPageState extends State<SolicitacoesPage> {
                                 termoPesquisa.toLowerCase(),
                               ) ??
                               false);
-                      return matchStatus && matchPesquisa;
+                      final matchData =
+                          filtroData == null ||
+                          (s['criado_em'] != null &&
+                              DateTime.tryParse(s['criado_em']) != null &&
+                              DateTime.tryParse(s['criado_em'])!.year ==
+                                  filtroData!.year &&
+                              DateTime.tryParse(s['criado_em'])!.month ==
+                                  filtroData!.month &&
+                              DateTime.tryParse(s['criado_em'])!.day ==
+                                  filtroData!.day);
+                      return matchStatus && matchPesquisa && matchData;
                     }).toList();
                     if (solicitacoesFiltradas.isEmpty) {
                       return Center(
                         child: Text(
-                          termoPesquisa.isNotEmpty || filtroStatus != 'todas'
+                          termoPesquisa.isNotEmpty ||
+                                  filtroStatus != 'todas' ||
+                                  filtroData != null
                               ? 'Nenhuma solicitação encontrada com os filtros aplicados.'
                               : 'Nenhuma solicitação encontrada.',
                           style: theme.textTheme.bodyLarge?.copyWith(

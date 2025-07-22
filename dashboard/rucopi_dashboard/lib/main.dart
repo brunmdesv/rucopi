@@ -8,6 +8,7 @@ import 'pages/login_page.dart';
 import 'pages/dashboard_home_page.dart';
 import 'pages/solicitacoes_route.dart';
 import 'pages/configuracoes_route.dart';
+import 'package:flutter_localizations/flutter_localizations.dart';
 
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -84,6 +85,13 @@ class _MyAppState extends State<MyApp> {
       darkTheme: themeProvider.darkTheme,
       themeMode: themeProvider.themeMode,
       routerConfig: _router,
+      locale: const Locale('pt', 'BR'),
+      supportedLocales: const [Locale('pt', 'BR'), Locale('en', 'US')],
+      localizationsDelegates: [
+        GlobalMaterialLocalizations.delegate,
+        GlobalWidgetsLocalizations.delegate,
+        GlobalCupertinoLocalizations.delegate,
+      ],
     );
   }
 }
