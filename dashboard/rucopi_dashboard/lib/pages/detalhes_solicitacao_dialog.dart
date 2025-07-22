@@ -158,7 +158,7 @@ class _DetalhesSolicitacaoDialogState extends State<DetalhesSolicitacaoDialog> {
       ),
       child: Container(
         constraints: BoxConstraints(
-          maxWidth: width < 600 ? width * 0.98 : 700,
+          maxWidth: width < 600 ? width * 0.98 : 900,
           maxHeight: MediaQuery.of(context).size.height * 0.95,
         ),
         decoration: BoxDecoration(
@@ -170,7 +170,7 @@ class _DetalhesSolicitacaoDialogState extends State<DetalhesSolicitacaoDialog> {
             : Column(
                 mainAxisSize: MainAxisSize.min,
                 children: [
-                  // Header colorido
+                  // HEADER MODERNO
                   Container(
                     padding: const EdgeInsets.symmetric(
                       horizontal: 24,
@@ -183,174 +183,116 @@ class _DetalhesSolicitacaoDialogState extends State<DetalhesSolicitacaoDialog> {
                         topRight: Radius.circular(AppRadius.card),
                       ),
                     ),
-                    child: Row(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.center,
                       children: [
-                        Icon(
-                          Icons.assignment_rounded,
-                          color: Colors.white,
-                          size: 28,
-                        ),
-                        const SizedBox(width: 12),
-                        Expanded(
-                          child: Text(
-                            'Detalhes da Solicitação',
-                            style: theme.textTheme.headlineSmall?.copyWith(
-                              fontWeight: FontWeight.bold,
-                              color: Colors.white,
+                        Row(
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          children: [
+                            Expanded(child: Container()),
+                            Text(
+                              'Detalhes da Solicitação',
+                              style: theme.textTheme.headlineSmall?.copyWith(
+                                fontWeight: FontWeight.bold,
+                                color: Colors.white,
+                              ),
+                              textAlign: TextAlign.center,
                             ),
-                          ),
+                            Expanded(
+                              child: Align(
+                                alignment: Alignment.centerRight,
+                                child: IconButton(
+                                  icon: const Icon(
+                                    Icons.close,
+                                    color: Colors.white,
+                                  ),
+                                  onPressed: () => Navigator.of(context).pop(),
+                                  tooltip: 'Fechar',
+                                ),
+                              ),
+                            ),
+                          ],
                         ),
-                        IconButton(
-                          icon: const Icon(Icons.close, color: Colors.white),
-                          onPressed: () => Navigator.of(context).pop(),
+                        const SizedBox(height: 8),
+                        Row(
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          children: [_statusVisual(theme, solicitacao)],
                         ),
                       ],
                     ),
                   ),
+                  // CONTEÚDO PRINCIPAL
                   Expanded(
                     child: SingleChildScrollView(
-                      padding: const EdgeInsets.all(24),
+                      padding: const EdgeInsets.all(0),
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.stretch,
                         children: [
-                          // Status destacado centralizado
-                          Row(
-                            mainAxisAlignment: MainAxisAlignment.center,
-                            children: [_buildStatusCard(theme, solicitacao)],
-                          ),
-                          const SizedBox(height: 20),
-                          // Card do Morador
-                          Card(
-                            elevation: 6,
-                            margin: EdgeInsets.zero,
-                            shape: RoundedRectangleBorder(
-                              borderRadius: BorderRadius.circular(
-                                AppRadius.card,
-                              ),
+                          // GALERIA DE FOTOS
+                          if (fotos.isNotEmpty) ...[
+                            _sectionTitle(
+                              'Fotos da Solicitação',
+                              theme,
+                              icon: Icons.photo_library_rounded,
                             ),
-                            child: Padding(
-                              padding: const EdgeInsets.all(16),
-                              child: Column(
-                                crossAxisAlignment: CrossAxisAlignment.start,
-                                children: [
-                                  _sectionSeparatorLabel(
-                                    'Informações do Morador',
+                            _modernPhotoGallery(fotos, theme),
+                            const SizedBox(height: 16),
+                          ],
+                          // INFORMAÇÕES AGRUPADAS
+                          Padding(
+                            padding: const EdgeInsets.symmetric(
+                              horizontal: 24,
+                              vertical: 8,
+                            ),
+                            child: Row(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                // BLOCO MODERNO DE INFORMAÇÕES DA SOLICITAÇÃO
+                                Expanded(
+                                  child: _modernSolicitacaoInfoBlock(
                                     theme,
+                                    solicitacao,
                                   ),
-                                  const SizedBox(height: 12),
-                                  _infoRowCompact(
-                                    'Nome',
-                                    morador?['nome'],
-                                    theme,
-                                  ),
-                                  _infoRowCompact(
-                                    'E-mail',
-                                    morador?['email'],
-                                    theme,
-                                  ),
-                                  _infoRowCompact(
-                                    'Whatsapp',
-                                    morador?['whatsapp'],
-                                    theme,
-                                  ),
-                                  _infoRowCompact(
-                                    'CPF',
-                                    morador?['cpf'],
-                                    theme,
-                                  ),
-                                  _infoRowCompact(
-                                    'Endereço',
-                                    morador?['endereco'],
-                                    theme,
-                                  ),
-                                ],
-                              ),
+                                ),
+                              ],
                             ),
                           ),
-                          const SizedBox(height: 20),
-                          // Card da Solicitação
-                          Card(
-                            elevation: 6,
-                            margin: EdgeInsets.zero,
-                            shape: RoundedRectangleBorder(
-                              borderRadius: BorderRadius.circular(
-                                AppRadius.card,
-                              ),
-                            ),
-                            child: Padding(
-                              padding: const EdgeInsets.all(16),
-                              child: Column(
-                                crossAxisAlignment: CrossAxisAlignment.start,
-                                children: [
-                                  _sectionSeparatorLabel(
-                                    'Informações da Solicitação',
-                                    theme,
-                                  ),
-                                  const SizedBox(height: 12),
-                                  _infoRowCompact(
-                                    'Descrição',
-                                    solicitacao['descricao'],
-                                    theme,
-                                  ),
-                                  _infoRowCompact(
-                                    'Tipo de Entulho',
-                                    solicitacao['tipo_entulho'],
-                                    theme,
-                                  ),
-                                  _infoRowCompact(
-                                    'Endereço',
-                                    solicitacao['endereco'],
-                                    theme,
-                                  ),
-                                  _infoRowCompact(
-                                    'Status',
-                                    solicitacao['status'],
-                                    theme,
-                                  ),
-                                  _infoRowCompact(
-                                    'Data de Criação',
-                                    _formatDate(solicitacao['criado_em']),
-                                    theme,
-                                  ),
-                                  if (fotos.isNotEmpty) ...[
-                                    const SizedBox(height: 12),
-                                    _cameraSeparator(theme),
-                                    const SizedBox(height: 12),
-                                    SizedBox(
-                                      height: 100,
-                                      child: ListView.separated(
-                                        scrollDirection: Axis.horizontal,
-                                        itemCount: fotos.length,
-                                        separatorBuilder: (_, __) =>
-                                            const SizedBox(width: 8),
-                                        itemBuilder: (context, index) {
-                                          return GestureDetector(
-                                            onTap: () => _showImageGallery(
-                                              context,
-                                              fotos,
-                                              index,
-                                            ),
-                                            child: ClipRRect(
-                                              borderRadius:
-                                                  BorderRadius.circular(8),
-                                              child: Image.network(
-                                                fotos[index],
-                                                width: 100,
-                                                height: 100,
-                                                fit: BoxFit.cover,
-                                              ),
-                                            ),
-                                          );
-                                        },
-                                      ),
-                                    ),
-                                  ],
-                                ],
-                              ),
-                            ),
-                          ),
+                          const SizedBox(height: 16),
                         ],
                       ),
+                    ),
+                  ),
+                  // RODAPÉ MODERNO
+                  Container(
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 24,
+                      vertical: 16,
+                    ),
+                    decoration: BoxDecoration(
+                      color: theme.dialogBackgroundColor,
+                      borderRadius: const BorderRadius.only(
+                        bottomLeft: Radius.circular(AppRadius.card),
+                        bottomRight: Radius.circular(AppRadius.card),
+                      ),
+                      border: Border(
+                        top: BorderSide(color: theme.dividerColor),
+                      ),
+                    ),
+                    child: Row(
+                      children: [
+                        // TAG DO MORADOR
+                        _moradorChip(morador, theme),
+                        Expanded(child: Container()),
+                        _modernStatusDropdownButton(theme),
+                        if (atualizandoStatus) ...[
+                          const SizedBox(width: 12),
+                          SizedBox(
+                            width: 18,
+                            height: 18,
+                            child: CircularProgressIndicator(strokeWidth: 2),
+                          ),
+                        ],
+                      ],
                     ),
                   ),
                 ],
@@ -359,7 +301,8 @@ class _DetalhesSolicitacaoDialogState extends State<DetalhesSolicitacaoDialog> {
     );
   }
 
-  Widget _buildStatusCard(ThemeData theme, Map solicitacao) {
+  // NOVOS WIDGETS MODERNOS
+  Widget _statusVisual(ThemeData theme, Map solicitacao) {
     final status = solicitacao['status']?.toString().toLowerCase() ?? '';
     Color color;
     String label;
@@ -395,21 +338,153 @@ class _DetalhesSolicitacaoDialogState extends State<DetalhesSolicitacaoDialog> {
         label = status.isNotEmpty ? status : 'Indefinido';
         icon = Icons.help_outline_rounded;
     }
-    return Row(
-      mainAxisSize: MainAxisSize.min,
-      children: [
-        Icon(icon, color: color, size: 18),
-        const SizedBox(width: 8),
-        _buildStatusDropdown(),
-        if (atualizandoStatus) ...[
-          const SizedBox(width: 8),
-          SizedBox(
-            width: 16,
-            height: 16,
-            child: CircularProgressIndicator(strokeWidth: 2),
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+      decoration: BoxDecoration(
+        color: color.withOpacity(0.12),
+        borderRadius: BorderRadius.circular(20),
+        border: Border.all(color: color.withOpacity(0.3)),
+      ),
+      child: Row(
+        children: [
+          Icon(icon, color: color, size: 18),
+          const SizedBox(width: 6),
+          Text(
+            label,
+            style: TextStyle(
+              color: color,
+              fontWeight: FontWeight.bold,
+              fontSize: 13,
+            ),
           ),
         ],
-      ],
+      ),
+    );
+  }
+
+  Widget _sectionTitle(String label, ThemeData theme, {IconData? icon}) {
+    return Padding(
+      padding: const EdgeInsets.only(top: 24, left: 24, right: 24, bottom: 8),
+      child: Row(
+        children: [
+          if (icon != null) ...[
+            Icon(icon, color: theme.primaryColor, size: 20),
+            const SizedBox(width: 8),
+          ],
+          Text(
+            label,
+            style: theme.textTheme.titleMedium?.copyWith(
+              fontWeight: FontWeight.bold,
+              color: theme.primaryColor,
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _modernPhotoGallery(List<String> fotos, ThemeData theme) {
+    return Container(
+      height: 120,
+      margin: const EdgeInsets.symmetric(horizontal: 24, vertical: 8),
+      child: ListView.separated(
+        scrollDirection: Axis.horizontal,
+        itemCount: fotos.length,
+        separatorBuilder: (_, __) => const SizedBox(width: 12),
+        itemBuilder: (context, index) {
+          return GestureDetector(
+            onTap: () => _showImageGallery(context, fotos, index),
+            child: ClipRRect(
+              borderRadius: BorderRadius.circular(14),
+              child: Image.network(
+                fotos[index],
+                width: 120,
+                height: 120,
+                fit: BoxFit.cover,
+              ),
+            ),
+          );
+        },
+      ),
+    );
+  }
+
+  Widget _modernInfoCard(
+    ThemeData theme, {
+    required String title,
+    required IconData icon,
+    required List<Widget> children,
+  }) {
+    return Card(
+      elevation: 3,
+      margin: EdgeInsets.zero,
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(18)),
+      child: Padding(
+        padding: const EdgeInsets.all(16),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Row(
+              children: [
+                Icon(icon, color: theme.primaryColor, size: 18),
+                const SizedBox(width: 8),
+                Text(
+                  title,
+                  style: theme.textTheme.titleSmall?.copyWith(
+                    fontWeight: FontWeight.bold,
+                    color: theme.primaryColor,
+                  ),
+                ),
+              ],
+            ),
+            const SizedBox(height: 10),
+            ...children,
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _modernStatusDropdown(ThemeData theme) {
+    final statusList = [
+      'pendente',
+      'agendada',
+      'coletando',
+      'concluido',
+      'cancelado',
+    ];
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+      decoration: BoxDecoration(
+        color: theme.primaryColor.withOpacity(0.08),
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(color: theme.primaryColor.withOpacity(0.18)),
+      ),
+      child: DropdownButtonHideUnderline(
+        child: DropdownButton<String>(
+          value: statusSelecionado,
+          icon: Icon(Icons.arrow_drop_down, color: theme.primaryColor),
+          items: statusList.map((status) {
+            return DropdownMenuItem(
+              value: status,
+              child: Text(
+                status[0].toUpperCase() + status.substring(1),
+                style: theme.textTheme.bodyMedium?.copyWith(
+                  fontWeight: FontWeight.w600,
+                  color: theme.primaryColor,
+                ),
+              ),
+            );
+          }).toList(),
+          onChanged: atualizandoStatus
+              ? null
+              : (novoStatus) {
+                  if (novoStatus != null && novoStatus != statusSelecionado) {
+                    _atualizarStatus(novoStatus);
+                  }
+                },
+        ),
+      ),
     );
   }
 
@@ -603,6 +678,284 @@ class _DetalhesSolicitacaoDialogState extends State<DetalhesSolicitacaoDialog> {
         ),
         const Expanded(child: Divider(thickness: 1, indent: 8, endIndent: 0)),
       ],
+    );
+  }
+
+  Widget _modernStatusDropdownButton(ThemeData theme) {
+    final statusList = [
+      'pendente',
+      'agendada',
+      'coletando',
+      'concluido',
+      'cancelado',
+    ];
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 0),
+      child: DropdownButtonHideUnderline(
+        child: DropdownButton<String>(
+          value: statusSelecionado,
+          icon: Icon(Icons.arrow_drop_down, color: theme.primaryColor),
+          style: theme.textTheme.bodyLarge?.copyWith(
+            fontWeight: FontWeight.bold,
+          ),
+          dropdownColor: theme.cardColor,
+          borderRadius: BorderRadius.circular(14),
+          items: statusList.map((status) {
+            return DropdownMenuItem(
+              value: status,
+              child: Row(
+                children: [
+                  Icon(
+                    _statusIcon(status),
+                    color: theme.primaryColor,
+                    size: 18,
+                  ),
+                  const SizedBox(width: 8),
+                  Text(
+                    status[0].toUpperCase() + status.substring(1),
+                    style: theme.textTheme.bodyMedium?.copyWith(
+                      fontWeight: FontWeight.w600,
+                      color: theme.primaryColor,
+                    ),
+                  ),
+                ],
+              ),
+            );
+          }).toList(),
+          onChanged: atualizandoStatus
+              ? null
+              : (novoStatus) {
+                  if (novoStatus != null && novoStatus != statusSelecionado) {
+                    _atualizarStatus(novoStatus);
+                  }
+                },
+        ),
+      ),
+    );
+  }
+
+  IconData _statusIcon(String status) {
+    switch (status) {
+      case 'pendente':
+        return Icons.schedule_rounded;
+      case 'agendada':
+        return Icons.event_available;
+      case 'coletando':
+        return Icons.local_shipping_rounded;
+      case 'concluido':
+        return Icons.check_circle_rounded;
+      case 'cancelado':
+        return Icons.cancel;
+      default:
+        return Icons.help_outline_rounded;
+    }
+  }
+
+  Widget _moradorChip(Map<String, dynamic>? morador, ThemeData theme) {
+    if (morador == null) return const SizedBox.shrink();
+    final nome = (morador['nome'] ?? '').toString().trim();
+    final nomes = nome.split(' ');
+    final primeiroNome = nomes.isNotEmpty ? nomes[0] : '';
+    final segundoNome = nomes.length > 1 ? nomes[1] : '';
+    final whatsapp = (morador['whatsapp'] ?? '').toString();
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
+      decoration: BoxDecoration(
+        color: theme.primaryColor.withOpacity(0.10),
+        borderRadius: BorderRadius.circular(20),
+        border: Border.all(color: theme.primaryColor.withOpacity(0.18)),
+      ),
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Icon(Icons.person, color: theme.primaryColor, size: 18),
+          const SizedBox(width: 6),
+          Text(
+            '$primeiroNome $segundoNome',
+            style: theme.textTheme.bodyMedium?.copyWith(
+              fontWeight: FontWeight.bold,
+              color: theme.primaryColor,
+            ),
+          ),
+          if (whatsapp.isNotEmpty) ...[
+            const SizedBox(width: 10),
+            Icon(Icons.phone, color: Colors.green, size: 18),
+            const SizedBox(width: 4),
+            Text(
+              whatsapp,
+              style: theme.textTheme.bodyMedium?.copyWith(
+                color: Colors.green[800],
+                fontWeight: FontWeight.w500,
+              ),
+            ),
+          ],
+        ],
+      ),
+    );
+  }
+
+  Widget _modernSolicitacaoInfoBlock(ThemeData theme, Map solicitacao) {
+    // Descrição, Tipo de Entulho e Data de Criação na mesma linha
+    return Container(
+      margin: const EdgeInsets.only(top: 0, bottom: 0),
+      padding: const EdgeInsets.symmetric(horizontal: 0, vertical: 0),
+      decoration: BoxDecoration(
+        color: theme.primaryColor.withOpacity(
+          theme.brightness == Brightness.dark ? 0.04 : 0.07,
+        ),
+        borderRadius: BorderRadius.circular(18),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Padding(
+            padding: const EdgeInsets.fromLTRB(16, 16, 16, 8),
+            child: Row(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Icon(
+                  Icons.description_rounded,
+                  color: theme.primaryColor,
+                  size: 18,
+                ),
+                const SizedBox(width: 10),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        'Descrição',
+                        style: theme.textTheme.bodyMedium?.copyWith(
+                          fontWeight: FontWeight.bold,
+                          color: theme.disabledColor,
+                          fontSize: 13,
+                        ),
+                      ),
+                      const SizedBox(height: 2),
+                      Text(
+                        (solicitacao['descricao'] ?? '-').toString(),
+                        style: theme.textTheme.bodyMedium?.copyWith(
+                          fontWeight: FontWeight.w500,
+                          fontSize: 14,
+                          color: theme.textTheme.bodyLarge?.color,
+                        ),
+                        maxLines: 2,
+                        overflow: TextOverflow.ellipsis,
+                      ),
+                    ],
+                  ),
+                ),
+                const SizedBox(width: 18),
+                // Tipo de Entulho
+                Icon(
+                  Icons.category_rounded,
+                  color: theme.primaryColor,
+                  size: 18,
+                ),
+                const SizedBox(width: 6),
+                Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      'Tipo de Entulho',
+                      style: theme.textTheme.bodyMedium?.copyWith(
+                        fontWeight: FontWeight.bold,
+                        color: theme.disabledColor,
+                        fontSize: 13,
+                      ),
+                    ),
+                    const SizedBox(height: 2),
+                    Text(
+                      (solicitacao['tipo_entulho'] ?? '-').toString(),
+                      style: theme.textTheme.bodyMedium?.copyWith(
+                        fontWeight: FontWeight.w500,
+                        fontSize: 14,
+                        color: theme.textTheme.bodyLarge?.color,
+                      ),
+                      maxLines: 2,
+                      overflow: TextOverflow.ellipsis,
+                    ),
+                  ],
+                ),
+                const SizedBox(width: 18),
+                // Data de Criação
+                Icon(
+                  Icons.calendar_today_rounded,
+                  color: theme.primaryColor,
+                  size: 18,
+                ),
+                const SizedBox(width: 6),
+                Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      'Data de Criação',
+                      style: theme.textTheme.bodyMedium?.copyWith(
+                        fontWeight: FontWeight.bold,
+                        color: theme.disabledColor,
+                        fontSize: 13,
+                      ),
+                    ),
+                    const SizedBox(height: 2),
+                    Text(
+                      _formatDate(solicitacao['criado_em']),
+                      style: theme.textTheme.bodyMedium?.copyWith(
+                        fontWeight: FontWeight.w500,
+                        fontSize: 14,
+                        color: theme.textTheme.bodyLarge?.color,
+                      ),
+                      maxLines: 2,
+                      overflow: TextOverflow.ellipsis,
+                    ),
+                  ],
+                ),
+              ],
+            ),
+          ),
+          Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 16),
+            child: Divider(height: 1, color: theme.dividerColor, thickness: 1),
+          ),
+          Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+            child: Row(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Icon(
+                  Icons.location_on_rounded,
+                  color: theme.primaryColor,
+                  size: 18,
+                ),
+                const SizedBox(width: 10),
+                SizedBox(
+                  width: 110,
+                  child: Text(
+                    'Endereço',
+                    style: theme.textTheme.bodyMedium?.copyWith(
+                      fontWeight: FontWeight.bold,
+                      color: theme.disabledColor,
+                      fontSize: 13,
+                    ),
+                  ),
+                ),
+                const SizedBox(width: 6),
+                Expanded(
+                  child: Text(
+                    (solicitacao['endereco'] ?? '-').toString(),
+                    style: theme.textTheme.bodyMedium?.copyWith(
+                      fontWeight: FontWeight.w500,
+                      fontSize: 14,
+                      color: theme.textTheme.bodyLarge?.color,
+                    ),
+                    maxLines: 2,
+                    overflow: TextOverflow.ellipsis,
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ],
+      ),
     );
   }
 }
