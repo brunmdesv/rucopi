@@ -52,7 +52,7 @@ class ThemeProvider extends ChangeNotifier {
       bodySmall: TextStyle(
         fontSize: AppTextStyles.subtitle,
         fontWeight: AppTextStyles.semiBold,
-        color: AppColors.lightSubtitle,
+        color: AppColors.lightPrimary,
       ),
       labelLarge: TextStyle(
         fontSize: AppTextStyles.button,
@@ -143,18 +143,18 @@ class ThemeProvider extends ChangeNotifier {
         borderSide: const BorderSide(color: AppColors.lightError, width: 2),
       ),
       contentPadding: const EdgeInsets.symmetric(vertical: 16, horizontal: 16),
-      labelStyle: const TextStyle(color: AppColors.lightSubtitle),
+      labelStyle: const TextStyle(color: AppColors.lightPrimary),
     ),
     colorScheme: const ColorScheme.light(
       primary: AppColors.lightPrimary,
-      secondary: AppColors.lightSecondary,
+      secondary: AppColors.lightPrimary,
       error: AppColors.lightError,
       background: AppColors.lightBackground,
       surface: AppColors.lightCard,
     ),
     chipTheme: ChipThemeData(
-      backgroundColor: AppColors.lightSecondary,
-      labelStyle: const TextStyle(color: AppColors.lightText),
+      backgroundColor: AppColors.lightPrimary.withOpacity(0.1),
+      labelStyle: const TextStyle(color: AppColors.lightPrimary),
       selectedColor: AppColors.lightPrimary.withOpacity(0.2),
       secondarySelectedColor: AppColors.lightPrimary.withOpacity(0.3),
       disabledColor: AppColors.lightDisabled,
@@ -205,7 +205,7 @@ class ThemeProvider extends ChangeNotifier {
       bodySmall: TextStyle(
         fontSize: AppTextStyles.subtitle,
         fontWeight: AppTextStyles.semiBold,
-        color: AppColors.darkSubtitle,
+        color: AppColors.darkPrimary,
       ),
       labelLarge: TextStyle(
         fontSize: AppTextStyles.button,
@@ -296,18 +296,18 @@ class ThemeProvider extends ChangeNotifier {
         borderSide: const BorderSide(color: AppColors.darkError, width: 2),
       ),
       contentPadding: const EdgeInsets.symmetric(vertical: 16, horizontal: 16),
-      labelStyle: const TextStyle(color: AppColors.darkSubtitle),
+      labelStyle: const TextStyle(color: AppColors.darkPrimary),
     ),
     colorScheme: const ColorScheme.dark(
       primary: AppColors.darkPrimary,
-      secondary: AppColors.darkSecondary,
+      secondary: AppColors.darkPrimary,
       error: AppColors.darkError,
       background: AppColors.darkBackground,
       surface: AppColors.darkCard,
     ),
     chipTheme: ChipThemeData(
-      backgroundColor: AppColors.darkSecondary,
-      labelStyle: const TextStyle(color: AppColors.darkText),
+      backgroundColor: AppColors.darkPrimary.withOpacity(0.1),
+      labelStyle: const TextStyle(color: AppColors.darkPrimary),
       selectedColor: AppColors.darkPrimary.withOpacity(0.2),
       secondarySelectedColor: AppColors.darkPrimary.withOpacity(0.3),
       disabledColor: AppColors.darkDisabled,
@@ -354,13 +354,5 @@ class ThemeProvider extends ChangeNotifier {
         _themeMode = ThemeMode.system;
     }
     notifyListeners();
-  }
-
-  Future<void> _saveTheme() async {
-    final prefs = await SharedPreferences.getInstance();
-    await prefs.setString(
-      _themeKey,
-      _themeMode == ThemeMode.dark ? 'dark' : 'light',
-    );
   }
 }
