@@ -5,6 +5,8 @@ import 'configuracoes_page.dart';
 import 'detalhes_solicitacao_dialog.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import 'perfil_usuario_page.dart';
+import 'package:table_calendar/table_calendar.dart';
+import '../dialogos/dialogos.dart';
 
 enum DashboardScreen {
   dashboard,
@@ -1439,12 +1441,11 @@ class _DashboardContentState extends State<_DashboardContent> {
             solicitacoesRecentes,
           ),
           const SizedBox(height: 16),
-          _buildQuickStats(
+          _buildCalendarioAgendamentos(
             theme,
             isDark,
             width,
-            total: total,
-            concluidas: concluidas,
+            solicitacoesRecentes,
           ),
         ],
       );
@@ -1475,17 +1476,143 @@ class _DashboardContentState extends State<_DashboardContent> {
           const SizedBox(width: 24),
           Expanded(
             flex: 1,
-            child: _buildQuickStats(
+            child: _buildCalendarioAgendamentos(
               theme,
               isDark,
               width,
-              total: total,
-              concluidas: concluidas,
+              solicitacoesRecentes,
             ),
           ),
         ],
       );
     }
+  }
+
+  Widget _buildCalendarioAgendamentos(
+    ThemeData theme,
+    bool isDark,
+    double width,
+    List<dynamic> solicitacoesRecentes,
+  ) {
+    // Filtrar datas de coleta das solicitações agendadas
+    final datasAgendadas = solicitacoesRecentes
+        .where((s) => s['status'] == 'agendada' && s['data_coleta'] != null)
+        .map<DateTime?>((s) {
+          final data = s['data_coleta'];
+          if (data == null) return null;
+          try {
+            return DateTime.parse(data).toLocal();
+          } catch (_) {
+            return null;
+          }
+        })
+        .whereType<DateTime>()
+        .toList();
+
+    // Para destacar os dias, criar um Set de datas (apenas ano-mês-dia)
+    final Set<DateTime> diasComAgendamento = datasAgendadas
+        .map((d) => DateTime(d.year, d.month, d.day))
+        .toSet();
+
+    return Container(
+      margin: const EdgeInsets.symmetric(vertical: 8, horizontal: 0),
+      padding: const EdgeInsets.all(8),
+      decoration: BoxDecoration(
+        color: theme.primaryColor.withOpacity(0.08),
+        borderRadius: BorderRadius.circular(12),
+      ),
+      child: TableCalendar(
+        locale: 'pt_BR',
+        firstDay: DateTime.now().subtract(const Duration(days: 365)),
+        lastDay: DateTime.now().add(const Duration(days: 365)),
+        focusedDay: DateTime.now(),
+        calendarFormat: CalendarFormat.month,
+        headerStyle: HeaderStyle(
+          formatButtonVisible: false,
+          titleCentered: true,
+          titleTextStyle:
+              theme.textTheme.titleMedium?.copyWith(
+                fontWeight: FontWeight.bold,
+                color: theme.primaryColor,
+              ) ??
+              const TextStyle(),
+        ),
+        daysOfWeekStyle: DaysOfWeekStyle(
+          weekdayStyle: theme.textTheme.bodySmall ?? const TextStyle(),
+          weekendStyle:
+              theme.textTheme.bodySmall?.copyWith(color: Colors.red) ??
+              const TextStyle(),
+        ),
+        calendarStyle: CalendarStyle(
+          todayDecoration: BoxDecoration(
+            color: theme.primaryColor.withOpacity(0.2),
+            shape: BoxShape.circle,
+          ),
+          selectedDecoration: BoxDecoration(
+            color: theme.primaryColor,
+            shape: BoxShape.circle,
+          ),
+          markerDecoration: const BoxDecoration(
+            color: Colors.blue,
+            shape: BoxShape.circle,
+          ),
+          markerSize: 8,
+          markersAlignment: Alignment.bottomCenter,
+        ),
+        calendarBuilders: CalendarBuilders(
+          markerBuilder: (context, date, events) {
+            final dia = DateTime(date.year, date.month, date.day);
+            if (diasComAgendamento.contains(dia)) {
+              return Align(
+                alignment: Alignment.bottomCenter,
+                child: Container(
+                  width: 8,
+                  height: 8,
+                  margin: const EdgeInsets.only(bottom: 4),
+                  decoration: const BoxDecoration(
+                    color: Colors.blue,
+                    shape: BoxShape.circle,
+                  ),
+                ),
+              );
+            }
+            return null;
+          },
+        ),
+        onDaySelected: (selectedDay, focusedDay) {
+          // Filtrar solicitações agendadas para o dia selecionado
+          final diaSelecionado = DateTime(
+            selectedDay.year,
+            selectedDay.month,
+            selectedDay.day,
+          );
+          final solicitacoesDoDia = solicitacoesRecentes
+              .where(
+                (s) =>
+                    s['status'] == 'agendada' &&
+                    s['data_coleta'] != null &&
+                    () {
+                      try {
+                        final data = DateTime.parse(s['data_coleta']).toLocal();
+                        return data.year == diaSelecionado.year &&
+                            data.month == diaSelecionado.month &&
+                            data.day == diaSelecionado.day;
+                      } catch (_) {
+                        return false;
+                      }
+                    }(),
+              )
+              .toList();
+          showDialog(
+            context: context,
+            builder: (context) => DialogSolicitacoesDoDia(
+              data: diaSelecionado,
+              solicitacoes: solicitacoesDoDia.cast<Map<String, dynamic>>(),
+            ),
+          );
+        },
+      ),
+    );
   }
 }
 

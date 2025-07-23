@@ -62,29 +62,37 @@ class _DetalhesSolicitacaoDialogState extends State<DetalhesSolicitacaoDialog> {
     }
   }
 
-  Future<void> _atualizarStatus(String novoStatus) async {
+  Future<void> _atualizarStatus(
+    String novoStatus, {
+    DateTime? dataAgendada,
+  }) async {
     setState(() {
       atualizandoStatus = true;
     });
     try {
       if (novoStatus == 'agendada') {
+        final dataParaSalvar = dataAgendada ?? DateTime.now();
         await Supabase.instance.client
             .from('solicitacoes')
             .update({
               'status': novoStatus,
-              'agendada_em': DateTime.now().toIso8601String(),
+              'agendada_em': DateTime.now()
+                  .toIso8601String(), // registro do momento da mudança
+              'data_coleta': dataParaSalvar
+                  .toIso8601String(), // data escolhida pelo usuário
             })
             .eq('id', widget.solicitacao['id']);
         // Buscar o valor real salvo no banco
         final updated = await Supabase.instance.client
             .from('solicitacoes')
-            .select('agendada_em')
+            .select('agendada_em, data_coleta')
             .eq('id', widget.solicitacao['id'])
             .single();
         setState(() {
           statusSelecionado = novoStatus;
           widget.solicitacao['status'] = novoStatus;
           widget.solicitacao['agendada_em'] = updated['agendada_em'];
+          widget.solicitacao['data_coleta'] = updated['data_coleta'];
         });
       } else {
         await Supabase.instance.client
@@ -611,7 +619,7 @@ class _DetalhesSolicitacaoDialogState extends State<DetalhesSolicitacaoDialog> {
     try {
       final dateTime = DateTime.tryParse(date.toString());
       if (dateTime != null) {
-        return '${dateTime.day.toString().padLeft(2, '0')}/${dateTime.month.toString().padLeft(2, '0')}/${dateTime.year} às ${dateTime.hour.toString().padLeft(2, '0')}:${dateTime.minute.toString().padLeft(2, '0')}';
+        return '${dateTime.day.toString().padLeft(2, '0')}/${dateTime.month.toString().padLeft(2, '0')}/${dateTime.year}';
       }
     } catch (e) {}
     return date.toString();
@@ -782,9 +790,29 @@ class _DetalhesSolicitacaoDialogState extends State<DetalhesSolicitacaoDialog> {
           }).toList(),
           onChanged: atualizandoStatus
               ? null
-              : (novoStatus) {
+              : (novoStatus) async {
                   if (novoStatus != null && novoStatus != statusSelecionado) {
-                    _atualizarStatus(novoStatus);
+                    if (novoStatus == 'agendada') {
+                      // Abrir calendário para selecionar data
+                      final dataSelecionada = await showDatePicker(
+                        context: context,
+                        initialDate: DateTime.now(),
+                        firstDate: DateTime.now(),
+                        lastDate: DateTime.now().add(const Duration(days: 365)),
+                        helpText: 'Selecione a data da coleta',
+                        cancelText: 'Cancelar',
+                        confirmText: 'Confirmar',
+                        locale: const Locale('pt', 'BR'),
+                      );
+                      if (dataSelecionada != null) {
+                        await _atualizarStatus(
+                          novoStatus,
+                          dataAgendada: dataSelecionada,
+                        );
+                      }
+                    } else {
+                      await _atualizarStatus(novoStatus);
+                    }
                   }
                 },
         ),
@@ -970,6 +998,39 @@ class _DetalhesSolicitacaoDialogState extends State<DetalhesSolicitacaoDialog> {
               ],
             ),
           ),
+          if ((solicitacao['status']?.toString() ?? '').toLowerCase() ==
+                  'agendada' &&
+              solicitacao['data_coleta'] != null)
+            Padding(
+              padding: const EdgeInsets.fromLTRB(16, 0, 16, 8),
+              child: Row(
+                children: [
+                  Icon(
+                    Icons.event_available,
+                    color: theme.primaryColor,
+                    size: 18,
+                  ),
+                  const SizedBox(width: 8),
+                  Text(
+                    'Coleta agendada para:',
+                    style: theme.textTheme.bodyMedium?.copyWith(
+                      fontWeight: FontWeight.bold,
+                      color: theme.disabledColor,
+                      fontSize: 13,
+                    ),
+                  ),
+                  const SizedBox(width: 8),
+                  Text(
+                    _formatDate(solicitacao['data_coleta']),
+                    style: theme.textTheme.bodyMedium?.copyWith(
+                      fontWeight: FontWeight.w500,
+                      fontSize: 14,
+                      color: theme.textTheme.bodyLarge?.color,
+                    ),
+                  ),
+                ],
+              ),
+            ),
           Padding(
             padding: const EdgeInsets.symmetric(horizontal: 16),
             child: Divider(height: 1, color: theme.dividerColor, thickness: 1),
